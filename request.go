@@ -35,6 +35,11 @@ func (client *Client) get(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodGet, path, payload, data, requestOptions{})
 }
 
+// delete sends a DELETE HTTP Request to PureCloud and gets the result
+func (client *Client) delete(path string, payload []byte, data interface{}) error {
+	return client.request(http.MethodDelete, path, payload, data, requestOptions{})
+}
+
 // authorize sends a client credentials authentication request to PureCloud
 func (client *Client) authorize() error {
 	auth := &responseAuth{}
