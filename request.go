@@ -25,18 +25,18 @@ type responseAuth struct {
 	ExpiresIn   uint32 `json:"expires_in,omitempty"`
 	Error       string `json:"error,omitempty"`
 }
-// post sends a POST HTTP Request to PureCloud and gets the result
-func (client *Client) post(path string, payload []byte, data interface{}) error {
+// Post sends a POST HTTP Request to PureCloud and gets the result
+func (client *Client) Post(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodPost, path, payload, data, requestOptions{})
 }
 
-// get sends a GET HTTP Request to PureCloud and gets the result
-func (client *Client) get(path string, payload []byte, data interface{}) error {
+// Get sends a GET HTTP Request to PureCloud and gets the result
+func (client *Client) Get(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodGet, path, payload, data, requestOptions{})
 }
 
 // delete sends a DELETE HTTP Request to PureCloud and gets the result
-func (client *Client) delete(path string, payload []byte, data interface{}) error {
+func (client *Client) Delete(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodDelete, path, payload, data, requestOptions{})
 }
 

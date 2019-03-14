@@ -20,7 +20,7 @@ type Organization struct {
 // GetMyOrganization retrives the current Organization
 func (client *Client) GetMyOrganization() (*Organization, error) {
 	organization := &Organization{}
-	if err := client.get("organizations/me", nil, &organization); err != nil {
+	if err := client.Get("organizations/me", nil, &organization); err != nil {
 		return nil, err
 	}
 	return organization, nil
