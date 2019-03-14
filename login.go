@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	logger "bitbucket.org/gildas_cherruel/go-logger"
+	"github.com/gildas/go-logger"
 )
 
 type responseLogin struct {

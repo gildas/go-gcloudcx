@@ -3,7 +3,7 @@ package conversation
 import (
 	"encoding/json"
 
-	"bitbucket.org/gildas_cherruel/go-logger"
+	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 )
 

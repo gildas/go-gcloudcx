@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	logger "bitbucket.org/gildas_cherruel/go-logger"
+	"github.com/gildas/go-logger"
 )
 
 // New creates a new PureCloud Client

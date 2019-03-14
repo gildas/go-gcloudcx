@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	logger "bitbucket.org/gildas_cherruel/go-logger"
+	"github.com/gildas/go-logger"
 )
 
 type requestOptions struct {
@@ -35,7 +35,7 @@ func (client *Client) Get(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodGet, path, payload, data, requestOptions{})
 }
 
-// delete sends a DELETE HTTP Request to PureCloud and gets the result
+// Delete sends a DELETE HTTP Request to PureCloud and gets the result
 func (client *Client) Delete(path string, payload []byte, data interface{}) error {
 	return client.request(http.MethodDelete, path, payload, data, requestOptions{})
 }

@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"time"
 
-	logger "bitbucket.org/gildas_cherruel/go-logger"
+	"github.com/gildas/go-logger"
 )
 
 // Client is the primary object to use PureCloud
