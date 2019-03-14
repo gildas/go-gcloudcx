@@ -12,7 +12,9 @@ type Client struct {
 	Region         string
 	OrganizationID string
 	DeploymentID   string
-	API            url.URL
+	API            *url.URL
+	Proxy          *url.URL
+	Authorization  Authorization
 	Token          Token
 	Logger         *logger.Logger
 }
@@ -32,8 +34,8 @@ type ClientOptions struct {
 	Logger         *logger.Logger
 }
 
-// LoginOptions contains the login options to connect the client to PureCloud
-type LoginOptions struct {
+// Authorization contains the login options to connect the client to PureCloud
+type Authorization struct {
 	GrantType string
 	ClientID  string
 	Secret    string
