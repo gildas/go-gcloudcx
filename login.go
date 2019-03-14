@@ -24,9 +24,9 @@ func New(options ClientOptions) *Client {
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
-	apiURL, err := url.Parse(fmt.Sprintf("https://api.%s/api/v2", options.Region))
+	apiURL, err := url.Parse(fmt.Sprintf("https://api.%s/api/v2/", options.Region))
 	if err != nil {
-		apiURL, _ = url.Parse("https://api.mypurecloud.com/api/v2")
+		apiURL, _ = url.Parse("https://api.mypurecloud.com/api/v2/")
 	}
 	return &Client{
 		Region:         options.Region,
@@ -60,5 +60,4 @@ func (client *Client) Login(authorization Authorization) (err error) {
 	default:
 		return fmt.Errorf("Invalid GrantType: %s", authorization.GrantType)
 	}
-	return nil
 }
