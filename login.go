@@ -29,11 +29,11 @@ func New(options ClientOptions) *Client {
 		apiURL, _ = url.Parse("https://api.mypurecloud.com/api/v2/")
 	}
 	return &Client{
-		Region:         options.Region,
-		API:            apiURL,
-		OrganizationID: options.OrganizationID,
-		DeploymentID:   options.DeploymentID,
-		Logger:         options.Logger,
+		Region:       options.Region,
+		API:          apiURL,
+		Organization: &Organization{},
+		DeploymentID: options.DeploymentID,
+		Logger:       options.Logger,
 	}
 }
 
@@ -46,18 +46,16 @@ func (client *Client) Login(authorization Authorization) (err error) {
 		log.Debugf("Login type: %s", authorization.GrantType)
 
 		// sanitize the options
-		if len(authorization.ClientID) == 0 {
-			return fmt.Errorf("Missing Argument ClientID")
-		}
-		if len(authorization.Secret) == 0 {
-			return fmt.Errorf("Missing Argument Secret")
-		}
+		if len(authorization.ClientID) == 0 { return fmt.Errorf("Missing Argument ClientID") }
+		if len(authorization.Secret)   == 0 { return fmt.Errorf("Missing Argument Secret") }
 
 		// TODO: Should we encrypt this?!?
 		client.Authorization = authorization
 
-		return client.authorize()
+		if err = client.authorize(); err != nil { return err }
+		if client.Organization, err = client.GetMyOrganization(); err != nil { return err }
 	default:
 		return fmt.Errorf("Invalid GrantType: %s", authorization.GrantType)
 	}
+	return nil
 }

@@ -10,7 +10,7 @@ import (
 // Client is the primary object to use PureCloud
 type Client struct {
 	Region         string
-	OrganizationID string
+	Organization   *Organization
 	DeploymentID   string
 	API            *url.URL
 	Proxy          *url.URL
