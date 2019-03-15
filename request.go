@@ -123,15 +123,15 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	}
 
 	if res.StatusCode >= 400 {
-		log.Errorf("Error while sending request \nstatus: %d %s, \nHeaders: %#v, Content-Length: %d", res.Status, res.StatusCode, res.Header, res.ContentLength)
+		log.Errorf("Error while sending request \nstatus: %s, \nHeaders: %#v, Content-Length: %d", res.Status, res.Header, res.ContentLength)
 		if res.ContentLength > 0 {
 			body, _ := ioutil.ReadAll(res.Body)
-			return fmt.Errorf("HTTP Request failed %d %s, %s", res.StatusCode, res.Status, body)
+			return fmt.Errorf("HTTP Request failed %s, %s", res.Status, body)
 		}
-		return fmt.Errorf("HTTP Request failed %d %s", res.StatusCode, res.Status)
+		return fmt.Errorf("HTTP Request failed %s", res.Status)
 	}
 
-	log.Debugf("Successfully sent request in %s \nstatus: %d %s, \nHeaders: %#v, \nContent-Length: %d", duration, res.StatusCode, res.Status, res.Header, res.ContentLength)
+	log.Debugf("Successfully sent request in %s \nstatus: %s, \nHeaders: %#v, \nContent-Length: %d", duration, res.Status, res.Header, res.ContentLength)
 
 	if data != nil {
 		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {

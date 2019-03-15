@@ -3,7 +3,6 @@ package conversation
 import (
 	"encoding/json"
 
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 )
 
@@ -16,11 +15,7 @@ type createPayload struct {
 
 // Create creates a new chat Conversation in PureCloud
 func Create(client *purecloud.Client, target Target, member ChatMember) (*Conversation, error) {
-	log := client.Logger.Record("scope", "create_conversation").Child().(*logger.Logger)
-
-	// sanitizing...
-
-	log.Debugf("Creating a new HTTP Request")
+	// TODO sanitizing...
 	payload, err := json.Marshal(createPayload{
 		OrganizationID: client.Organization.ID,
 		DeploymentID:   client.DeploymentID,
@@ -28,13 +23,12 @@ func Create(client *purecloud.Client, target Target, member ChatMember) (*Conver
 		Member:         member,
 	})
 	if err != nil {
-		log.Errorf("Error while encoding payload", err)
 		return nil, err
 	}
 
 	conversation := &Conversation{}
-	err = client.Post("webchat/guest/conversations", payload, &conversation)
-
-	log.Debugf("Success: %+v", conversation)
+	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
+		return nil, err
+	}
 	return conversation, nil
 }
