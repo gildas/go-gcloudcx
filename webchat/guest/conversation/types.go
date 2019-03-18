@@ -1,6 +1,8 @@
 package conversation
 
 import (
+	"time"
+	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 )
 
@@ -12,6 +14,7 @@ type Conversation struct {
 	Member      Member `json:"member,omitifempty"`
 
 	Client      *purecloud.Client `json:"-"`
+	Logger      *logger.Logger    `json:"-"`
 }
 
 // Member describes a chat guest member

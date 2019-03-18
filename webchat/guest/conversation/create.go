@@ -3,6 +3,7 @@ package conversation
 import (
 	"encoding/json"
 
+	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 )
 
@@ -26,9 +27,10 @@ func Create(client *purecloud.Client, target Target, member Member) (*Conversati
 		return nil, err
 	}
 
-	conversation := &Conversation{ Client: client }
+	conversation := &Conversation{Client: client}
 	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
 		return nil, err
 	}
+	conversation.Logger = client.Logger.Record("topic", "conversation").Record("scope", "conversation").Record("conversation", conversation.ID).Child().(*logger.Logger)
 	return conversation, nil
 }
