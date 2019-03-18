@@ -1,15 +1,21 @@
 package conversation
 
+import (
+	"github.com/gildas/go-purecloud"
+)
+
 // Conversation contains the details of a live chat/conversation
 type Conversation struct {
-	ID          string     `json:"id,omitifempty"`
-	JWT         string     `json:"jwt,omitifempty"`
-	EventStream string     `json:"eventStreamUri,omitifempty"`
-	Member      ChatMember `json:"member,omitifempty"`
+	ID          string `json:"id,omitifempty"`
+	JWT         string `json:"jwt,omitifempty"`
+	EventStream string `json:"eventStreamUri,omitifempty"`
+	Member      Member `json:"member,omitifempty"`
+
+	Client      *purecloud.Client `json:"-"`
 }
 
-// ChatMember describes a chat guest member
-type ChatMember struct {
+// Member describes a chat guest member
+type Member struct {
 	ID          string            `json:"id,omitifempty"`
 	State       string            `json:"state"`
 	DisplayName string            `json:"displayName,omitifempty"`
@@ -29,7 +35,7 @@ type Message struct {
 	EventBody struct {
 		Message      string       `json:"message"` // if TopicName == "channel.metadata"
 		Conversation Conversation `json:"conversation"`
-		Member       ChatMember   `json:"member"`
+		Member       Member       `json:"member"`
 		Timestamp    string       `json:"timestamp"` // time.Time!?
 	} `json:"eventBody"`
 	Metadata struct {

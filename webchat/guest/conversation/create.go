@@ -7,14 +7,14 @@ import (
 )
 
 type createPayload struct {
-	OrganizationID string     `json:"organizationId"`
-	DeploymentID   string     `json:"deploymentId"`
-	RoutingTarget  Target     `json:"routingTarget"`
-	Member         ChatMember `json:"memberInfo"`
+	OrganizationID string `json:"organizationId"`
+	DeploymentID   string `json:"deploymentId"`
+	RoutingTarget  Target `json:"routingTarget"`
+	Member         Member `json:"memberInfo"`
 }
 
 // Create creates a new chat Conversation in PureCloud
-func Create(client *purecloud.Client, target Target, member ChatMember) (*Conversation, error) {
+func Create(client *purecloud.Client, target Target, member Member) (*Conversation, error) {
 	// TODO sanitizing...
 	payload, err := json.Marshal(createPayload{
 		OrganizationID: client.Organization.ID,
@@ -26,7 +26,7 @@ func Create(client *purecloud.Client, target Target, member ChatMember) (*Conver
 		return nil, err
 	}
 
-	conversation := &Conversation{}
+	conversation := &Conversation{ Client: client }
 	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
 		return nil, err
 	}
