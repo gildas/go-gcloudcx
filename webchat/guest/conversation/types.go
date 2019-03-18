@@ -4,6 +4,7 @@ import (
 	"time"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
+	"github.com/gorilla/websocket"
 )
 
 // Conversation contains the details of a live chat/conversation
@@ -15,6 +16,7 @@ type Conversation struct {
 	SelfURI     string `json:"selfUri,omitifempty"`
 
 	Client      *purecloud.Client  `json:"-"`
+	Socket      *websocket.Conn    `json:"-"`
 	Members     map[string]*Member `json:"-"`
 	Logger      *logger.Logger     `json:"-"`
 }
