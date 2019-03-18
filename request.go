@@ -14,7 +14,8 @@ import (
 	"github.com/gildas/go-logger"
 )
 
-type requestOptions struct {
+// RequestOptions contains options for requests
+type RequestOptions struct {
 	ContentType   string
 	Authorization string
 }
@@ -26,18 +27,18 @@ type responseAuth struct {
 	Error       string `json:"error,omitempty"`
 }
 // Post sends a POST HTTP Request to PureCloud and gets the result
-func (client *Client) Post(path string, payload []byte, data interface{}) error {
-	return client.request(http.MethodPost, path, payload, data, requestOptions{})
+func (client *Client) Post(path string, payload []byte, data interface{}, options ...RequestOptions) error {
+	return client.request(http.MethodPost, path, payload, data, options...)
 }
 
 // Get sends a GET HTTP Request to PureCloud and gets the result
-func (client *Client) Get(path string, payload []byte, data interface{}) error {
-	return client.request(http.MethodGet, path, payload, data, requestOptions{})
+func (client *Client) Get(path string, payload []byte, data interface{}, options ...RequestOptions) error {
+	return client.request(http.MethodGet, path, payload, data, options...)
 }
 
 // Delete sends a DELETE HTTP Request to PureCloud and gets the result
-func (client *Client) Delete(path string, payload []byte, data interface{}) error {
-	return client.request(http.MethodDelete, path, payload, data, requestOptions{})
+func (client *Client) Delete(path string, payload []byte, data interface{}, options ...RequestOptions) error {
+	return client.request(http.MethodDelete, path, payload, data, options...)
 }
 
 // authorize sends a client credentials authentication request to PureCloud
@@ -48,7 +49,7 @@ func (client *Client) authorize() error {
 		"https://login." + client.Region + "/oauth/token",
 		[]byte("grant_type=client_credentials"),
 		auth,
-		requestOptions{
+		RequestOptions{
 			ContentType:   "application/x-www-form-urlencoded",
 			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(client.Authorization.ClientID + ":" + client.Authorization.Secret)),
 		},
@@ -64,7 +65,7 @@ func (client *Client) authorize() error {
 }
 
 // request sends an HTTP Request to PureCloud and gets the result
-func (client *Client) request(method, path string, payload []byte, data interface{}, options requestOptions) error {
+func (client *Client) request(method, path string, payload []byte, data interface{}, options ...RequestOptions) error {
 	log := client.Logger.Record("scope", "request."+method).Child().(*logger.Logger)
 
 	url, err := client.parseURL(path)
@@ -80,8 +81,8 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 
 	// Setting common Headers
 	req.Header.Set("User-Agent", APP+" "+VERSION)
-	if len(options.Authorization) > 0 {
-		req.Header.Set("Authorization", options.Authorization)
+	if len(options) > 0 && len(options[len(options)-1].Authorization) > 0 {
+		req.Header.Set("Authorization", options[len(options)-1].Authorization)
 	} else {
 		if len(client.Token.Token) == 0 {
 			if err := client.authorize(); err != nil {
@@ -90,8 +91,8 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 		}
 		req.Header.Set("Authorization", client.Token.Type + " " + client.Token.Token)
 	}
-	if len(options.ContentType) > 0 {
-		req.Header.Set("Content-Type", options.ContentType)
+	if len(options) > 0 && len(options[len(options)-1].ContentType) > 0 {
+		req.Header.Set("Content-Type", options[len(options)-1].ContentType)
 	} else {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -104,6 +105,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	}
 	start := time.Now()
 	log.Debugf("Sending %s request to %s", method, req.URL.String())
+	log.Tracef("Request Headers: %#v", req.Header)
 	res, err := httpClient.Do(req)
 	duration := time.Since(start)
 	log = log.Record("duration", duration.Seconds()).Child().(*logger.Logger)
@@ -115,20 +117,17 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	defer res.Body.Close()
 
 	// TODO: Process redirections (3xx)
-	if res.StatusCode == 401 && len(options.Authorization) == 0 { // Typically we need to acquire our token again
+	if res.StatusCode == 401 && len(options) > 0 && len(options[len(options)-1].Authorization) == 0 { // Typically we need to acquire our token again
 		if err := client.authorize(); err != nil {
 			return err
 		}
-		return client.request(method, path, payload, data, options)
+		return client.request(method, path, payload, data, options...)
 	}
 
 	if res.StatusCode >= 400 {
 		log.Errorf("Error while sending request \nstatus: %s, \nHeaders: %#v, Content-Length: %d", res.Status, res.Header, res.ContentLength)
-		if res.ContentLength > 0 {
-			body, _ := ioutil.ReadAll(res.Body)
-			return fmt.Errorf("HTTP Request failed %s, %s", res.Status, body)
-		}
-		return fmt.Errorf("HTTP Request failed %s", res.Status)
+		body, _ := ioutil.ReadAll(res.Body)
+		return fmt.Errorf("HTTP Request failed %s, %s", res.Status, body)
 	}
 
 	log.Debugf("Successfully sent request in %s \nstatus: %s, \nHeaders: %#v, \nContent-Length: %d", duration, res.Status, res.Header, res.ContentLength)
