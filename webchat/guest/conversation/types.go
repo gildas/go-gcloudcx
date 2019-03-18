@@ -48,7 +48,7 @@ type Message struct {
 		Message      string       `json:"message,omitifempty"`      // heartbeat (channel.metadata)
 		Conversation Conversation `json:"conversation,omitifempty"` // typing-indicator, member-change
 		Member       Member       `json:"member,omitifempty"`       // member-change
-		Timestamp    string       `json:"timestamp,omitifempty"`    // time.Time!?, all
+		Timestamp    time.Time    `json:"timestamp,omitifempty"`    // all
 	} `json:"eventBody,omitifempty"`
 	Metadata struct {
 		CorrelationID string `json:"CorrelationId,omitifempty"` // typing-indicator
