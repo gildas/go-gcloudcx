@@ -31,16 +31,20 @@ type Target struct {
 
 // Message describes messages exchanged over a websocket
 type Message struct {
-	TopicName string `json:"topicName"`
+	TopicName string `json:"topicName,omitifempty"`
 	EventBody struct {
-		Message      string       `json:"message"` // if TopicName == "channel.metadata"
-		Conversation Conversation `json:"conversation"`
-		Member       Member       `json:"member"`
-		Timestamp    string       `json:"timestamp"` // time.Time!?
-	} `json:"eventBody"`
+		ID           string       `json:"id,omitifempty"`           // typing-indicator, message
+		Sender       Member       `json:"sender,omitifempty"`       // typing-indicator, message
+		Body         string       `json:"body,omitifempty"`         // message
+		BodyType     string       `json:"bodyType,omitifempty"`     // message
+		Message      string       `json:"message,omitifempty"`      // heartbeat (channel.metadata)
+		Conversation Conversation `json:"conversation,omitifempty"` // typing-indicator, member-change
+		Member       Member       `json:"member,omitifempty"`       // member-change
+		Timestamp    string       `json:"timestamp,omitifempty"`    // time.Time!?, all
+	} `json:"eventBody,omitifempty"`
 	Metadata struct {
-		CorrelationID string `json:"CorrelationId"`
-		Type          string `json:"type"`
-	} `json:"metadata"`
-	Version   string `json:"version"`
+		CorrelationID string `json:"CorrelationId,omitifempty"` // typing-indicator
+		Type          string `json:"type,omitifempty"`          // typing-indicator, message, member-change
+	} `json:"metadata,omitifempty"`
+	Version   string `json:"version"` // all
 }
