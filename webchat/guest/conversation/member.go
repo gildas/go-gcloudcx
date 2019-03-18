@@ -27,13 +27,17 @@ func (conversation *Conversation) GetMembers() ([]Member, error) {
 	return response.Members, nil
 }
 
-// GetMember fetches the given member of this Conversation
+// GetMember fetches the given member of this Conversation (caches the member)
 func (conversation *Conversation) GetMember(id string) (*Member, error) {
-	response := &Member{}
-	if err := conversation.Client.Get(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, id), nil, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
+	if member, ok := conversation.Members[id]; ok {
+		return member, nil
+	}
+	member := &Member{}
+	if err := conversation.Client.Get(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, id), nil, &member, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
 		return nil, err
 	}
-	conversation.Logger.Record("scope", "getmembers").Debugf("Response: %+v", response)
-	return response, nil
+	conversation.Logger.Record("scope", "getmembers").Debugf("Response: %+v", member)
+	conversation.Members[member.ID] = member
+	return member, nil
 
 }

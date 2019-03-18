@@ -27,7 +27,7 @@ func Create(client *purecloud.Client, target Target, member Member) (*Conversati
 		return nil, err
 	}
 
-	conversation := &Conversation{Client: client}
+	conversation := &Conversation{Client: client, Members: make(map[string]*Member)}
 	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
 		return nil, err
 	}

@@ -14,8 +14,9 @@ type Conversation struct {
 	Member      Member `json:"member,omitifempty"`
 	SelfURI     string `json:"selfUri,omitifempty"`
 
-	Client      *purecloud.Client `json:"-"`
-	Logger      *logger.Logger    `json:"-"`
+	Client      *purecloud.Client  `json:"-"`
+	Members     map[string]*Member `json:"-"`
+	Logger      *logger.Logger     `json:"-"`
 }
 
 // Member describes a chat guest member
