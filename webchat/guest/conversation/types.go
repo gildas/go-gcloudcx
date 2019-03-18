@@ -12,6 +12,7 @@ type Conversation struct {
 	JWT         string `json:"jwt,omitifempty"`
 	EventStream string `json:"eventStreamUri,omitifempty"`
 	Member      Member `json:"member,omitifempty"`
+	SelfURI     string `json:"selfUri,omitifempty"`
 
 	Client      *purecloud.Client `json:"-"`
 	Logger      *logger.Logger    `json:"-"`
@@ -19,11 +20,15 @@ type Conversation struct {
 
 // Member describes a chat guest member
 type Member struct {
-	ID          string            `json:"id,omitifempty"`
-	State       string            `json:"state"`
-	DisplayName string            `json:"displayName,omitifempty"`
-	ImageURL    string            `json:"avatarImageUrl,omitifempty"`
-	Custom      map[string]string `json:"customFields,omitifempty"`
+	ID            string            `json:"id,omitifempty"`
+	DisplayName   string            `json:"displayName,omitifempty"`
+	AvatarURL     string            `json:"avatarImageUrl,omitifempty"`
+	Role          string            `json:"role,omitifempty"`
+	State         string            `json:"state,omitifempty"`
+	JoinedAt      time.Time         `json:"joinDate,omitifempty"`
+	LeftAt        time.Time         `json:"leaveDate,omitifempty"`
+	Authenticated bool              `json:"authenticatedGuest,omitifempty"`
+	Custom        map[string]string `json:"customFields,omitifempty"`
 }
 
 // Target describes the target of a Chat/Conversation
