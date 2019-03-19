@@ -82,11 +82,13 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			}
 			switch strings.ToLower(message.Metadata.Type) {
 			case "message":
+				// TODO: Do NOT send the same message twice!
 				log.Debugf("Message %s from %s (%s) at %s", message.EventBody.ID, sender.ID, sender.DisplayName, message.EventBody.Timestamp)
 				if sender.ID != conversation.Member.ID && handlers.OnMessage != nil {
 					handlers.OnMessage(conversation, message, sender)
 				}
 			case "typing-indicator":
+				// TODO: Do NOT send the same message twice!
 				log.Debugf("Typing Indicator %s from %s (%s) at %s", message.EventBody.ID, sender.ID, sender.DisplayName, message.EventBody.Timestamp)
 				if handlers.OnMessage != nil {
 					handlers.OnTyping(conversation, message, sender)
