@@ -14,7 +14,7 @@ type Client struct {
 	DeploymentID   string
 	API            *url.URL
 	Proxy          *url.URL
-	Authorization  Authorization
+	Authorization  *Authorization
 	Token          Token
 	Logger         *logger.Logger
 }
