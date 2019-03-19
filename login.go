@@ -18,10 +18,9 @@ type responseLogin struct {
 func (client *Client) Login(authorization Authorization) (err error) {
 	log := client.Logger.Record("scope", "login").Child().(*logger.Logger)
 
+	log.Debugf("Login type: %s, region: %s", authorization.GrantType, client.Region)
 	switch strings.ToLower(authorization.GrantType) {
 	case "clientcredentials":
-		log.Debugf("Login type: %s", authorization.GrantType)
-
 		// sanitize the options
 		if len(authorization.ClientID) == 0 { return fmt.Errorf("Missing Argument ClientID") }
 		if len(authorization.Secret)   == 0 { return fmt.Errorf("Missing Argument Secret") }
