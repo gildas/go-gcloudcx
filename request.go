@@ -56,11 +56,9 @@ func (client *Client) authorize() error {
 	); err != nil {
 		return err
 	}
-	client.Token = Token{
-		Type:    auth.TokenType,
-		Token:   auth.AccessToken,
-		Expires: time.Now().Add(time.Duration(int64(auth.ExpiresIn))),
-	}
+	client.Authorization.TokenType    = auth.TokenType
+	client.Authorization.Token        = auth.AccessToken
+	client.Authorization.TokenExpires = time.Now().Add(time.Duration(int64(auth.ExpiresIn)))
 	return nil
 }
 
@@ -79,23 +77,31 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 		return err
 	}
 
+	// Grabbing latest options
+	authorization := ""
+	contentType   := "application/json"
+	for _, option := range options {
+		if len(option.Authorization) > 0 {
+			authorization = option.Authorization
+		}
+		if len(option.ContentType) > 0 {
+			contentType = option.ContentType
+		}
+	}
+
 	// Setting common Headers
 	req.Header.Set("User-Agent", APP+" "+VERSION)
-	if len(options) > 0 && len(options[len(options)-1].Authorization) > 0 {
-		req.Header.Set("Authorization", options[len(options)-1].Authorization)
+	if len(authorization) > 0 {
+		req.Header.Set("Authorization", authorization)
 	} else {
-		if len(client.Token.Token) == 0 {
+		if len(client.Authorization.Token) == 0 {
 			if err := client.authorize(); err != nil {
 				return err
 			}
 		}
-		req.Header.Set("Authorization", client.Token.Type + " " + client.Token.Token)
+		req.Header.Set("Authorization", client.Authorization.TokenType + " " + client.Authorization.Token)
 	}
-	if len(options) > 0 && len(options[len(options)-1].ContentType) > 0 {
-		req.Header.Set("Content-Type", options[len(options)-1].ContentType)
-	} else {
-		req.Header.Set("Content-Type", "application/json")
-	}
+	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", "application/json")
 
 	// Sending the Request
@@ -117,7 +123,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	defer res.Body.Close()
 
 	// TODO: Process redirections (3xx)
-	if res.StatusCode == 401 && len(options) > 0 && len(options[len(options)-1].Authorization) == 0 { // Typically we need to acquire our token again
+	if res.StatusCode == 401 && len(authorization) == 0 { // Typically we need to acquire our token again
 		if err := client.authorize(); err != nil {
 			return err
 		}

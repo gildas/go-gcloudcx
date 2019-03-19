@@ -20,7 +20,7 @@ func New(options ClientOptions) *Client {
 		Region:        options.Region,
 		API:           getAPI(options.Region),
 		Organization:  &Organization{},
-		Authorization: &Authorization{GrantType: "ClientCredentials"},
+		Authorization: &Authorization{GrantType: "ClientCredentials", TokenType: "bearer"},
 		DeploymentID:  options.DeploymentID,
 		Logger:        options.Logger,
 	}

@@ -7,13 +7,6 @@ import (
 	"github.com/gildas/go-logger"
 )
 
-type responseLogin struct {
-	AccessToken string `json:"access_token,omitempty"`
-	TokenType   string `json:"token_type,omitempty"`
-	ExpiresIn   uint32 `json:"expires_in,omitempty"`
-	Error       string `json:"error,omitempty"`
-}
-
 // Login logs in a Client to PureCloud
 func (client *Client) Login(authorization *Authorization) (err error) {
 	log := client.Logger.Record("scope", "login").Child().(*logger.Logger)
