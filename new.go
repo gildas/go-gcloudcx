@@ -3,7 +3,6 @@ package purecloud
 import (
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/gildas/go-logger"
 )
@@ -46,9 +45,8 @@ func getAPI(region string) *url.URL {
 	return api
 }
 
-// IsAuthorizationExpired tells if the Authorization Token expired (or inexistant)
-// Per PureCloud documentation the expiration should not be really trusted
-// and processing an HTTP 401 by re-acquiring a token is more robust
-func (client *Client) IsAuthorizationExpired() bool {
-	return len(client.Authorization.Token) == 0 || time.Now().After(client.Authorization.TokenExpires)
+// IsAuthorized tells if the client has an Authorization Token
+// It migt be expired and the app should login again as needed
+func (client *Client) IsAuthorized() bool {
+	return len(client.Authorization.Token) > 0
 }
