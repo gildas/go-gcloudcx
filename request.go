@@ -117,12 +117,13 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	log = log.Record("duration", duration.Seconds()).Child().(*logger.Logger)
 
 	if err != nil {
-		log.Errorf("Failed sending %s reqquest to %s", method, req.URL.String())
+		log.Errorf("Failed sending %s request to %s", method, req.URL.String())
 		return err
 	}
 	defer res.Body.Close()
 
 	// TODO: Process redirections (3xx)
+	// TODO: Handle retry-after (https://developer.mypurecloud.com/forum/t/new-rate-limit-header-retry-after/4777)
 	if res.StatusCode == 401 && len(authorization) == 0 { // Typically we need to acquire our token again
 		if err := client.authorize(); err != nil {
 			return err
