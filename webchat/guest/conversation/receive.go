@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	"os"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -37,29 +38,34 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			log.Errorf("Malformed JSON message: %s", body, err)
 			continue
 		}
+		message.Logger = log.Record("correlation", message.Metadata.CorrelationID).Record("message", message.EventBody.ID).Child().(*logger.Logger)
 
-		log.Infof("Received: %s (version %s)", message.TopicName, message.Version)
 		switch strings.ToLower(message.TopicName) {
 		case "channel.metadata":
 			if message.EventBody.Message == "WebSocket Heartbeat" {
-				log.Debugf("<< %s", message.EventBody.Message)
+				// Since this adds a lot to the logs, log heartbeat only if the environment demands it
+				// TODO: Document this
+				if _, ok := os.LookupEnv("PURECLOUD_TRACE_HEARTBEAT"); ok {
+					message.Logger.Debugf("<< %s", message.EventBody.Message)
+				}
 			} else {
-				log.Warnf("Unknown: %s, \n%s,\n%+v", message.TopicName, body, message)
+				message.Logger.Warnf("Unknown: %s, \n%s,\n%+v", message.TopicName, body, message)
 			}
 
 		case "v2.conversations.chats." + conversation.ID + ".members":
 			switch strings.ToLower(message.Metadata.Type) {
 			case "member-change":
-				log.Record("correlation", message.Metadata.CorrelationID).Debugf("Timestamp %s", message.EventBody.Timestamp)
+				message.Logger.Record("correlation", message.Metadata.CorrelationID).Debugf("Timestamp %s", message.EventBody.Timestamp)
 				member, err := conversation.GetMember(message.EventBody.Member.ID)
 				if err != nil {
-					log.Errorf("Failed to get member info for %s", message.EventBody.Member.ID, err)
+					message.Logger.Errorf("Failed to get member info for %s", message.EventBody.Member.ID, err)
 					member = &Member{
 						ID:    message.EventBody.Member.ID,
 						State: message.EventBody.Member.State,
 					}
 				}
-				log.Debugf("%s Member %s (%s) State: %s", member.Role, member.ID, member.DisplayName, member.State)
+				message.Logger.Debugf("State Change for %s Member %s (%s): %s at %s", member.Role, member.ID, member.DisplayName, member.State, message.EventBody.Timestamp)
+				// If the chat guest disconnected, the whole chat should close
 				if message.EventBody.Member.ID == conversation.Member.ID && message.EventBody.Member.State == "DISCONNECTED" {
 					defer conversation.Close()
 					if handlers.OnClosed != nil {
@@ -77,28 +83,27 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 		case "v2.conversations.chats." + conversation.ID + ".messages":
 			sender, err := conversation.GetMember(message.EventBody.Sender.ID)
 			if err != nil {
-				log.Errorf("Failed to get sender info for %s", message.EventBody.Sender.ID, err)
+				message.Logger.Errorf("Failed to get sender info for %s", message.EventBody.Sender.ID, err)
 				sender = &Member{ ID: message.EventBody.Sender.ID }
 			}
 			switch strings.ToLower(message.Metadata.Type) {
 			case "message":
 				// TODO: Do NOT send the same message twice!
-				log.Debugf("Message %s from %s (%s) at %s", message.EventBody.ID, sender.ID, sender.DisplayName, message.EventBody.Timestamp)
+				message.Logger.Debugf("Message from %s (%s) at %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp)
 				if sender.ID != conversation.Member.ID && handlers.OnMessage != nil {
 					handlers.OnMessage(conversation, message, sender)
 				}
 			case "typing-indicator":
 				// TODO: Do NOT send the same message twice!
-				log.Debugf("Typing Indicator %s from %s (%s) at %s", message.EventBody.ID, sender.ID, sender.DisplayName, message.EventBody.Timestamp)
+				message.Logger.Debugf("Typing Indicator from %s (%s) at %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp)
 				if handlers.OnMessage != nil {
 					handlers.OnTyping(conversation, message, sender)
 				}
 			default:
-				log.Warnf("Unknown: %s, \n%s, \n%+v", message.Metadata.Type, body, message)
+				message.Logger.Warnf("Unknown: %s, \n%s, \n%+v", message.Metadata.Type, body, message)
 			}
-
 		default:
-			log.Warnf("Unknown: %s, \n%s, \n%+v", message.TopicName, body, message)
+			message.Logger.Warnf("Unknown: %s, \n%s, \n%+v", message.TopicName, body, message)
 		}
 	}
 }

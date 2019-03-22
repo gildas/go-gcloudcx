@@ -58,4 +58,6 @@ type Message struct {
 		Type          string `json:"type,omitifempty"`          // typing-indicator, message, member-change
 	} `json:"metadata,omitifempty"`
 	Version   string `json:"version"` // all
+
+	Logger    *logger.Logger `json:"-"`
 }
