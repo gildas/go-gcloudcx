@@ -27,6 +27,11 @@ func New(options ClientOptions) *Client {
 	}
 }
 
+// SetLogger sets the logger
+func (client *Client) SetLogger(l *logger.Logger) {
+	client.Logger = l.Record("topic", "purecloud").Record("scope", "purecloud").Child().(*logger.Logger)
+}
+
 // SetRegion sets the region and its main API
 func (client *Client) SetRegion(region string) {
 	client.Region = region
