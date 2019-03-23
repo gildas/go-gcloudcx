@@ -13,17 +13,17 @@ type createPayload struct {
 	OrganizationID string `json:"organizationId"`
 	DeploymentID   string `json:"deploymentId"`
 	RoutingTarget  Target `json:"routingTarget"`
-	Member         Member `json:"memberInfo"`
+	Guest          Member `json:"memberInfo"`
 }
 
 // Create creates a new chat Conversation in PureCloud
-func Create(client *purecloud.Client, target Target, member Member) (*Conversation, error) {
+func Create(client *purecloud.Client, target Target, guest Member) (*Conversation, error) {
 	// TODO sanitizing...
 	payload, err := json.Marshal(createPayload{
 		OrganizationID: client.Organization.ID,
 		DeploymentID:   client.DeploymentID,
 		RoutingTarget:  target,
-		Member:         member,
+		Guest:          guest,
 	})
 	if err != nil {
 		return nil, err
@@ -41,6 +41,12 @@ func Create(client *purecloud.Client, target Target, member Member) (*Conversati
 		conversation.Close()
 		return nil, err
 	}
+	conversation.Guest.AvatarURL   = guest.AvatarURL
+	conversation.Guest.DisplayName = guest.DisplayName
+	conversation.Guest.Role        = guest.Role
+	conversation.Guest.Custom      = guest.Custom
+	conversation.Members[conversation.Guest.ID] = &conversation.Guest
+
 	return conversation, nil
 }
 
@@ -57,7 +63,7 @@ func (conversation *Conversation) Close() error {
 		log.Infof("Websocket disconnected")
 	} else if conversation.Client != nil {
 		log.Debugf("Guest Member leaving")
-		if err := conversation.Client.Delete(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Member.ID), nil, nil); err != nil {
+		if err := conversation.Client.Delete(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil, nil); err != nil {
 			log.Errorf("Failed while guest member was leaving chat", err)
 			return err
 		}

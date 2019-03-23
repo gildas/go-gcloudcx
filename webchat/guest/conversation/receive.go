@@ -55,7 +55,6 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 		case "v2.conversations.chats." + conversation.ID + ".members":
 			switch strings.ToLower(message.Metadata.Type) {
 			case "member-change":
-				message.Logger.Record("correlation", message.Metadata.CorrelationID).Debugf("Timestamp %s", message.EventBody.Timestamp)
 				member, err := conversation.GetMember(message.EventBody.Member.ID)
 				if err != nil {
 					message.Logger.Errorf("Failed to get member info for %s", message.EventBody.Member.ID, err)
@@ -66,7 +65,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 				}
 				message.Logger.Debugf("State Change for %s Member %s (%s): %s at %s", member.Role, member.ID, member.DisplayName, member.State, message.EventBody.Timestamp)
 				// If the chat guest disconnected, the whole chat should close
-				if message.EventBody.Member.ID == conversation.Member.ID && message.EventBody.Member.State == "DISCONNECTED" {
+				if message.EventBody.Member.ID == conversation.Guest.ID && message.EventBody.Member.State == "DISCONNECTED" {
 					defer conversation.Close()
 					if handlers.OnClosed != nil {
 						handlers.OnClosed(conversation, message, member)
@@ -90,7 +89,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			case "message":
 				// TODO: Do NOT send the same message twice!
 				message.Logger.Debugf("Message from %s (%s) at %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp)
-				if sender.ID != conversation.Member.ID && handlers.OnMessage != nil {
+				if sender.ID != conversation.Guest.ID && handlers.OnMessage != nil {
 					handlers.OnMessage(conversation, message, sender)
 				}
 			case "typing-indicator":

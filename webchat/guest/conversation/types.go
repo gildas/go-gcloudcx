@@ -12,7 +12,7 @@ type Conversation struct {
 	ID          string `json:"id,omitifempty"`
 	JWT         string `json:"jwt,omitifempty"`
 	EventStream string `json:"eventStreamUri,omitifempty"`
-	Member      Member `json:"member,omitifempty"`
+	Guest       Member `json:"member,omitifempty"`
 	SelfURI     string `json:"selfUri,omitifempty"`
 
 	Client      *purecloud.Client  `json:"-"`

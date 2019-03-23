@@ -1,6 +1,7 @@
 package conversation
 
 import (
+	"fmt"
 	"github.com/gildas/go-purecloud"
 	"encoding/json"
 )
@@ -26,7 +27,7 @@ type sendTypingResponse struct {
 // SendTyping sends a typing indicator to PureCloud as the chat guest
 func (conversation *Conversation) SendTyping() (err error) {
 	response := &sendTypingResponse{}
-	if err = conversation.Client.Post("webchat/guest/conversations/"+conversation.ID+"/members/"+conversation.Member.ID+"/typing", nil, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
+	if err = conversation.Client.Post(fmt.Sprintf("webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID), nil, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT }); err != nil {
 		return err
 	}
 	conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfuly. Response: %+v", response)
@@ -57,8 +58,7 @@ func (conversation *Conversation) sendBody(bodyType, body string) (err error) {
 	}
 
 	response := &sendBodyResponse{}
-	//return conversation.Client.Post("webchat/guest/conversations/"+conversation.ID+"/members/"+conversation.Member.ID+"/messages", payload, &response)
-	if err = conversation.Client.Post("webchat/guest/conversations/"+conversation.ID+"/members/"+conversation.Member.ID+"/messages", payload, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
+	if err = conversation.Client.Post(fmt.Sprintf("webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID), payload, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT }); err != nil {
 		return err
 	}
 	conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfuly. Response: %+v", response)
