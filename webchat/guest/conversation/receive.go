@@ -88,7 +88,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			switch strings.ToLower(message.Metadata.Type) {
 			case "message":
 				// TODO: Do NOT send the same message twice!
-				message.Logger.Debugf("Message from %s (%s) at %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp)
+				message.Logger.Debugf("Message from %s (%s) at %s: %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp, message.EventBody.Body)
 				if sender.ID != conversation.Guest.ID && handlers.OnMessage != nil {
 					handlers.OnMessage(conversation, message, sender)
 				}
