@@ -23,6 +23,7 @@ type ClientOptions struct {
 	Region         string
 	OrganizationID string
 	DeploymentID   string
+	Proxy          *url.URL
 	Logger         *logger.Logger
 }
 
