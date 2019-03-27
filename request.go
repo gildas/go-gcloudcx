@@ -107,6 +107,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	// Sending the Request
 	httpClient := http.DefaultClient
 	if client.Proxy != nil {
+		log.Debugf("Setting HTTP Proxt to: %s", client.Proxy)
 		httpClient.Transport = &http.Transport{Proxy: http.ProxyURL(client.Proxy)}
 	}
 	start := time.Now()

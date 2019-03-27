@@ -19,6 +19,7 @@ func New(options ClientOptions) *Client {
 	return &Client{
 		Region:        options.Region,
 		API:           getAPI(options.Region),
+		Proxy:         options.Proxy,
 		Organization:  &Organization{},
 		Authorization: &Authorization{GrantType: "ClientCredentials", TokenType: "bearer"},
 		DeploymentID:  options.DeploymentID,
