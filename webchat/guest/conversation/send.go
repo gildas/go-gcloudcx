@@ -17,11 +17,11 @@ func (conversation *Conversation) SendNotice(text string) (err error) {
 }
 
 type sendTypingResponse struct {
-	ID           string       `json:"id,omitifempty"`
-	Name         string       `json:"name,omitifempty"`
-	Conversation Conversation `json:"conversation,omitifempty"`
-	Sender       Member       `json:"sender,omitifempty"`
-	Timestamp    string       `json:"timestamp,omitifempty"` // time.Time!?
+	ID           string       `json:"id,omitempty"`
+	Name         string       `json:"name,omitempty"`
+	Conversation Conversation `json:"conversation,omitempty"`
+	Sender       Member       `json:"sender,omitempty"`
+	Timestamp    string       `json:"timestamp,omitempty"` // time.Time!?
 }
 
 // SendTyping sends a typing indicator to PureCloud as the chat guest
@@ -40,14 +40,14 @@ type sendBodyPayload struct {
 }
 
 type sendBodyResponse struct {
-	ID           string       `json:"id,omitifempty"`
-	Name         string       `json:"name,omitifempty"`
-	Conversation Conversation `json:"conversation,omitifempty"`
-	Sender       Member       `json:"sender,omitifempty"`
-	Body         string       `json:"body,omitifempty"`
-	BodyType     string       `json:"bodyType,omitifempty"`
-	Timestamp    string       `json:"timestamp,omitifempty"` // time.Time!?
-	SelfURI      string       `json:"selfUri,omitifempty"`
+	ID           string       `json:"id,omitempty"`
+	Name         string       `json:"name,omitempty"`
+	Conversation Conversation `json:"conversation,omitempty"`
+	Sender       Member       `json:"sender,omitempty"`
+	Body         string       `json:"body,omitempty"`
+	BodyType     string       `json:"bodyType,omitempty"`
+	Timestamp    string       `json:"timestamp,omitempty"` // time.Time!?
+	SelfURI      string       `json:"selfUri,omitempty"`
 }
 
 // sendBody sends a body message as the chat guest

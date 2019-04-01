@@ -7,15 +7,15 @@ import (
 
 type getMembersResponse struct {
 	Members     []Member `json:"entities"`
-	PageSize    uint32   `json:"pageSize,omitifempty"`
-	PageNumber  uint32   `json:"pageNumber,omitifempty"`
-	PageCount   uint32   `json:"pageCount,omitifempty"`
-	Total       uint32   `json:"total,omitifempty"`
-	FirstURI    string   `json:"firstUri,omitifempty"`
-	SelfURI     string   `json:"selfUri,omitifempty"`
-	NextURI     string   `json:"nextUri,omitifempty"`
-	PreviousURI string   `json:"previousUri,omitifempty"`
-	LastURI     string   `json:"lastUri,omitifempty"`
+	PageSize    uint32   `json:"pageSize,omitempty"`
+	PageNumber  uint32   `json:"pageNumber,omitempty"`
+	PageCount   uint32   `json:"pageCount,omitempty"`
+	Total       uint32   `json:"total,omitempty"`
+	FirstURI    string   `json:"firstUri,omitempty"`
+	SelfURI     string   `json:"selfUri,omitempty"`
+	NextURI     string   `json:"nextUri,omitempty"`
+	PreviousURI string   `json:"previousUri,omitempty"`
+	LastURI     string   `json:"lastUri,omitempty"`
 }
 // GetMembers fetches the Members of this Conversation
 func (conversation *Conversation) GetMembers() ([]Member, error) {
