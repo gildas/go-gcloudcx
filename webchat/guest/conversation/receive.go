@@ -53,6 +53,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			}
 
 		case "v2.conversations.chats." + conversation.ID + ".members":
+			log.Tracef("Received message: %s", string(body))
 			switch strings.ToLower(message.Metadata.Type) {
 			case "member-change":
 				member, err := conversation.GetMember(message.EventBody.Member.ID)
@@ -60,12 +61,12 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 					message.Logger.Errorf("Failed to get member info for %s", message.EventBody.Member.ID, err)
 					member = &Member{
 						ID:    message.EventBody.Member.ID,
-						State: message.EventBody.Member.State,
 					}
 				}
+				member.State = message.EventBody.Member.State
 				message.Logger.Debugf("State Change for %s Member %s (%s): %s at %s", member.Role, member.ID, member.DisplayName, member.State, message.EventBody.Timestamp)
 				// If the chat guest disconnected, the whole chat should close
-				if message.EventBody.Member.ID == conversation.Guest.ID && message.EventBody.Member.State == "DISCONNECTED" {
+				if member.ID == conversation.Guest.ID && member.State == "DISCONNECTED" {
 					defer conversation.Close()
 					if handlers.OnClosed != nil {
 						handlers.OnClosed(conversation, message, member)
@@ -80,6 +81,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			}
 
 		case "v2.conversations.chats." + conversation.ID + ".messages":
+			log.Tracef("Received message: %s", string(body))
 			sender, err := conversation.GetMember(message.EventBody.Sender.ID)
 			if err != nil {
 				message.Logger.Errorf("Failed to get sender info for %s", message.EventBody.Sender.ID, err)
@@ -88,9 +90,29 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			switch strings.ToLower(message.Metadata.Type) {
 			case "message":
 				// TODO: Do NOT send the same message twice!
-				message.Logger.Debugf("Message from %s (%s) at %s: %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp, message.EventBody.Body)
-				if sender.ID != conversation.Guest.ID && handlers.OnMessage != nil {
-					handlers.OnMessage(conversation, message, sender)
+				switch message.EventBody.BodyType {
+				case "member-join":
+					sender.State = "JOINED"
+					message.Logger.Debugf("State Change for %s Member %s (%s): %s at %s", sender.Role, sender.ID, sender.DisplayName, sender.State, message.EventBody.Timestamp)
+					if handlers.OnStateChanged != nil {
+						handlers.OnStateChanged(conversation, message, sender)
+					}
+				case "member-leave":
+					sender.State = "LEFT"
+					message.Logger.Debugf("State Change for %s Member %s (%s): %s at %s", sender.Role, sender.ID, sender.DisplayName, sender.State, message.EventBody.Timestamp)
+					if handlers.OnStateChanged != nil {
+						handlers.OnStateChanged(conversation, message, sender)
+					}
+				case "standard", "text":
+					message.Logger.Debugf("Message from %s (%s) at %s: %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp, message.EventBody.Body)
+					if sender.ID != conversation.Guest.ID && handlers.OnMessage != nil {
+						handlers.OnMessage(conversation, message, sender)
+					}
+				default:
+					message.Logger.Warnf("Message from %s (%s) at %s, Unknown Body Type (%s): %s", sender.ID, sender.DisplayName, message.EventBody.Timestamp, message.EventBody.BodyType, message.EventBody.Body)
+					if sender.ID != conversation.Guest.ID && handlers.OnMessage != nil {
+						handlers.OnMessage(conversation, message, sender)
+					}
 				}
 			case "typing-indicator":
 				// TODO: Do NOT send the same message twice!
