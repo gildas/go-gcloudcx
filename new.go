@@ -12,7 +12,7 @@ func New(options ClientOptions) *Client {
 	if options.Logger == nil {
 		options.Logger = logger.Create("Purecloud")
 	}
-	options.Logger = options.Logger.Record("topic", "purecloud").Record("scope", "purecloud").Child().(*logger.Logger)
+	options.Logger = options.Logger.Topic("purecloud").Scope("purecloud").Child()
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
@@ -29,7 +29,7 @@ func New(options ClientOptions) *Client {
 
 // SetLogger sets the logger
 func (client *Client) SetLogger(l *logger.Logger) {
-	client.Logger = l.Record("topic", "purecloud").Record("scope", "purecloud").Child().(*logger.Logger)
+	client.Logger = l.Topic("purecloud").Scope("purecloud").Child()
 }
 
 // SetRegion sets the region and its main API

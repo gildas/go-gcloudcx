@@ -33,7 +33,7 @@ func Create(client *purecloud.Client, target Target, guest Member) (*Conversatio
 	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
 		return nil, err
 	}
-	conversation.Logger = client.Logger.Record("topic", "conversation").Record("scope", "conversation").Record("conversation", conversation.ID).Child().(*logger.Logger)
+	conversation.Logger = client.Logger.Topic("conversation").Scope("conversation").Record("conversation", conversation.ID).Child()
 
 	conversation.Socket, _, err = websocket.DefaultDialer.Dial(conversation.EventStream, nil)
 	if err != nil {
@@ -52,7 +52,7 @@ func Create(client *purecloud.Client, target Target, guest Member) (*Conversatio
 
 // Close terminates a conversation (its websocket as well)
 func (conversation *Conversation) Close() error {
-	log := conversation.Logger.Record("scope", "close").Child().(*logger.Logger)
+	log := conversation.Logger.Scope("close").Child()
 
 	if conversation.Socket != nil {
 		log.Debugf("Disconnecting websocket")

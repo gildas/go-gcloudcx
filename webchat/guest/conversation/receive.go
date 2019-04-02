@@ -22,7 +22,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 		return fmt.Errorf("Conversation Not Connected")
 	}
 
-	log := conversation.Logger.Record("scope", "receive").Child().(*logger.Logger)
+	log := conversation.Logger.Scope("receive").Child()
 
 	for {
 		// get a message body and decode it. (ReadJSON is nice, but in case of unknown message, I cannot get the original string)
@@ -38,7 +38,7 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 			log.Errorf("Malformed JSON message: %s", body, err)
 			continue
 		}
-		message.Logger = log.Record("correlation", message.Metadata.CorrelationID).Record("message", message.EventBody.ID).Child().(*logger.Logger)
+		message.Logger = log.Record("correlation", message.Metadata.CorrelationID).Record("message", message.EventBody.ID).Child()
 
 		switch strings.ToLower(message.TopicName) {
 		case "channel.metadata":

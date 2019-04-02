@@ -10,8 +10,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/gildas/go-logger"
 )
 
 // RequestOptions contains options for requests
@@ -64,7 +62,7 @@ func (client *Client) authorize() error {
 
 // request sends an HTTP Request to PureCloud and gets the result
 func (client *Client) request(method, path string, payload []byte, data interface{}, options ...RequestOptions) error {
-	log := client.Logger.Record("scope", "request."+method).Child().(*logger.Logger)
+	log := client.Logger.Scope("request."+method).Child()
 
 	url, err := client.parseURL(path)
 	if err != nil {
@@ -115,7 +113,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	log.Tracef("Request Headers: %#v", req.Header)
 	res, err := httpClient.Do(req)
 	duration := time.Since(start)
-	log = log.Record("duration", duration.Seconds()).Child().(*logger.Logger)
+	log = log.Record("duration", duration.Seconds()).Child()
 
 	if err != nil {
 		log.Errorf("Failed sending %s request to %s", method, req.URL.String())

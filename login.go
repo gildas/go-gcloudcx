@@ -3,13 +3,11 @@ package purecloud
 import (
 	"fmt"
 	"strings"
-
-	"github.com/gildas/go-logger"
 )
 
 // Login logs in a Client to PureCloud
 func (client *Client) Login(authorization *Authorization) (err error) {
-	log := client.Logger.Record("scope", "login").Child().(*logger.Logger)
+	log := client.Logger.Scope("login").Child()
 
 	log.Debugf("Login type: %s, region: %s", authorization.GrantType, client.Region)
 	switch strings.ToLower(authorization.GrantType) {
