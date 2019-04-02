@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/gildas/go-logger"
 )
 
 // MessageHandlers holds the various callbacks used when receiving messages

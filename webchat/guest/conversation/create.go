@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"encoding/json"
 
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 	"github.com/gorilla/websocket"
 )
