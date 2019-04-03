@@ -120,6 +120,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 		return err
 	}
 	defer res.Body.Close()
+	body, _ := ioutil.ReadAll(res.Body) // read the body no matter what
 
 	// TODO: Process redirections (3xx)
 	// TODO: Handle retry-after (https://developer.mypurecloud.com/forum/t/new-rate-limit-header-retry-after/4777)
@@ -132,8 +133,15 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 
 	if res.StatusCode >= 400 {
 		log.Errorf("Error while sending request \nstatus: %s, \nHeaders: %#v, Content-Length: %d", res.Status, res.Header, res.ContentLength)
-		body, _ := ioutil.ReadAll(res.Body)
-		return fmt.Errorf("HTTP Request failed %s, %s", res.Status, body)
+		apiError := APIError{}
+		if err := json.Unmarshal(body, &apiError); err != nil {
+			apiError.Message = err.Error()
+			apiError.Code    = "JSON_PARSE"
+		}
+		if apiError.Status == 0 { apiError.Status = res.StatusCode }
+		if len(apiError.ContextID) == 0 { apiError.ContextID = res.Header.Get("ININ-Correlation-Id") }
+		return apiError
+
 	}
 
 	log.Debugf("Successfully sent request in %s \nstatus: %s, \nHeaders: %#v, \nContent-Length: %d", duration, res.Status, res.Header, res.ContentLength)
