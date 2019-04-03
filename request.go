@@ -1,10 +1,10 @@
 package purecloud
 
 import (
+	"fmt"
 	"encoding/base64"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -66,13 +66,13 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 
 	url, err := client.parseURL(path)
 	if err != nil {
-		return err
+		return APIError{ Code: "url.parse", Message: err.Error() }
 	}
 
 	// Creating a new HTTP request with the payload
 	req, err := http.NewRequest(method, url.String(), bytes.NewBuffer(payload))
 	if err != nil {
-		return err
+		return APIError{ Code: "http.request.create", Message: err.Error() }
 	}
 
 	// Grabbing latest options
@@ -93,9 +93,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 		req.Header.Set("Authorization", authorization)
 	} else {
 		if len(client.Authorization.Token) == 0 {
-			if err := client.authorize(); err != nil {
-				return err
-			}
+			if err := client.authorize(); err != nil { return err }
 		}
 		req.Header.Set("Authorization", client.Authorization.TokenType + " " + client.Authorization.Token)
 	}
@@ -116,8 +114,12 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	log = log.Record("duration", duration.Seconds()).Child()
 
 	if err != nil {
-		log.Errorf("Failed sending %s request to %s", method, req.URL.String())
-		return err
+		return APIError{
+			Code:              "http.request.send",
+			Message:           "Failed sending %s request to %s: %s",
+			MessageParams:     map[string]string{ "method": method, "url": req.URL.String(), "error": err.Error() },
+			MessageWithParams: fmt.Sprintf("Failed sending %s request to %s: %s", method, req.URL.String(), err),
+		}
 	}
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body) // read the body no matter what
@@ -125,30 +127,31 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	// TODO: Process redirections (3xx)
 	// TODO: Handle retry-after (https://developer.mypurecloud.com/forum/t/new-rate-limit-header-retry-after/4777)
 	if res.StatusCode == 401 && len(authorization) == 0 { // Typically we need to acquire our token again
-		if err := client.authorize(); err != nil {
-			return err
-		}
+		if err := client.authorize(); err != nil { return err }
 		return client.request(method, path, payload, data, options...)
 	}
 
 	if res.StatusCode >= 400 {
-		log.Errorf("Error while sending request \nstatus: %s, \nHeaders: %#v, Content-Length: %d", res.Status, res.Header, res.ContentLength)
+		log.Errorf("Error while sending request \nstatus: %s, \nHeaders: %#v, Content-Length: %d, \nBody: %s", res.Status, res.Header, res.ContentLength, string(body))
 		apiError := APIError{}
 		if err := json.Unmarshal(body, &apiError); err != nil {
-			apiError.Message = err.Error()
-			apiError.Code    = "JSON_PARSE"
+			apiError = APIError{ Code: "json.parse", Message: err.Error() }
 		}
-		if apiError.Status == 0 { apiError.Status = res.StatusCode }
+		if apiError.Status == 0         { apiError.Status = res.StatusCode }
 		if len(apiError.ContextID) == 0 { apiError.ContextID = res.Header.Get("ININ-Correlation-Id") }
 		return apiError
-
 	}
 
 	log.Debugf("Successfully sent request in %s \nstatus: %s, \nHeaders: %#v, \nContent-Length: %d", duration, res.Status, res.Header, res.ContentLength)
 
 	if data != nil {
-		if err := json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return err
+		if err := json.Unmarshal(body, &data); err != nil {
+			return APIError{
+				Status:    res.StatusCode,
+				Code:      "json.parse",
+				Message:   err.Error(),
+				ContextID: res.Header.Get("ININ-Correlation-Id"),
+			}
 		}
 	}
 	return nil
