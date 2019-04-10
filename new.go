@@ -21,7 +21,12 @@ func New(options ClientOptions) *Client {
 		API:           getAPI(options.Region),
 		Proxy:         options.Proxy,
 		Organization:  &Organization{},
-		Authorization: &Authorization{GrantType: "ClientCredentials", TokenType: "bearer"},
+		Authorization: &Authorization{
+			GrantType: "ClientCredentials",
+			ClientID:  options.ClientID,
+			Secret:    options.ClientSecret,
+			TokenType: "bearer",
+		},
 		DeploymentID:  options.DeploymentID,
 		Logger:        options.Logger,
 	}
