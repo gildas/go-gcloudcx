@@ -73,10 +73,11 @@ func (e APIError) Error() string {
 func (e *APIError) UnmarshalJSON(payload []byte) (err error) {
 	// Try to get an error from the login API (/oauth/token)
 	oauthError := struct{
-		Error       string `json:"error,omitempty"`
-		Description string `json:"description,omitempty"`
+		Error       string `json:"error"`
+		Description string `json:"description"`
 	}{}
-	if err = json.Unmarshal(payload, &oauthError); err == nil {
+	err = json.Unmarshal(payload, &oauthError)
+	if err == nil && len(oauthError.Error) > 0 && len(oauthError.Description) > 0 {
 		*e = APIError{
 			Code:    BadCredentialsError.Code,
 			Message: fmt.Sprintf("%s: %s", oauthError.Description, oauthError.Error),
