@@ -109,6 +109,11 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	start := time.Now()
 	log.Debugf("Sending %s request to %s", method, req.URL.String())
 	log.Tracef("Request Headers: %#v", req.Header)
+	if len(payload) > 512 {
+		log.Tracef("Data: %s", string(payload[:511]))
+	} else {
+		log.Tracef("Data: %s", string(payload))
+	}
 	res, err := httpClient.Do(req)
 	duration := time.Since(start)
 	log = log.Record("duration", duration.Seconds()).Child()
