@@ -1,6 +1,8 @@
 package purecloud
 
 import (
+	"context"
+	"github.com/gildas/go-core"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -55,6 +57,47 @@ func (client *Client) LoginWithCredentials(authorization *Authorization) (err er
 			ExpiresIn   uint32 `json:"expires_in,omitempty"`
 			Error       string `json:"error,omitempty"`
 		}{}
+
+		err := client.sendRequest(
+			http.MethodPost,
+			"https://login." + client.Region + "/oauth/token",
+			&response,
+		)
+
+		url, err := client.parseURL("https://login." + client.Region + "/oauth/token")
+		if err != nil {
+			return APIError{ Code: "url.parse", Message: err.Error() }
+		}
+		res, err := core.SendRequest(context.Background(), &core.RequestOptions{
+			Method:     http.MethodPost,
+			URL:        url,
+			Proxy:      client.Proxy,
+			UserAgent:  APP + " " + VERSION,
+			Headers:    map[string]string {
+				"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(authorization.ClientID + ":" + authorization.Secret)),
+			},
+			Content: core.ContentReader{
+				Type: "application/x-www-form-urlencoded",
+			},
+			Parameters: map[string]string{
+				"grant_type": authorization.GrantType.String(),
+			},
+			Logger: log,
+		}, &response)
+
+		if err != nil {
+			log.Record("err", err).Errorf("Core SendRequest error", err)
+			if res != nil {
+				log.Infof("Reading error from res")
+				apiError := APIError{}
+				err = res.UnmarshalContentJSON(&apiError)
+				if err != nil { return err }
+				return apiError
+			}
+			return err
+		}
+
+		/*
 		err = client.request(
 			http.MethodPost,
 			"https://login." + client.Region + "/oauth/token",
@@ -65,7 +108,8 @@ func (client *Client) LoginWithCredentials(authorization *Authorization) (err er
 				Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(authorization.ClientID + ":" + authorization.Secret)),
 			},
 		)
-		if err != nil { return }
+		if err != nil { return err }
+		*/
 
 		// Saves auth stuff and response
 		client.Authorization.GrantType    = authorization.GrantType

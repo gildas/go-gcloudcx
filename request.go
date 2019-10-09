@@ -1,14 +1,17 @@
 package purecloud
 
 import (
-	"fmt"
 	"bytes"
+	"context"
+	"fmt"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/gildas/go-core"
 )
 
 // RequestOptions contains options for requests
@@ -30,6 +33,46 @@ func (client *Client) Get(path string, payload []byte, data interface{}, options
 // Delete sends a DELETE HTTP Request to PureCloud and gets the result
 func (client *Client) Delete(path string, payload []byte, data interface{}, options ...RequestOptions) error {
 	return client.request(http.MethodDelete, path, payload, data, options...)
+}
+
+func (client *Client) sendRequest(method, path string, results interface{}) error {
+	log := client.Logger.Scope("request."+method)
+
+	url, err := client.parseURL(path)
+	if err != nil {
+		return APIError{ Code: "url.parse", Message: err.Error() }
+	}
+
+	res, err := core.SendRequest(context.Background(), &core.RequestOptions{
+		Method:     http.MethodPost,
+		URL:        url,
+		Proxy:      client.Proxy,
+		UserAgent:  APP + " " + VERSION,
+		Headers:    map[string]string {
+			"Authorization": "Basic " + base64.StdEncoding.EncodeToString([]byte(authorization.ClientID + ":" + authorization.Secret)),
+		},
+		Content: core.ContentReader{
+			Type: "application/x-www-form-urlencoded",
+		},
+		Parameters: map[string]string{
+			"grant_type": authorization.GrantType.String(),
+		},
+		Logger: log,
+	}, results)
+
+	if err != nil {
+		log.Record("err", err).Errorf("Core SendRequest error", err)
+		if res != nil {
+			log.Infof("Reading error from res")
+			apiError := APIError{}
+			err = res.UnmarshalContentJSON(&apiError)
+			if err != nil { return err }
+			return apiError
+		}
+		return err // Make a nice APIError
+	}
+
+	return nil
 }
 
 // request sends an HTTP Request to PureCloud and gets the result
