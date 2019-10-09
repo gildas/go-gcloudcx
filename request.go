@@ -2,7 +2,6 @@ package purecloud
 
 import (
 	"fmt"
-	"encoding/base64"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
@@ -18,12 +17,6 @@ type RequestOptions struct {
 	Authorization string
 }
 
-type responseAuth struct {
-	AccessToken string `json:"access_token,omitempty"`
-	TokenType   string `json:"token_type,omitempty"`
-	ExpiresIn   uint32 `json:"expires_in,omitempty"`
-	Error       string `json:"error,omitempty"`
-}
 // Post sends a POST HTTP Request to PureCloud and gets the result
 func (client *Client) Post(path string, payload []byte, data interface{}, options ...RequestOptions) error {
 	return client.request(http.MethodPost, path, payload, data, options...)
@@ -37,27 +30,6 @@ func (client *Client) Get(path string, payload []byte, data interface{}, options
 // Delete sends a DELETE HTTP Request to PureCloud and gets the result
 func (client *Client) Delete(path string, payload []byte, data interface{}, options ...RequestOptions) error {
 	return client.request(http.MethodDelete, path, payload, data, options...)
-}
-
-// authorize sends a client credentials authentication request to PureCloud
-func (client *Client) authorize() error {
-	auth := &responseAuth{}
-	if err := client.request(
-		http.MethodPost,
-		"https://login." + client.Region + "/oauth/token",
-		[]byte("grant_type=client_credentials"),
-		auth,
-		RequestOptions{
-			ContentType:   "application/x-www-form-urlencoded",
-			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(client.Authorization.ClientID + ":" + client.Authorization.Secret)),
-		},
-	); err != nil {
-		return err
-	}
-	client.Authorization.TokenType    = auth.TokenType
-	client.Authorization.Token        = auth.AccessToken
-	client.Authorization.TokenExpires = time.Now().Add(time.Duration(int64(auth.ExpiresIn)))
-	return nil
 }
 
 // request sends an HTTP Request to PureCloud and gets the result
@@ -93,7 +65,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 		req.Header.Set("Authorization", authorization)
 	} else {
 		if len(client.Authorization.Token) == 0 {
-			if err := client.authorize(); err != nil { return err }
+			if err := client.Login(); err != nil { return err }
 		}
 		req.Header.Set("Authorization", client.Authorization.TokenType + " " + client.Authorization.Token)
 	}
@@ -132,7 +104,7 @@ func (client *Client) request(method, path string, payload []byte, data interfac
 	// TODO: Process redirections (3xx)
 	// TODO: Handle retry-after (https://developer.mypurecloud.com/forum/t/new-rate-limit-header-retry-after/4777)
 	if res.StatusCode == 401 && len(authorization) == 0 { // Typically we need to acquire our token again
-		if err := client.authorize(); err != nil { return err }
+		if err := client.Login(); err != nil { return err }
 		return client.request(method, path, payload, data, options...)
 	}
 

@@ -7,48 +7,52 @@ import (
 	"github.com/gildas/go-logger"
 )
 
+// ClientOptions contains the options to create a new Client
+type ClientOptions struct {
+	Region         string
+	OrganizationID string
+	DeploymentID   string
+	ClientID       string
+	ClientSecret   string
+	Proxy          *url.URL
+	Logger         *logger.Logger
+}
+
 // New creates a new PureCloud Client
 func New(options ClientOptions) *Client {
-	if options.Logger == nil {
-		options.Logger = logger.Create("Purecloud")
-	}
-	options.Logger = options.Logger.Topic("purecloud").Scope("purecloud").Child()
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
-	return &Client{
-		Region:        options.Region,
-		API:           getAPI(options.Region),
+	client := Client{
 		Proxy:         options.Proxy,
 		Organization:  &Organization{},
 		Authorization: &Authorization{
-			GrantType: "ClientCredentials",
+			GrantType: ClientCredentialsGrant,
 			ClientID:  options.ClientID,
 			Secret:    options.ClientSecret,
-			TokenType: "bearer",
 		},
 		DeploymentID:  options.DeploymentID,
 		Logger:        options.Logger,
 	}
+	return client.SetLogger(options.Logger).SetRegion(options.Region)
 }
 
 // SetLogger sets the logger
-func (client *Client) SetLogger(l *logger.Logger) {
-	client.Logger = l.Topic("purecloud").Scope("purecloud").Child()
+func (client *Client) SetLogger(log *logger.Logger) (*Client) {
+	client.Logger = logger.CreateIfNil(log, "PureCloud").Topic("purecloud").Scope("purecloud")
+	return client
 }
 
 // SetRegion sets the region and its main API
-func (client *Client) SetRegion(region string) {
-	client.Region = region
-	client.API    = getAPI(region)
-}
+func (client *Client) SetRegion(region string) (*Client) {
+	var err error
 
-func getAPI(region string) *url.URL {
-	if api, err := url.Parse(fmt.Sprintf("https://api.%s/api/v2/", region)); err == nil {
-		return api
+	client.Region = region
+	client.API, err = url.Parse(fmt.Sprintf("https://api.%s/api/v2/", region))
+	if err != nil {
+		client.API, _ = url.Parse("https://api.mypurecloud.com/api/v2/")
 	}
-	api, _ := url.Parse("https://api.mypurecloud.com/api/v2/")
-	return api
+	return client
 }
 
 // IsAuthorized tells if the client has an Authorization Token
