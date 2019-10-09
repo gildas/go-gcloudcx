@@ -27,8 +27,12 @@ func (conversation *Conversation) HandleMessages(handlers MessageHandlers) (err 
 		var body []byte
 
 		if _, body, err = conversation.Socket.ReadMessage(); err != nil {
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				log.Infof("Websocket was closed, stopping receive handler")
+				return nil
+			}
 			log.Errorf("Failed to read incoming message", err)
-			continue // TODO: Should we bail out?!?
+			continue
 		}
 
 		message := &Message{}

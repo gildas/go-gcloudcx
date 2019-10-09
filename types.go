@@ -10,10 +10,10 @@ import (
 // Client is the primary object to use PureCloud
 type Client struct {
 	Region         string         `json:"region"`
-	Organization   *Organization  `json:"organization"`
+	Organization   *Organization  `json:"organization,omitempty"`
 	DeploymentID   string         `json:"deploymentId"`
-	API            *url.URL       `json:"apiUrl"`
-	Proxy          *url.URL       `json:"proxyUrl"`
+	API            *url.URL       `json:"apiUrl,omitempty"`
+	Proxy          *url.URL       `json:"proxyUrl,omitempty"`
 	Authorization  *Authorization `json:"auth"`
 	Logger         *logger.Logger `json:"-"`
 }
@@ -23,6 +23,8 @@ type ClientOptions struct {
 	Region         string
 	OrganizationID string
 	DeploymentID   string
+	ClientID       string
+	ClientSecret   string
 	Proxy          *url.URL
 	Logger         *logger.Logger
 }
