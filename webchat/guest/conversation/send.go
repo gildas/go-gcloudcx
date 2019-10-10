@@ -1,11 +1,11 @@
 package conversation
 
 import (
-	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-core"
 )
 
 // SendMessage sends a message as the chat guest
@@ -29,11 +29,17 @@ type sendTypingResponse struct {
 // SendTyping sends a typing indicator to PureCloud as the chat guest
 func (conversation *Conversation) SendTyping() (err error) {
 	response := &sendTypingResponse{}
-	if err = conversation.Client.Post(fmt.Sprintf("webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID), nil, &response, purecloud.RequestOptions{Authorization: "bearer " + conversation.JWT}); err != nil {
-		return err
+	if err = conversation.Client.SendRequest(
+		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
+		&core.RequestOptions{
+			Method:        http.MethodPost, // since payload is empty
+			Authorization: "bearer " + conversation.JWT,
+		},
+		&response,
+	); err == nil {
+		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfuly. Response: %+v", response)
 	}
-	conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfuly. Response: %+v", response)
-	return nil
+	return
 }
 
 type sendBodyPayload struct {
@@ -54,15 +60,16 @@ type sendBodyResponse struct {
 
 // sendBody sends a body message as the chat guest
 func (conversation *Conversation) sendBody(bodyType, body string) (err error) {
-	payload, err := json.Marshal(sendBodyPayload{BodyType: bodyType, Body: body})
-	if err != nil {
-		return err
-	}
-
 	response := &sendBodyResponse{}
-	if err = conversation.Client.Post(fmt.Sprintf("webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID), payload, &response, purecloud.RequestOptions{Authorization: "bearer " + conversation.JWT}); err != nil {
-		return err
+	if err = conversation.Client.SendRequest(
+		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
+		&core.RequestOptions{
+			Authorization: "bearer " + conversation.JWT,
+			Payload:       sendBodyPayload{BodyType: bodyType, Body: body},
+		},
+		&response,
+	); err == nil {
+		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfuly. Response: %+v", response)
 	}
-	conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfuly. Response: %+v", response)
-	return nil
+	return
 }

@@ -1,8 +1,9 @@
 package conversation
 
 import (
-	"github.com/gildas/go-purecloud"
 	"fmt"
+
+	"github.com/gildas/go-core"
 )
 
 type getMembersResponse struct {
@@ -20,7 +21,14 @@ type getMembersResponse struct {
 // GetMembers fetches the Members of this Conversation
 func (conversation *Conversation) GetMembers() ([]Member, error) {
 	response := &getMembersResponse{}
-	if err := conversation.Client.Get(fmt.Sprintf("webchat/guest/conversations/%s/members", conversation.ID), nil, &response, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
+	err := conversation.Client.SendRequest(
+		fmt.Sprintf("/webchat/guest/conversations/%s/members", conversation.ID),
+		&core.RequestOptions{
+			Authorization: "bearer " + conversation.JWT,
+		},
+		&response,
+	)
+	if err != nil {
 		return nil, err
 	}
 	conversation.Logger.Record("scope", "getmembers").Debugf("Response: %+v", response)
@@ -33,7 +41,14 @@ func (conversation *Conversation) GetMember(id string) (*Member, error) {
 		return member, nil
 	}
 	member := &Member{}
-	if err := conversation.Client.Get(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, id), nil, &member, purecloud.RequestOptions{ Authorization: "bearer " + conversation.JWT}); err != nil {
+	err := conversation.Client.SendRequest(
+		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, id),
+		&core.RequestOptions{
+			Authorization: "bearer " + conversation.JWT,
+		},
+		&member,
+	)
+	if err != nil {
 		return nil, err
 	}
 	conversation.Logger.Record("scope", "getmembers").Debugf("Response: %+v", member)

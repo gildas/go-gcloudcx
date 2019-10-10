@@ -7,4 +7,4 @@ var commit string
 var VERSION = "0.0.2" + commit
 
 // APP is the name of the application
-const APP string = "PureCloud Agent"
+const APP string = "PureCloud Client"

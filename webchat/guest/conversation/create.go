@@ -2,7 +2,6 @@ package conversation
 
 import (
 	"fmt"
-	"encoding/json"
 
 	"github.com/gildas/go-purecloud"
 	"github.com/gorilla/websocket"
@@ -17,19 +16,16 @@ type createPayload struct {
 
 // Create creates a new chat Conversation in PureCloud
 func Create(client *purecloud.Client, target Target, guest Member) (*Conversation, error) {
-	// TODO sanitizing...
-	payload, err := json.Marshal(createPayload{
+	var err error
+	payload := createPayload{
 		OrganizationID: client.Organization.ID,
 		DeploymentID:   client.DeploymentID,
 		RoutingTarget:  target,
 		Guest:          guest,
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	conversation := &Conversation{Client: client, Members: make(map[string]*Member)}
-	if err = client.Post("webchat/guest/conversations", payload, &conversation); err != nil {
+	if err = client.Post("/webchat/guest/conversations", payload, &conversation); err != nil {
 		return nil, err
 	}
 	conversation.Logger = client.Logger.Topic("conversation").Scope("conversation").Record("conversation", conversation.ID).Child()
@@ -62,7 +58,7 @@ func (conversation *Conversation) Close() error {
 		log.Infof("Websocket disconnected")
 	} else if conversation.Client != nil {
 		log.Debugf("Guest Member leaving")
-		if err := conversation.Client.Delete(fmt.Sprintf("webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil, nil); err != nil {
+		if err := conversation.Client.Delete(fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while guest member was leaving chat", err)
 			return err
 		}
