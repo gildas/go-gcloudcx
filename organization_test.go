@@ -30,11 +30,11 @@ func TestOrganizationSuite(t *testing.T) {
 }
 
 func (suite *OrganizationSuite) TestOrganizationHasName() {
-	suite.Assert().NotNil(suite.Client.Organization)
-	suite.Assert().NotEmpty(suite.Client.Organization.Name)
-	suite.Assert().NotEmpty(suite.Client.Organization.Name)
-	suite.Assert().NotEmpty(suite.Client.Organization.Name)
 	suite.Logger.Record("org", suite.Client.Organization).Infof("Organization Details")
+	suite.Require().NotNil(suite.Client.Organization, "Client's Organization is not loaded")
+	suite.Assert().NotEmpty(suite.Client.Organization.ID, "Client's Orgization has no ID")
+	suite.Assert().NotEmpty(suite.Client.Organization.Name, "Client's Orgization has no Name")
+	suite.Assert().NotEmpty(suite.Client.Organization.Features, "Client's Orgization has no features")
 	suite.T().Logf("Organization: %s", suite.Client.Organization.Name)
 }
 
@@ -80,8 +80,12 @@ func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {
 
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
+		suite.Logger.Infof("Client is not logged in...")
 		err := suite.Client.Login()
 		suite.Require().Nil(err, "Failed to login")
+		suite.Logger.Infof("Client is now logged in...")
+	} else {
+		suite.Logger.Infof("Client is already logged in...")
 	}
 }
 
