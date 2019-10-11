@@ -57,7 +57,6 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
 	suite.Assert().Equal(400, apierr.Status)
 	suite.Assert().Equal("bad.credentials", apierr.Code)
-	suite.Assert().NotEmpty(apierr.ContextID)
 }
 
 // Suite Tools
