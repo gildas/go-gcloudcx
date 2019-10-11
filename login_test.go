@@ -34,23 +34,21 @@ func (suite *LoginSuite) TestCanLogin() {
 	suite.Assert().Nil(err, "Failed to login")
 }
 
-func (suite *LoginSuite) TestCanLoginWithCredentials() {
-	credendials := &purecloud.Authorization{
-		GrantType: purecloud.ClientCredentialsGrant,
+func (suite *LoginSuite) TestCanLoginWithGrant() {
+	grant := &purecloud.ClientCredentialsGrant{
 		ClientID:  core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
 		Secret:    core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	}
-	err := suite.Client.LoginWithCredentials(credendials)
+	err := suite.Client.LoginWithAuthorizationGrant(grant)
 	suite.Assert().Nil(err, "Failed to login")
 }
 
-func (suite *LoginSuite) TestFailsLoginWithWrongCredentials() {
-	credendials := &purecloud.Authorization{
-		GrantType: purecloud.ClientCredentialsGrant,
+func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
+	grant := &purecloud.ClientCredentialsGrant{
 		ClientID:  "DEADID",
 		Secret:    "WRONGSECRET",
 	}
-	err := suite.Client.LoginWithCredentials(credendials)
+	err := suite.Client.LoginWithAuthorizationGrant(grant)
 	suite.Assert().NotNil(err, "Should have failed login in")
 
 	apierr, ok := err.(purecloud.APIError)
