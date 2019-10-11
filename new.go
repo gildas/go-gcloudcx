@@ -7,13 +7,15 @@ import (
 	"github.com/gildas/go-logger"
 )
 
+// See: https://developer.mypurecloud.com/api/webchat/agentchat.html
+// See: https://developer.mypurecloud.com/api/tutorials/
+// See: https://developer.mypurecloud.com/api/rest/authorization/
+
 // ClientOptions contains the options to create a new Client
 type ClientOptions struct {
 	Region         string
 	OrganizationID string
 	DeploymentID   string
-	ClientID       string
-	ClientSecret   string
 	Proxy          *url.URL
 	Logger         *logger.Logger
 }
@@ -24,14 +26,10 @@ func New(options ClientOptions) *Client {
 		options.Region = "mypurecloud.com"
 	}
 	client := Client{
-		Proxy:              options.Proxy,
-		Organization:       &Organization{},
-		AuthorizationGrant: &ClientCredentialsGrant{
-			ClientID:  options.ClientID,
-			Secret:    options.ClientSecret,
-		},
-		DeploymentID:       options.DeploymentID,
-		Logger:             options.Logger,
+		Proxy:        options.Proxy,
+		Organization: &Organization{},
+		DeploymentID: options.DeploymentID,
+		Logger:       options.Logger,
 	}
 	return client.SetLogger(options.Logger).SetRegion(options.Region)
 }
@@ -51,6 +49,12 @@ func (client *Client) SetRegion(region string) (*Client) {
 	if err != nil {
 		client.API, _ = url.Parse("https://api.mypurecloud.com/api/v2/")
 	}
+	return client
+}
+
+// SetAuthorizationGrant sets the Authorization Grant
+func (client *Client) SetAuthorizationGrant(grant AuthorizationGrant) (*Client) {
+	client.AuthorizationGrant = grant
 	return client
 }
 

@@ -57,9 +57,10 @@ func (suite *OrganizationSuite) SetupSuite() {
 	suite.Client = purecloud.New(purecloud.ClientOptions{
 		Region:       region,
 		DeploymentID: deploymentID,
-		ClientID:     clientID,
-		ClientSecret: secret,
 		Logger:       suite.Logger,
+	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		ClientID: clientID,
+		Secret:   secret,
 	})
 	suite.Require().NotNil(suite.Client, "PureCloud Client is nil")
 }

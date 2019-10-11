@@ -1,13 +1,14 @@
 package purecloud
 
 import (
-	"time"
 	"encoding/base64"
-	"github.com/gildas/go-core"
 	"fmt"
+	"time"
+
+	"github.com/gildas/go-core"
 )
 
-// ClientCredentialsGrant represents PureCloud's Client Credentials Grants
+// ClientCredentialsGrant implements PureCloud's Client Credentials Grants
 //   See: https://developer.mypurecloud.com/api/rest/authorization/use-client-credentials.html
 type ClientCredentialsGrant struct {
 	ClientID string
@@ -17,9 +18,10 @@ type ClientCredentialsGrant struct {
 
 // Authorize this Grant with PureCloud
 func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
-	log := client.Logger.Scope("client_credentials")
+	log := client.Logger.Scope("authorize").Record("grant", "client_credentials")
 
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
+
 	// Validates the Grant
 	if len(grant.ClientID) == 0 { return fmt.Errorf("Missing Argument ClientID") }
 	if len(grant.Secret)   == 0 { return fmt.Errorf("Missing Argument Secret") }
