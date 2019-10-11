@@ -19,7 +19,7 @@ type Authorization struct {
 // Login logs in a Client to PureCloud
 //   Uses the credentials stored in the Client
 func (client *Client) Login() error {
-	return client.AuthorizationGrant.Authorize(client)
+	return client.LoginWithAuthorizationGrant(client.AuthorizationGrant)
 }
 
 // LoginWithAuthorizationGrant logs in a Client to PureCloud with given authorization Grant
@@ -27,7 +27,11 @@ func (client *Client) LoginWithAuthorizationGrant(authorizationGrant Authorizati
 	if authorizationGrant == nil {
 		return fmt.Errorf("Authorization Grant cannot be nil")
 	}
-	return authorizationGrant.Authorize(client)
+	if err = authorizationGrant.Authorize(client); err != nil {
+		return err
+	}
+	client.Organization, err = client.GetMyOrganization()
+	return
 		/*
 	case AuthorizationCodeGrant:
 		// sanitize the options
