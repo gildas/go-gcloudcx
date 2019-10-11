@@ -20,6 +20,11 @@ func (token *AccessToken) Reset() {
 	token.ExpiresOn = time.Time{}
 }
 
+// IsValid tells if this AccessToken is valid
+func (token AccessToken) IsValid() bool {
+	return len(token.Token) > 0 // TODO: We should have && !token.IsExpired()
+}
+
 // IsExpired tells if this AccessToken is expired or not
 func (token AccessToken) IsExpired() bool {
 	return time.Now().UTC().After(token.ExpiresOn)
