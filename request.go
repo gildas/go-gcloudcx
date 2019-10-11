@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gildas/go-core"
+	"github.com/pkg/errors"
 )
 
 // Post sends a POST HTTP Request to PureCloud and gets the results
@@ -25,8 +26,6 @@ func (client *Client) Delete(path string, results interface{}) error {
 
 // SendRequest sends a REST request to PureCloud via core.SendRequest
 func (client *Client) SendRequest(path string, options *core.RequestOptions, results interface{}) (err error) {
-	log := client.Logger.Scope("request." + options.Method)
-
 	if options == nil { options = &core.RequestOptions{} }
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
@@ -42,17 +41,19 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 
 	options.Proxy     = client.Proxy
 	options.UserAgent = APP + " " + VERSION
-	options.Logger    = log
+	options.Logger    = client.Logger
 
 	res, err := core.SendRequest(options, results)
 	if err != nil {
-		log.Record("err", err).Errorf("Core SendRequest error", err)
 		if res != nil {
-			log.Infof("Reading error from res")
 			apiError := APIError{}
-			err = res.UnmarshalContentJSON(&apiError)
-			if err != nil { return err }
-			return apiError
+			if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
+				return errors.Wrap(err, "Failed to extract an error from the response")
+			}
+			if err, ok := errors.Cause(err).(core.RequestError); ok {
+				apiError.Status = err.StatusCode
+			}
+			return errors.WithStack(apiError)
 		}
 		return err // Make a nice APIError
 	}
