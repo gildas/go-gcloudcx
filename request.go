@@ -36,8 +36,8 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 	if err != nil {
 		return APIError{ Code: "url.parse", Message: err.Error() }
 	}
-	if len(options.Authorization) == 0 && len(client.Authorization.Token) > 0 {
-		options.Authorization = client.Authorization.TokenType + " " + client.Authorization.Token
+	if len(options.Authorization) == 0 && client.AuthorizationGrant.AccessToken().IsValid() {
+		options.Authorization = client.AuthorizationGrant.AccessToken().String()
 	}
 
 	options.Proxy     = client.Proxy
