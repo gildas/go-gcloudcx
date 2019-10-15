@@ -144,9 +144,6 @@ func main() {
 			}
 		}
 	}()
-	fmt.Println("WEB Server started")
-	// Output:
-	// WEB Server started
 
 	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
 	interruptChannel := make(chan os.Signal, 1)
