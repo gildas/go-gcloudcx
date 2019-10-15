@@ -80,7 +80,6 @@ func (suite *LoginSuite) SetupSuite() {
 		Logger:       suite.Logger,
 	})
 	suite.Require().NotNil(suite.Client, "PureCloud Client is nil")
-
 }
 
 func (suite *LoginSuite) TearDownSuite() {
