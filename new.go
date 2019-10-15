@@ -27,7 +27,6 @@ func New(options ClientOptions) *Client {
 	}
 	client := Client{
 		Proxy:        options.Proxy,
-		Organization: &Organization{},
 		DeploymentID: options.DeploymentID,
 		Logger:       options.Logger,
 	}

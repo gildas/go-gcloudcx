@@ -30,12 +30,14 @@ func TestOrganizationSuite(t *testing.T) {
 }
 
 func (suite *OrganizationSuite) TestOrganizationHasName() {
-	suite.Logger.Record("org", suite.Client.Organization).Infof("Organization Details")
-	suite.Require().NotNil(suite.Client.Organization, "Client's Organization is not loaded")
-	suite.Assert().NotEmpty(suite.Client.Organization.ID, "Client's Orgization has no ID")
-	suite.Assert().NotEmpty(suite.Client.Organization.Name, "Client's Orgization has no Name")
-	suite.Assert().NotEmpty(suite.Client.Organization.Features, "Client's Orgization has no features")
-	suite.T().Logf("Organization: %s", suite.Client.Organization.Name)
+	organization, err := suite.Client.GetMyOrganization()
+	suite.Require().Nil(err, "Failed to fetch my Organization")
+	suite.Require().NotNil(organization, "Client's Organization is not loaded")
+	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")
+	suite.Assert().NotEmpty(organization.Name, "Client's Orgization has no Name")
+	suite.Assert().NotEmpty(organization.Features, "Client's Orgization has no features")
+	suite.T().Logf("Organization: %s", organization.Name)
+	suite.Logger.Record("org", organization).Infof("Organization Details")
 }
 
 // Suite Tools

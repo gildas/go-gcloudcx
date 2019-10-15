@@ -15,10 +15,18 @@ type createPayload struct {
 }
 
 // Create creates a new chat Conversation in PureCloud
-func Create(client *purecloud.Client, target Target, guest Member) (*Conversation, error) {
+func Create(client *purecloud.Client, organization *purecloud.Organization, target Target, guest Member) (*Conversation, error) {
 	var err error
+
+	if organization == nil {
+		organization, err = client.GetMyOrganization()
+		if err != nil {
+			client.Logger.Errorf("Failed to retrieve my Organization", err)
+			return nil, err
+		}
+	}
 	payload := createPayload{
-		OrganizationID: client.Organization.ID,
+		OrganizationID: organization.ID,
 		DeploymentID:   client.DeploymentID,
 		RoutingTarget:  target,
 		Guest:          guest,

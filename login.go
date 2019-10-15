@@ -30,7 +30,6 @@ func (client *Client) LoginWithAuthorizationGrant(authorizationGrant Authorizati
 	if err = authorizationGrant.Authorize(client); err != nil {
 		return err
 	}
-	client.Organization, err = client.GetMyOrganization()
 	return
 		/*
 	case AuthorizationCodeGrant:
