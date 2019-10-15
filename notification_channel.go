@@ -26,9 +26,7 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 func (channel *NotificationChannel) Subscribe(subscriber Subscriber) error {
 	return channel.Client.Post(
 		"/notifications/channels/"+channel.ID+"/subscriptions",
-		struct {
-			ID string `json:"id"`
-		}{ID: subscriber.ActivityID()},
+		struct {ID string `json:"id"`}{ID: subscriber.ActivityID()},
 		nil,
 	)
 }
