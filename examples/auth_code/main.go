@@ -1,4 +1,4 @@
-package purecloud_test
+package main
 
 import (
 	"context"
@@ -78,25 +78,29 @@ func mainRouteHandler() http.Handler {
 	})
 }
 
-func ExampleAuthorizationCodeGrant() {
+func main() {
 	var (
-		region       = flag.String("region", core.GetEnvAsString("REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
-		clientID     = flag.String("clientid", core.GetEnvAsString("CLIENTID", ""), "the PureCloud Client ID for authentication")
-		secret       = flag.String("secret", core.GetEnvAsString("SECRET", ""), "the PureCloud Client Secret for authentication")
-		deploymentID = flag.String("deploymentid", core.GetEnvAsString("DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
-		root         = flag.String("root", core.GetEnvAsString("ROOT", ""), "The root uri to give to PureCloud as a Redirect URI")
+		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
+		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the PureCloud Client ID for authentication")
+		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
+		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
+		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
+	flag.Parse()
+
 	Log = logger.Create("AuthCode_Example")
 
-	if len(*root) == 0 {
-		*root = fmt.Sprintf("http://localhost:%d", *port)
+	Log.Infof("redirect root: %s", *redirectRoot)
+	if len(*redirectRoot) == 0 {
+		*redirectRoot = fmt.Sprintf("http://localhost:%d", *port)
 	}
-	redirectURL, err := url.Parse(*root + "/token")
+	redirectURL, err := url.Parse(*redirectRoot + "/token")
 	if err != nil {
-		Log.Fatalf("Invalid Redirect URL: %s/token", *root, err)
+		Log.Fatalf("Invalid Redirect URL: %s/token", *redirectRoot, err)
 		os.Exit(-1)
 	}
+	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
 	Client = purecloud.New(purecloud.ClientOptions{
 		Region:       *region,
