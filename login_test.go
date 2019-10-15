@@ -1,10 +1,7 @@
 package purecloud_test
 
 import (
-	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,7 +11,6 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 
@@ -44,8 +40,8 @@ func (suite *LoginSuite) TestCanLogin() {
 
 func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID:  "DEADID",
-		Secret:    "WRONGSECRET",
+		ClientID: "DEADID",
+		Secret:   "WRONGSECRET",
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
 
@@ -58,89 +54,10 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 
 func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID:  core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
-		Secret:    core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})
 	suite.Assert().Nil(err, "Failed to login")
-}
-
-func (suite *LoginSuite) TestCanLoginWithImplicitGrant() {
-	redirectURL, _ := url.Parse("http://localhost:35000/oauth2/callback")
-	grant := &purecloud.ImplicitGrant{
-		ClientID:    core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
-		RedirectURL: redirectURL,
-
-	}
-
-	endTest := make(chan struct{})
-
-	// Setting up web routes
-	router := mux.NewRouter().StrictSlash(true)
-	router.Methods("GET").Path("/").Handler(suite.Logger.HttpHandler()(grant.HttpHandler()(func() http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log, err := logger.FromContext(r.Context())
-			if err != nil {
-				log := suite.Logger
-			}
-			log.Infof("Handling Authentication Callback")
-			grant, err := purecloud.AuthorizationGrantFromContext(r.Context())
-			suite.Assert().Nil(err, "Failed to retrieve Authorization Grant from Request Context")
-			if err != nil {
-				core.RespondWithError(w, http.StatusServiceUnavailable, errors.New("Failed to retrieve Grant"))
-				return
-			}
-			core.RespondWithJSON(w, http.StatusOK, struct{}{})
-			return
-		})
-	})))
-	router.Methods("GET").Path("/token/{token}").Handler(suite.Logger.HttpHandler()(grant.HttpHandler()(func() http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log, err := logger.FromContext(r.Context())
-			if err != nil {
-				log := suite.Logger
-			}
-			log.Infof("Handling Incoming Token")
-			grant, err := purecloud.AuthorizationGrantFromContext(r.Context())
-			suite.Assert().Nil(err, "Failed to retrieve Authorization Grant from Request Context")
-			if err != nil {
-				log.Errorf("Failed to retrieve Grant from request")
-				core.RespondWithError(w, http.StatusServiceUnavailable, errors.New("Failed to retrieve Grant"))
-				return
-			}
-
-			params := mux.Vars(r)
-			tokenString, ok := params["token"]
-			if !ok {
-				log.Errorf("Parameter token was missing")
-				core.RespondWithError(w, http.StatusBadRequest, errors.New("Parameter token was missing"))
-				return
-			}
-			core.RespondWithJSON(w, http.StatusOK, struct{}{})
-			return
-		})
-	})))
-
-	// Setting up the server
-	WebServer := &http.Server{
-		Addr:         "0.0.0.0:35000",
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler:      router,
-		//ErrorLog:     Log,
-	}
-
-	suite.Client.LoginWithAuthorizationGrant(grant)
-
-	<- endTest
-	context, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
-	defer cancel()
-	WebServer.SetKeepAlivesEnabled(false)
-	WebServer.Shutdown(context)
-
-	token := grant.AccessToken()
-	suite.Require().NotNil(token)
-	suite.Assert().NotEmpty(token.Token)
 }
 
 // Suite Tools
@@ -154,8 +71,6 @@ func (suite *LoginSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
-		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
 	)
 	suite.Client = purecloud.New(purecloud.ClientOptions{
