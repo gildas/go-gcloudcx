@@ -34,6 +34,7 @@ func loggedInHandler() http.Handler {
 
 		// Do stuff here...
 		// For Example go to the root path:
+		log.Infof("Redirecting to /")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
 }
@@ -67,14 +68,13 @@ func mainRouteHandler() http.Handler {
 			log.Errorf("Failed to retrieve my User", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 		}
-		core.RespondWithJSON(w, http.StatusOK, struct{
+		core.RespondWithJSON(w, http.StatusOK, struct {
 			UserName string `json:"user"`
 			OrgName  string `json:"organization"`
 		}{
 			UserName: user.ID,
-			OrgName: organization.Name,
+			OrgName:  organization.Name,
 		})
-		return
 	})
 }
 
@@ -87,7 +87,7 @@ func ExampleAuthorizationCodeGrant() {
 		root         = flag.String("root", core.GetEnvAsString("ROOT", ""), "The root uri to give to PureCloud as a Redirect URI")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
-	Log := logger.Create("AuthCode_Example")
+	Log = logger.Create("AuthCode_Example")
 
 	if len(*root) == 0 {
 		*root = fmt.Sprintf("http://localhost:%d", *port)
@@ -146,7 +146,7 @@ func ExampleAuthorizationCodeGrant() {
 
 	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
 	interruptChannel := make(chan os.Signal, 1)
-	exitChannel      := make(chan struct{})
+	exitChannel := make(chan struct{})
 
 	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
 
@@ -154,7 +154,7 @@ func ExampleAuthorizationCodeGrant() {
 	go func() {
 		sig := <-interruptChannel // Block until we have to stop
 
-		context, cancel := context.WithTimeout(context.Background(), 15 * time.Second)
+		context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		Log.Infof("Application is stopping (%+v)", sig)
@@ -162,11 +162,15 @@ func ExampleAuthorizationCodeGrant() {
 		// Stopping the WEB server
 		Log.Debugf("WEB server is shutting down")
 		WebServer.SetKeepAlivesEnabled(false)
-		WebServer.Shutdown(context)
-		Log.Infof("WEB server is stopped")
+		err := WebServer.Shutdown(context)
+		if err != nil {
+			Log.Errorf("Failed to stop the WEB server", err)
+		} else {
+			Log.Infof("WEB server is stopped")
+		}
 		close(exitChannel)
 	}()
 
-	<- exitChannel
+	<-exitChannel
 	os.Exit(0)
 }

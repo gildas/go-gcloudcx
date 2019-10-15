@@ -65,7 +65,8 @@ func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 func (suite *LoginSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	logFolder := filepath.Join(".", "log")
-	os.MkdirAll(logFolder, os.ModePerm)
+	err := os.MkdirAll(logFolder, os.ModePerm)
+	suite.Require().Nil(err, "Failed to create folder: %s", logFolder)
 	suite.Logger = logger.CreateWithDestination("test", fmt.Sprintf("file://%s/test-%s.log", logFolder, strings.ToLower(suite.Name)))
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
@@ -99,6 +100,6 @@ func (suite *LoginSuite) BeforeTest(suiteName, testName string) {
 }
 
 func (suite *LoginSuite) AfterTest(suiteName, testName string) {
-	duration := time.Now().Sub(suite.Start)
+	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }
