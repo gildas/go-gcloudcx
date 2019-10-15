@@ -72,7 +72,7 @@ func mainRouteHandler() http.Handler {
 			UserName string `json:"user"`
 			OrgName  string `json:"organization"`
 		}{
-			UserName: user.ID,
+			UserName: user.Name,
 			OrgName:  organization.Name,
 		})
 	})
