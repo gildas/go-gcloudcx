@@ -1,9 +1,10 @@
 package purecloud
 
 import (
-	"github.com/pkg/errors"
 	"context"
 	"fmt"
+
+	"github.com/pkg/errors"
 )
 
 // AuthorizationGrant describes the capabilities authorization grants must have
