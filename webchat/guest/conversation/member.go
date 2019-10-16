@@ -54,5 +54,4 @@ func (conversation *Conversation) GetMember(id string) (*Member, error) {
 	conversation.Logger.Record("scope", "getmembers").Debugf("Response: %+v", member)
 	conversation.Members[member.ID] = member
 	return member, nil
-
 }
