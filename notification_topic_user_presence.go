@@ -1,6 +1,7 @@
 package purecloud
 
 import (
+	"fmt"
 	"strings"
 	"encoding/json"
 	"github.com/pkg/errors"
@@ -38,4 +39,8 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	topic.UserID   = strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
 	topic.Presence = inner.Presence
 	return
+}
+
+func (topic UserPresenceTopic) String() string {
+	return fmt.Sprintf("%s=%s", topic.Name, topic.Presence)
 }
