@@ -14,28 +14,23 @@ import (
 
 // NotificationChannel  defines a Notification Channel
 type NotificationChannel struct {
-	ID         string          `json:"id"`
-	ConnectURL *url.URL        `json:"-"`
-	ExpiresOn  time.Time       `json:"expires"`
-	Client     *Client         `json:"-"`
-	Socket     *websocket.Conn `json:"-"`
-}
-
-// NotificationTopic defines a Notification Topic that can subscribed to
-type NotificationTopic struct {
-	ID          string                 `json:"id"`
-	Description string                 `json:"description"`
-	Permissions []string               `json:"requiresPermissions"`
-	Schema      map[string]interface{} `json:"schema"`
+	ID           string          `json:"id"`
+	ConnectURL   *url.URL        `json:"-"`
+	ExpiresOn    time.Time       `json:"expires"`
+	LogHeartbeat bool            `json:"logHeartbeat"`
+	Client       *Client         `json:"-"`
+	Socket       *websocket.Conn `json:"-"`
 }
 
 // CreateNotificationChannel creates a new channel for notifications
+//   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
 func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) {
 	var err error
 	channel := &NotificationChannel{}
 	if err = client.Post("/notifications/channels", struct{}{}, &channel); err != nil {
 		return nil, err
 	}
+	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
 	channel.Client = client
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
@@ -58,23 +53,6 @@ func (channel *NotificationChannel) Close() (err error) {
 		channel.Socket = nil
 	}
 	return
-}
-
-// GetNotificationAvailableTopics retrieves available notification topics
-//   properties is one of more properties that should be expanded
-//   see https://developer.mypurecloud.com/api/rest/v2/notifications/#get-api-v2-notifications-availabletopics
-func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]NotificationTopic, error) {
-	query := url.Values{}
-	if len(properties) > 0 {
-		query.Add("expand", strings.Join(properties, ","))
-	}
-	results := &struct {
-		Entities []NotificationTopic `json:"entities"`
-	}{}
-	if err := client.Get("/notifications/availabletopics?"+query.Encode(), &results); err != nil {
-		return []NotificationTopic{}, err
-	}
-	return results.Entities, nil
 }
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
@@ -146,6 +124,12 @@ func (channel *NotificationChannel) messageLoop() (err error) {
 			log.Errorf("Failed to read incoming message", err)
 			continue
 		}
-		log.Tracef("Received %d bytes: %s", len(body), string(body))
+
+		topic, err := NotificationTopicFromJSON(body)
+		if err != nil {
+			log.Warnf("%s, Body size: %d, Content: %s", err.Error(), len(body), string(body))
+			continue
+		}
+		topic.Send(channel)
 	}
 }
