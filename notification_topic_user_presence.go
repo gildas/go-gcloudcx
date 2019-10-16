@@ -21,6 +21,7 @@ func (topic UserPresenceTopic) Match(topicName string) bool {
 func (topic UserPresenceTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Scope(topic.Name)
 	log.Infof("User: %s, New Presence: %s", topic.UserID, topic.Presence.String())
+	channel.TopicReceived <- topic
 }
 
 func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {

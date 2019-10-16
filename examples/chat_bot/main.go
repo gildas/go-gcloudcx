@@ -67,7 +67,7 @@ func mainRouteHandler() http.Handler {
 			return
 		}
 
-		topics, err := channel.Subscribe("v2.users." + user.ID + ".presence")
+		topics, err := channel.Subscribe("v2.users." + user.ID + ".presence", "v2.users." + user.ID + ".conversations.chats")
 		if err != nil {
 			log.Errorf("Failed to subscribe to topics", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
@@ -75,6 +75,19 @@ func mainRouteHandler() http.Handler {
 		}
 		log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
+		go func(){
+			log = log.Topic("topic").Scope("process")
+			// Processing Received NotificationTopic by reading the chan
+			// We do this in a non-blocking way
+			// TODO: Add a chan to stop the goroutine
+			for {
+				select {
+				case topic := <- channel.TopicReceived:
+					log.Infof("Received topic: %s", topic)
+				default:
+				}
+			}
+		}()
 
 		core.RespondWithJSON(w, http.StatusOK, struct {
 			UserName     string `json:"user"`

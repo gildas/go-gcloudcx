@@ -15,13 +15,14 @@ import (
 
 // NotificationChannel  defines a Notification Channel
 type NotificationChannel struct {
-	ID           string          `json:"id"`
-	ConnectURL   *url.URL        `json:"-"`
-	ExpiresOn    time.Time       `json:"expires"`
-	LogHeartbeat bool            `json:"logHeartbeat"`
-	Logger       *logger.Logger  `json:"-"`
-	Client       *Client         `json:"-"`
-	Socket       *websocket.Conn `json:"-"`
+	ID            string                 `json:"id"`
+	ConnectURL    *url.URL               `json:"-"`
+	ExpiresOn     time.Time              `json:"expires"`
+	LogHeartbeat  bool                   `json:"logHeartbeat"`
+	Logger        *logger.Logger         `json:"-"`
+	Client        *Client                `json:"-"`
+	Socket        *websocket.Conn        `json:"-"`
+	TopicReceived chan NotificationTopic `json:"-"`
 }
 
 // CreateNotificationChannel creates a new channel for notifications
@@ -32,9 +33,10 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	if err = client.Post("/notifications/channels", struct{}{}, &channel); err != nil {
 		return nil, err
 	}
-	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
-	channel.Client = client
-	channel.Logger = client.Logger.Topic("notification_channel")
+	channel.LogHeartbeat  = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
+	channel.Client        = client
+	channel.Logger        = client.Logger.Topic("notification_channel")
+	channel.TopicReceived = make(chan NotificationTopic)
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 	}
