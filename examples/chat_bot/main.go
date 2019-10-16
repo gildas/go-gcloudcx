@@ -1,7 +1,6 @@
 package main
 
 import (
-	"golang.org/x/tools/go/callgraph/cha"
 	"context"
 	"flag"
 	"fmt"
@@ -57,22 +56,35 @@ func mainRouteHandler() http.Handler {
 		if err != nil {
 			log.Errorf("Failed to retrieve my User", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
 
 		channel, err := client.CreateNotificationChannel()
 		if err != nil {
 			log.Errorf("Failed to create a notification channel", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
+
+		topics, err := channel.Subscribe("v2.users." + user.ID + ".presence")
+		if err != nil {
+			log.Errorf("Failed to subscribe to topics", err)
+			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
+		}
+		for _, topic := range topics {
+			log.Infof("Subscribed to topic: %s", topic.ID)
+		}
+
 
 		core.RespondWithJSON(w, http.StatusOK, struct {
 			UserName     string `json:"user"`
 			ChannelID    string `json:"channelId"`
-			WebsocketURL string `json:"websocketUrl`
+			WebsocketURL string `json:"websocketUrl"`
 		}{
 			UserName:     user.Name,
 			ChannelID:    channel.ID,
-			WebsocketURL: channel.WebsocketURL,
+			WebsocketURL: channel.ConnectURL.String(),
 		})
 	})
 }
