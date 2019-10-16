@@ -48,6 +48,12 @@ func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 		return nil, errors.WithStack(err)
 	}
 	switch {
+	case ConversationChatMessageTopic{}.Match(header.TopicName):
+		var topic ConversationChatMessageTopic
+		if err := json.Unmarshal(payload, &topic); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return topic, nil
 	case MetadataTopic{}.Match(header.TopicName):
 		var topic MetadataTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
