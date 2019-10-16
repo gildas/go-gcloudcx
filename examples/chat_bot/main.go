@@ -67,7 +67,10 @@ func mainRouteHandler() http.Handler {
 			return
 		}
 
-		topics, err := channel.Subscribe("v2.users." + user.ID + ".presence", "v2.users." + user.ID + ".conversations.chats")
+		topics, err := channel.Subscribe(
+			purecloud.UserPresenceTopic{}.TopicFor(user),
+			purecloud.UserConversationChatTopic{}.TopicFor(user),
+		)
 		if err != nil {
 			log.Errorf("Failed to subscribe to topics", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)

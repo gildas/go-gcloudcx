@@ -29,6 +29,13 @@ func (topic ConversationChatMessageTopic) Send(channel *NotificationChannel) {
 	channel.TopicReceived <- topic
 }
 
+func (topic ConversationChatMessageTopic) TopicFor(chat *ConversationChat) string {
+	if chat != nil {
+		return fmt.Sprintf("v2.conversations.chats.%s.messages", chat.ID)
+	}
+	return ""
+}
+
 func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err error) {
 	var inner struct {
 		TopicName string       `json:"topicName"`
