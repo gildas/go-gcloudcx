@@ -15,6 +15,7 @@ type Organization struct {
 	SelfURI                    string          `json:"selfURI"`
 	Features                   map[string]bool `json:"features"`
 	Version                    uint32          `json:"version"`
+	Client                     *Client         `json:"-"`
 }
 
 // GetMyOrganization retrives the current Organization
@@ -23,5 +24,15 @@ func (client *Client) GetMyOrganization() (*Organization, error) {
 	if err := client.Get("/organizations/me", &organization); err != nil {
 		return nil, err
 	}
+	organization.Client = client
 	return organization, nil
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (organization Organization) String() string {
+	if len(organization.Name) > 0 {
+		return organization.Name
+	}
+	return organization.ID
 }

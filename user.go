@@ -2,7 +2,7 @@ package purecloud
 
 import "fmt"
 
-// User describe a PureCloud User
+// User describes a PureCloud User
 type User struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -44,4 +44,19 @@ func (client *Client) GetMyUser() (*User, error) {
 
 func (user User) ActivityID() string {
 	return fmt.Sprintf("v2.users.%s.conversations.chats", user.ID)
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (user User) String() string {
+	if len(user.Name) > 0 {
+		return user.Name
+	}
+	if len(user.UserName) > 0 {
+		return user.UserName
+	}
+	if len(user.Mail) > 0 {
+		return user.Mail
+	}
+	return user.ID
 }
