@@ -1,6 +1,7 @@
 package purecloud
 
 import (
+	"github.com/gildas/go-logger"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -18,6 +19,7 @@ type NotificationChannel struct {
 	ConnectURL   *url.URL        `json:"-"`
 	ExpiresOn    time.Time       `json:"expires"`
 	LogHeartbeat bool            `json:"logHeartbeat"`
+	Logger       *logger.Logger  `json:"-"`
 	Client       *Client         `json:"-"`
 	Socket       *websocket.Conn `json:"-"`
 }
@@ -32,6 +34,7 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	}
 	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
 	channel.Client = client
+	channel.Logger = client.Logger.Topic("notification_channel")
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 	}
@@ -112,7 +115,7 @@ func (channel *NotificationChannel) UnmarshalJSON(payload []byte) (err error) {
 }
 
 func (channel *NotificationChannel) messageLoop() (err error) {
-	log := channel.Client.Logger.Scope("receive")
+	log := channel.Logger.Scope("receive")
 	for {
 		var body []byte
 

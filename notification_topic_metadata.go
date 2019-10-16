@@ -16,10 +16,10 @@ func (topic MetadataTopic) Match(topicName string) bool {
 }
 
 func (topic MetadataTopic) Send(channel *NotificationChannel) {
-	if topic.Message == "Websocket Heartbeat" && !channel.LogHeartbeat {
+	if topic.Message == "WebSocket Heartbeat" && !channel.LogHeartbeat {
 		return
 	}
-	log := channel.Client.Logger.Scope(topic.Name)
+	log := channel.Logger.Scope(topic.Name)
 	
 	log.Infof("Topic Message: %s", topic.Message)
 }
