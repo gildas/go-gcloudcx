@@ -21,16 +21,12 @@ type NotificationChannel struct {
 	Socket     *websocket.Conn `json:"-"`
 }
 
+// NotificationTopic defines a Notification Topic that can subscribed to
 type NotificationTopic struct {
 	ID          string                 `json:"id"`
 	Description string                 `json:"description"`
 	Permissions []string               `json:"requiresPermissions"`
 	Schema      map[string]interface{} `json:"schema"`
-}
-
-type NotificationChannelTopic struct {
-	ID      string `json:"id"`
-	SelfURI string `json:"selfUri,omitempty"`
 }
 
 // CreateNotificationChannel creates a new channel for notifications
@@ -82,22 +78,27 @@ func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]No
 }
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
-func (channel *NotificationChannel) Subscribe(topics ...string) ([]NotificationChannelTopic, error) {
-	channelTopics := make([]NotificationChannelTopic, len(topics))
+func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error) {
+	type idHolder struct {ID string `json:"id"`}
+	channelTopics := make([]idHolder, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
 	results := &struct {
-		Entities []NotificationChannelTopic `json:"entities"`
+		Entities []idHolder `json:"entities"`
 	}{}
 	if err := channel.Client.Post(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
 	); err != nil {
-		return []NotificationChannelTopic{}, errors.WithStack(err)
+		return []string{}, errors.WithStack(err)
 	}
-	return results.Entities, nil
+	ids := make([]string, len(results.Entities))
+	for i, entity := range results.Entities {
+		ids[i] = entity.ID
+	}
+	return ids, nil
 }
 
 // Unsubscribe unsubscribes from all topics

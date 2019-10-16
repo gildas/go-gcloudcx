@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"context"
 	"flag"
 	"fmt"
@@ -72,9 +73,7 @@ func mainRouteHandler() http.Handler {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		for _, topic := range topics {
-			log.Infof("Subscribed to topic: %s", topic.ID)
-		}
+		log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
 
 		core.RespondWithJSON(w, http.StatusOK, struct {
