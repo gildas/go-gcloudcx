@@ -54,6 +54,12 @@ func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 			return nil, errors.WithStack(err)
 		}
 		return topic, nil
+	case UserPresenceTopic{}.Match(header.TopicName):
+		var topic UserPresenceTopic
+		if err := json.Unmarshal(payload, &topic); err != nil {
+			return nil, errors.WithStack(err)
+		}
+		return topic, nil
 	default:
 		return nil, errors.Errorf("Unsupported Topic: %s", header.TopicName)
 	}
