@@ -14,6 +14,16 @@ func (client *Client) Post(path string, payload, results interface{}) error {
 	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPost, Payload: payload}, results)
 }
 
+// Post sends a PATCH HTTP Request to PureCloud and gets the results
+func (client *Client) Patch(path string, payload, results interface{}) error {
+	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPatch, Payload: payload}, results)
+}
+
+// Post sends an UPDATE HTTP Request to PureCloud and gets the results
+func (client *Client) Put(path string, payload, results interface{}) error {
+	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPut, Payload: payload}, results)
+}
+
 // Get sends a GET HTTP Request to PureCloud and gets the results
 func (client *Client) Get(path string, results interface{}) error {
 	return client.SendRequest(path, &core.RequestOptions{}, results)

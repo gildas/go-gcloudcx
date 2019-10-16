@@ -88,21 +88,45 @@ func mainRouteHandler() http.Handler {
 				case receivedTopic := <-channel.TopicReceived:
 					log.Infof("Received topic: %s", receivedTopic)
 					switch topic := receivedTopic.(type) {
-					case purecloud.UserConversationChatTopic:
-						log.Infof("User %s, Conversation: %s", topic.User, topic.Conversation.ID)
+					case *purecloud.UserConversationChatTopic:
+						log.Infof("User %s, Conversation: %s", topic.UserID, topic.ConversationID)
 						// TODO: Matt => What is that connected variable in index.html?!?
 						if len(topic.Participants) >= 4 && len(topic.Participants[3].ID) != 0 {
-							log.Infof("Subscribing to Conversation %s", topic.Conversation.ID)
-							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+							log.Infof("Subscribing to Conversation %s", topic.ConversationID)
+							conversation := purecloud.Conversation{ID: topic.ConversationID}
+							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(conversation))
 							if err != nil {
 								log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 								continue
 							}
 						}
-					case purecloud.ConversationChatMessageTopic:
-						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation.ID, topic.BodyType, topic.Body)
-					case purecloud.UserPresenceTopic:
-						log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
+					case *purecloud.ConversationChatMessageTopic:
+						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.ConversationID, topic.BodyType, topic.Body)
+						// We need a real conversation object, so we can operate on it
+						conversation, err := topic.GetClient().GetConversation(topic.ConversationID)
+						if err != nil {
+							log.Errorf("Failed to retreive a Conversation for ID %s", topic.ConversationID, err)
+							continue
+						}
+						participant := conversation.Participants[3]
+						queueID     := user.ID
+						wrapup      := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
+						if strings.Contains(topic.Body, "stop") { // disconnect
+							if err := conversation.WrapupParticipant(&participant, wrapup); err != nil {
+								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, queueID, err)
+								continue
+							}
+						} else if strings.Contains(topic.Body, "agent") { // transfer
+							if err := conversation.TransferParticipant(&participant, queueID); err != nil {
+								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, queueID, err)
+								continue
+							}
+						} else {
+							log.Infof("Sending %s Body to Google: %s", topic.BodyType, topic.Body)
+							// Send stuff to Google
+						}
+					case *purecloud.UserPresenceTopic:
+						log.Infof("User %s, Presence: %s", topic.UserID, topic.Presence)
 					default:
 						log.Warnf("Unknown topic: %s", topic)
 					}

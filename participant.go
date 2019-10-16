@@ -22,21 +22,44 @@ type ErrorInfo struct {
 	Errors []ErrorInfo `json:"errors"`
 }
 
-type ConversationParticipant struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Address       string    `json:"address"`
-	StartTime     time.Time `json:"startTime"`
-	ConnectedTime time.Time `json:"connectedTime"`
-	EndTime       time.Time `json:"endTime"`
-	StartHoldTime time.Time `json:"startHoldTime"`
-	Purpose       string    `json:"purpose"`
+type Participant struct {
+  ID                     string    `json:"id"`
+	Name                   string    `json:"name"`
+	StartTime              time.Time `json:"startTime"`
+	ConnectedTime          time.Time `json:"connectedTime"`
+	EndTime                time.Time `json:"endTime"`
+	StartHoldTime          time.Time `json:"startHoldTime"`
+  Purpose                string    `json:"purpose"`
+
+  UserURI                string    `json:"userUri"`
+  UserID                 string    `json:"userId"`
+  ExternalContactID      string    `json:"externalContactId"`
+  ExternalOrganizationID string    `json:"externalOrganizationId"`
+
+  QueueID                string    `json:"queueId"`
+  GroupID                string    `json:"groupId"`
+  QueueName              string    `json:"queueName"`
+  ParticipantType        string    `json:"participantType"`
+  ConsultParticipantID   string    `json:"consultParticipantId"`
+
+  Address                string    `json:"address"`
+  ANI                    string    `json:"ani"`
+  ANIName                string    `json:"aniName"`
+  DNIS                   string    `json:"dnis"`
+  Locale                 string    `json:"locale"`
+
+  WrapupRequired         bool      `json:"wrapupRequired"`
+  WrapupPrompt           string    `json:"wrapupPrompt"`
+  WrapupTimeout          int       `json:"wrapupTimeoutMs` // time.Duration
+  WrapupSkipped          bool      `json:"wrapupSkipped"`
+  Wrapup                 Wrapup    `json:"wrapup"`
+
+
+
 	State         string    `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
 	Direction     string    `json:"direction"` // inbound,outbound
 	DisconnectType string   `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
 	Held           bool     `json:"held"`
-	WrapupRequired bool     `json:"wrapupRequired"`
-	WrapupPrompt   string   `json:"wrapupPrompt"`
 	User           struct {
 		ID   string           `json:"id"`
 		Name string           `json:"name"`
@@ -105,4 +128,10 @@ type ConversationParticipant struct {
     {}
   ]
 */
+}
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (participant Participant) GetID() string {
+	return participant.ID
 }

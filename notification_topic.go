@@ -13,8 +13,14 @@ type NotificationTopic interface {
 	// Match tells if the given topicName matches this topic
 	Match(topicName string) bool
 
+	// Get the PureCloud Client associated with this
+	GetClient() *Client
+
 	// Send sends the current topic to the Channel's chan
 	Send(channel *NotificationChannel)
+
+	// TopicFor builds the topicName for the given identifiables
+	TopicFor(identifiables ...Identifiable) string
 }
 
 // NotificationTopicDefinition defines a Notification Topic that can subscribed to
@@ -57,25 +63,25 @@ func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 		if err := json.Unmarshal(payload, &topic); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return topic, nil
+		return &topic, nil
 	case MetadataTopic{}.Match(header.TopicName):
 		var topic MetadataTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return topic, nil
+		return &topic, nil
 	case UserConversationChatTopic{}.Match(header.TopicName):
 		var topic UserConversationChatTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return topic, nil
+		return &topic, nil
 	case UserPresenceTopic{}.Match(header.TopicName):
 		var topic UserPresenceTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
 			return nil, errors.WithStack(err)
 		}
-		return topic, nil
+		return &topic, nil
 	default:
 		return nil, errors.Errorf("Unsupported Topic: %s", header.TopicName)
 	}

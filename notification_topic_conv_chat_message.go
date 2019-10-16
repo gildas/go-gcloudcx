@@ -11,12 +11,13 @@ import (
 
 // ConversationChatMessageTopic describes a Topic about User's Presence
 type ConversationChatMessageTopic struct {
-	Name         string
-	Conversation *ConversationChat
-	Sender       ChatMember
-	Body         string
-	BodyType     string
-	TimeStamp    time.Time
+	Name           string
+	ConversationID string
+	Sender         ChatMember
+	Body           string
+	BodyType       string
+	TimeStamp      time.Time
+	Client         *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -24,20 +25,25 @@ func (topic ConversationChatMessageTopic) Match(topicName string) bool {
 	return strings.HasPrefix(topicName, "v2.conversations.chats.") && strings.HasSuffix(topicName, ".messages")
 }
 
-// Send sends the current topic to the Channel's chan
-func (topic ConversationChatMessageTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Scope(topic.Name)
-	log.Infof("Conversation: %s, Sender: %s", topic.Conversation.ID, topic.Sender.DisplayName)
-	topic.Conversation.Client = channel.Client
-	channel.TopicReceived <- topic
+// Get the PureCloud Client associated with this
+func (topic *ConversationChatMessageTopic) GetClient() *Client {
+	return topic.Client
 }
 
-// TopicFor builds the topicName for the given parameter(s)
-func (topic ConversationChatMessageTopic) TopicFor(chat *ConversationChat) string {
-	if chat != nil {
-		return fmt.Sprintf("v2.conversations.chats.%s.messages", chat.ID)
+// TopicFor builds the topicName for the given identifiables
+func (topic ConversationChatMessageTopic) TopicFor(identifiables ...Identifiable) string {
+	if len(identifiables) > 0 {
+		return fmt.Sprintf("v2.conversations.chats.%s.messages", identifiables[0].GetID())
 	}
 	return ""
+}
+
+// Send sends the current topic to the Channel's chan
+func (topic *ConversationChatMessageTopic) Send(channel *NotificationChannel) {
+	log := channel.Logger.Scope(topic.Name)
+	log.Infof("Conversation: %s, Sender: %s", topic.ConversationID, topic.Sender.DisplayName)
+	topic.Client = channel.Client
+	channel.TopicReceived <- topic
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -59,12 +65,12 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
 	}
-	topic.Name         = inner.TopicName
-	topic.Conversation = &ConversationChat{ID: strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.v2.conversations.chats."), ".messages")}
-	topic.Sender       = inner.EventBody.Sender
-	topic.BodyType     = inner.EventBody.BodyType
-	topic.Body         = inner.EventBody.Body
-	topic.TimeStamp    = inner.EventBody.Timestamp
+	topic.Name           = inner.TopicName
+	topic.ConversationID = strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.v2.conversations.chats."), ".messages")
+	topic.Sender         = inner.EventBody.Sender
+	topic.BodyType       = inner.EventBody.BodyType
+	topic.Body           = inner.EventBody.Body
+	topic.TimeStamp      = inner.EventBody.Timestamp
 	return
 }
 

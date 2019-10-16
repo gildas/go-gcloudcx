@@ -1,7 +1,6 @@
 package purecloud
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -56,8 +55,10 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 	return user, nil
 }
 
-func (user User) ActivityID() string {
-	return fmt.Sprintf("v2.users.%s.conversations.chats", user.ID)
+// GetID gets the identifier of this
+//   implements Identifiable
+func (user User) GetID() string {
+	return user.ID
 }
 
 // String gets a string version
