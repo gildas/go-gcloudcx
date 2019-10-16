@@ -1,41 +1,38 @@
 package purecloud
 
 import (
-	"strings"
-	"net/url"
 	"fmt"
+	"net/url"
+	"strings"
 )
 
 // User describes a PureCloud User
 type User struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Division struct {
-		ID      string `json:"id"`
-		Name    string `json:"name"`
-		SelfURI string `json:"selfUri"`
-	} `json:"division"`
-	Chat struct {
+	ID                  string                   `json:"id"`
+	Name                string                   `json:"name"`
+	UserName            string                   `json:"username"`
+	Department          string                   `json:"department"`
+	Title               string                   `json:"title"`
+	Division            Division                 `json:"division"`
+	Mail                string                   `json:"email"`
+	Images              []UserImage              `json:"images"`
+	PrimaryContact      []Contact                `json:"primaryContactInfo"`
+	Addresses           []Contact                `json:"addresses"`
+	State               string                   `json:"state"`
+	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
+	Presence            *UserPresence            `json:"presence,omitempty"`
+	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`
+	Employer            *EmployerInfo            `json:"employerInfo,omitempty"`
+	Manager             *User                    `json:"manager,omitempty"`
+	ConversationSummary *UserConversationSummary `json:"conversationSummary,omitempty"`
+	GeoLocation         *GeoLocation             `json:"geolocation"`
+	Chat                struct {
 		JabberID string `json:"jabberId"`
 	} `json:"chat"`
-	Department         string `json:"department"`
-	Mail               string `json:"email"`
-	PrimaryContactInfo []struct {
-		Address   string `json:"address"`
-		MediaType string `json:"mediaType"`
-		Type      string `json:"type"`
-	} `json:"primaryContactInfo"`
-	Addresses []struct {
-		Display   string `json:"display"`
-		MediaType string `json:"mediaType"`
-		Type      string `json:"type"`
-	} `json:"addresses"`
-	State         string `json:"state"`
-	Title         string `json:"title"`
-	UserName      string `json:"username"`
-	Version       int    `json:"version"`
-	AcdAutoAnswer bool   `json:"acdAutoAnswer"`
-	SelfURI       string `json:"selfUri"`
+	SelfURI string  `json:"selfUri"`
+	Version int     `json:"version"`
+	Client  *Client `json:"-"`
+	// TODO: Continue to add objects...
 }
 
 type UserImage struct {
@@ -52,7 +49,7 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 		query.Add("expand", strings.Join(properties, ","))
 	}
 	user := &User{}
-	if err := client.Get("/users/me?" + query.Encode(), &user); err != nil {
+	if err := client.Get("/users/me?"+query.Encode(), &user); err != nil {
 		return nil, err
 	}
 	user.Client = client
