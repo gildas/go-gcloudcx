@@ -1,7 +1,6 @@
 package purecloud
 
 import (
-	"github.com/gildas/go-logger"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -9,11 +8,12 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-logger"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
 
-// NotificationChannel  defines a Notification Channel
+// NotificationChannel defines a Notification Channel
 type NotificationChannel struct {
 	ID            string                 `json:"id"`
 	ConnectURL    *url.URL               `json:"-"`
@@ -52,6 +52,7 @@ func (channel *NotificationChannel) Close() (err error) {
 		return err
 	}
 	if channel.Socket != nil {
+		close(channel.TopicReceived)
 		if err = channel.Socket.Close(); err != nil {
 			return errors.WithStack(err)
 		}

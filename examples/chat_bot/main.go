@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"context"
 	"flag"
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -78,16 +78,36 @@ func mainRouteHandler() http.Handler {
 		}
 		log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
-		go func(){
+		go func() {
 			log = log.Topic("topic").Scope("process")
 			// Processing Received NotificationTopic by reading the chan
-			// We do this in a non-blocking way
+			// We do this in a non-blocking way with a timeout to not loop too fast
 			// TODO: Add a chan to stop the goroutine
 			for {
 				select {
-				case topic := <- channel.TopicReceived:
-					log.Infof("Received topic: %s", topic)
-				default:
+				case receivedTopic := <-channel.TopicReceived:
+					log.Infof("Received topic: %s", receivedTopic)
+					switch topic := receivedTopic.(type) {
+					case purecloud.UserConversationChatTopic:
+						log.Infof("User %s, Conversation: %s", topic.User, topic.Conversation.ID)
+						// TODO: Matt => What is that connected variable in index.html?!?
+						if len(topic.Participants) >= 4 && len(topic.Participants[3].ID) != 0 {
+							log.Infof("Subscribing to Conversation %s", topic.Conversation.ID)
+							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+							if err != nil {
+								log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
+								continue
+							}
+						}
+					case purecloud.ConversationChatMessageTopic:
+						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation.ID, topic.BodyType, topic.Body)
+					case purecloud.UserPresenceTopic:
+						log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
+					default:
+						log.Warnf("Unknown topic: %s", topic)
+					}
+				case <- time.After(30 * time.Second):
+					log.Debugf("Nothing in the last 30 seconds")
 				}
 			}
 		}()

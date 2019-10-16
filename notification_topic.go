@@ -10,7 +10,10 @@ import (
 
 // NotificationTopic describes a Notification Topic received on a WebSocket
 type NotificationTopic interface {
+	// Match tells if the given topicName matches this topic
 	Match(topicName string) bool
+
+	// Send sends the current topic to the Channel's chan
 	Send(channel *NotificationChannel)
 }
 
@@ -39,6 +42,7 @@ func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]No
 	return results.Entities, nil
 }
 
+// NotificationTopicFromJSON Unmarshal JSON into a NotificationTopic
 func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 	var header struct {
 		TopicName string `json:"topicName"`
