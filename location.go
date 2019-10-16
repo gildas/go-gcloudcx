@@ -1,5 +1,13 @@
 package purecloud
 
+import (
+	"encoding/json"
+	"net/url"
+
+	"github.com/gildas/go-core"
+	"github.com/pkg/errors"
+)
+
 // LocationDefinition describes a location (office, etc)
 type LocationDefinition struct {
 	ID              string                  `json:"id"`
@@ -36,8 +44,8 @@ type LocationAddress struct {
 }
 
 type LocationImage struct {
-	ImageURL   string `json:"imageUrl"`
-	Resolution string `json:"resolution"`
+	ImageURL   *url.URL `json:"-"`
+	Resolution string   `json:"resolution"`
 }
 
 // GeoLocation describes a location with coordinates
@@ -47,4 +55,31 @@ type GeoLocation struct {
 	Locations  []LocationDefinition `json:"locations"`
 
 	SelfURI        string         `json:"selfUri"`
+}
+
+// MarshalJSON marshals this into JSON
+func (locationImage LocationImage) MarshalJSON() ([]byte, error) {
+	type surrogate LocationImage
+	return json.Marshal(struct {
+		surrogate
+		I *core.URL `json:"imageUrl"`
+	}{
+		surrogate: surrogate(locationImage),
+		I:         (*core.URL)(locationImage.ImageURL),
+	})
+}
+
+// UnmarshalJSON unmarshals JSON into this
+func (locationImage *LocationImage) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate LocationImage
+	var inner struct {
+		surrogate
+		I *core.URL `json:"imageUrl"`
+	}
+	if err = json.Unmarshal(payload, &inner); err != nil {
+		return errors.WithStack(err)
+	}
+	*locationImage = LocationImage(inner.surrogate)
+	locationImage.ImageURL = (*url.URL)(inner.I)
+	return
 }
