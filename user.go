@@ -1,6 +1,10 @@
 package purecloud
 
-import "fmt"
+import (
+	"strings"
+	"net/url"
+	"fmt"
+)
 
 // User describes a PureCloud User
 type User struct {
@@ -34,11 +38,24 @@ type User struct {
 	SelfURI       string `json:"selfUri"`
 }
 
-func (client *Client) GetMyUser() (*User, error) {
+type UserImage struct {
+	ImageURL   *url.URL `json:"imageUri"`
+	Resolution string   `json:"resolution"`
+}
+
+// GetMyUser retrieves the User that authenticated with the client
+//   properties is one of more properties that should be expanded
+//   see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
+func (client *Client) GetMyUser(properties ...string) (*User, error) {
+	query := url.Values{}
+	if len(properties) > 0 {
+		query.Add("expand", strings.Join(properties, ","))
+	}
 	user := &User{}
-	if err := client.Get("/users/me", &user); err != nil {
+	if err := client.Get("/users/me?" + query.Encode(), &user); err != nil {
 		return nil, err
 	}
+	user.Client = client
 	return user, nil
 }
 
