@@ -4,69 +4,57 @@ import (
 	"time"
 )
 
-type ErrorInfo struct {
-	Status int `json:"status"`
-	Code   string `json:"code"`
-	EntityID string `json:"entityId"`
-	EntityName string `json:"entityName"`
-	Message    string `json:"message"`
-	MessageWithParams string `json:"messageWithParams"`
-	MessageParams     interface{} `json:"messageParams"`
-	ContextID         string      `json:"contextId"`
-	Details           struct {
-		ErrorCode  string `json:"errorCode"`
-		Fieldname  string `json:"fieldName"`
-		EntityID   string `json:"entityId"`
-		EntityName string `json:"entityName"`
-	} `json:"details"`
-	Errors []ErrorInfo `json:"errors"`
-}
-
 type Participant struct {
-  ID                     string    `json:"id"`
-	Name                   string    `json:"name"`
-	StartTime              time.Time `json:"startTime"`
-	ConnectedTime          time.Time `json:"connectedTime"`
-	EndTime                time.Time `json:"endTime"`
-	StartHoldTime          time.Time `json:"startHoldTime"`
-  Purpose                string    `json:"purpose"`
+  ID                     string                  `json:"id"`
+	Name                   string                  `json:"name"`
+	StartTime              time.Time               `json:"startTime"`
+	ConnectedTime          time.Time               `json:"connectedTime"`
+	EndTime                time.Time               `json:"endTime"`
+	StartHoldTime          time.Time               `json:"startHoldTime"`
+  Purpose                string                  `json:"purpose"`
 
-  UserURI                string    `json:"userUri"`
-  UserID                 string    `json:"userId"`
-  ExternalContactID      string    `json:"externalContactId"`
-  ExternalOrganizationID string    `json:"externalOrganizationId"`
+  UserURI                string                  `json:"userUri"`
+  UserID                 string                  `json:"userId"`
+  ExternalContactID      string                  `json:"externalContactId"`
+  ExternalOrganizationID string                  `json:"externalOrganizationId"`
 
-  QueueID                string    `json:"queueId"`
-  GroupID                string    `json:"groupId"`
-  QueueName              string    `json:"queueName"`
-  ParticipantType        string    `json:"participantType"`
-  ConsultParticipantID   string    `json:"consultParticipantId"`
+  QueueID                string                  `json:"queueId"`
+  GroupID                string                  `json:"groupId"`
+  QueueName              string                  `json:"queueName"`
+  ParticipantType        string                  `json:"participantType"`
+  ConsultParticipantID   string                  `json:"consultParticipantId"`
+  MonitoredParticipantID string                  `json:"monitoredParticipantId"`
 
-  Address                string    `json:"address"`
-  ANI                    string    `json:"ani"`
-  ANIName                string    `json:"aniName"`
-  DNIS                   string    `json:"dnis"`
-  Locale                 string    `json:"locale"`
+  Address                string                  `json:"address"`
+  ANI                    string                  `json:"ani"`
+  ANIName                string                  `json:"aniName"`
+  DNIS                   string                  `json:"dnis"`
+  Locale                 string                  `json:"locale"`
 
-  WrapupRequired         bool      `json:"wrapupRequired"`
-  WrapupPrompt           string    `json:"wrapupPrompt"`
-  WrapupTimeout          int       `json:"wrapupTimeoutMs` // time.Duration
-  WrapupSkipped          bool      `json:"wrapupSkipped"`
-  Wrapup                 Wrapup    `json:"wrapup"`
+  Attributes             map[string]string       `json:"attributes"`
+  Calls                  []ConversationCall      `json:"calls"`
+  Callbacks              []ConversationCallback  `json:"callbacks"`
+  Chats                  []ConversationChat      `json:"chats"`
+  CobrowseSessions       []CobrowseSession       `json:"cobrowseSession"`
+  Emails                 []ConversationEmail     `json:"emails"`
+  Messages               []ConversationMessage   `json:"messages"`
+  ScreenShares           []ScreenShare           `json:"screenShares"`
+  SocialExpressions      []SocialExpression      `json:"socialExpressions"`
+  Videos                 []ConversationVideo     `json:"videos"`
+  Evaluations            []Evaluation            `json:"evaluations"`
 
+  WrapupRequired         bool                    `json:"wrapupRequired"`
+  WrapupPrompt           string                  `json:"wrapupPrompt"`
+  WrapupTimeout          int                     `json:"wrapupTimeoutMs` // time.Duration
+  WrapupSkipped          bool                    `json:"wrapupSkipped"`
+  Wrapup                 Wrapup                  `json:"wrapup"`
 
+  AlertingTimeout        int                     `json:"alertingTimeoutMs` // time.Duration
+  ScreenRecordingState   string                  `json:"screenRecordingState"`
+  FlaggedReason          string                  `json:"flaggedReason"`
 
-	State         string    `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction     string    `json:"direction"` // inbound,outbound
-	DisconnectType string   `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
-	Held           bool     `json:"held"`
-	User           struct {
-		ID   string           `json:"id"`
-		Name string           `json:"name"`
-	}                       `json:"user"`
-	Queue interface{} `json:"queue"`
-	ErrorInfo ErrorInfo `json:"errorInfo"`
-	Attributes interface{} `json:"attributes"`
+  RoutingData            ConversationRoutingData `json:"conversationRoutingData"`
+	SelfURI                string                  `json:"selfUri"`
 
 /*
       "script": "object",
