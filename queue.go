@@ -11,3 +11,10 @@ type Queue struct {
 func (queue Queue) GetID() string {
 	return queue.ID
 }
+
+func (queue Queue) String() string {
+	if len(queue.Name) > 0 {
+		return queue.Name
+	}
+	return queue.ID
+}

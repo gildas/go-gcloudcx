@@ -112,7 +112,6 @@ func mainRouteHandler() http.Handler {
 							continue
 						}
 						participant := conversation.Participants[3]
-						queueID     := Queue.ID
 						wrapup      := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
 						if strings.Contains(topic.Body, "stop") { // disconnect
 							if err := conversation.WrapupParticipant(&participant, wrapup); err != nil {
@@ -120,8 +119,8 @@ func mainRouteHandler() http.Handler {
 								continue
 							}
 						} else if strings.Contains(topic.Body, "agent") { // transfer
-							if err := conversation.TransferParticipant(&participant, queueID); err != nil {
-								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, queueID, err)
+							if err := conversation.TransferParticipant(&participant, Queue); err != nil {
+								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
 								continue
 							}
 						} else {

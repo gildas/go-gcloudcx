@@ -105,10 +105,10 @@ func (conversation Conversation) WrapupParticipant(participant *Participant, wra
 }
 
 // TransferParticipant transfers a participant of this Conversation to the given Queue
-func (conversation Conversation) TransferParticipant(participant *Participant, queueID string) error {
+func (conversation Conversation) TransferParticipant(participant *Participant, queue Identifiable) error {
 	return conversation.Client.Post(
 		fmt.Sprintf("/conversations/chat/%s/participants/%s/replace", conversation.ID, participant.ID),
-		struct{ID string `json:"queueId"`}{ID: queueID},
+		struct{ID string `json:"queueId"`}{ID: queue.GetID()},
 		nil,
 	)
 }
