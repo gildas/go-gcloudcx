@@ -14,6 +14,7 @@ import (
 )
 
 // NotificationChannel defines a Notification Channel
+//   See: https://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html
 type NotificationChannel struct {
 	ID            string                 `json:"id"`
 	ConnectURL    *url.URL               `json:"-"`
