@@ -34,11 +34,6 @@ type User struct {
 	// TODO: Continue to add objects...
 }
 
-type UserImage struct {
-	ImageURL   *url.URL `json:"imageUri"`
-	Resolution string   `json:"resolution"`
-}
-
 // GetMyUser retrieves the User that authenticated with the client
 //   properties is one of more properties that should be expanded
 //   see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
