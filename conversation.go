@@ -48,7 +48,7 @@ type Segment struct {
 	DisconnectType  string    `json:"disconnectType"`
 	StartTime       time.Time `json:"startTime"`
 	EndTime         time.Time `json:"endTime"`
-	HowEnded        string    `json:"howEnded`
+	HowEnded        string    `json:"howEnded"`
 }
 
 // DisconnectReason describes the reason of a disconnect

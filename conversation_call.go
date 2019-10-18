@@ -8,9 +8,9 @@ import (
 type FaxStatus struct {
 	Direction        string `json:"direction"`      // inbound,outbound
 	ActivePage       int    `json:"activePage"`
-	ExpectedPages    int    `json:"expectedPages`
+	ExpectedPages    int    `json:"expectedPages"`
 	LinesTransmitted int    `json:"linesTransmitted"`
-	bytesTransmitted int    `json:"bytesTransmitted"`
+	BytesTransmitted int    `json:"bytesTransmitted"`
 	BaudRate         int    `json:"baudRate"`
 	PageErrors       int    `json:"pageErrors"`
 	LineErrors       int    `json:"lineErrors"`

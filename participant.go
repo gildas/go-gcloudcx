@@ -45,11 +45,11 @@ type Participant struct {
 
   WrapupRequired         bool                    `json:"wrapupRequired"`
   WrapupPrompt           string                  `json:"wrapupPrompt"`
-  WrapupTimeout          int                     `json:"wrapupTimeoutMs` // time.Duration
+  WrapupTimeout          int                     `json:"wrapupTimeoutMs"` // time.Duration
   WrapupSkipped          bool                    `json:"wrapupSkipped"`
   Wrapup                 Wrapup                  `json:"wrapup"`
 
-  AlertingTimeout        int                     `json:"alertingTimeoutMs` // time.Duration
+  AlertingTimeout        int                     `json:"alertingTimeoutMs"` // time.Duration
   ScreenRecordingState   string                  `json:"screenRecordingState"`
   FlaggedReason          string                  `json:"flaggedReason"`
 

@@ -37,7 +37,7 @@ type ConversationEmail struct {
 type Attachment struct {
 	AttachmentID  string `json:"attachmentId"`
 	Name          string `json:"name"`
-	ContentURI    string `json:"contentUri`
+	ContentURI    string `json:"contentUri"`
 	ContentType   string `json:"contentType"`
 	ContentLength int64  `json:"contentLength"`
 	InlineImage   bool   `json:"inlineImage"`

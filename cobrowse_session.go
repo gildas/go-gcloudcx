@@ -24,6 +24,6 @@ type CobrowseSession struct {
 	PeerID            string    `json:"peerId"`
 	CobrowseSessionID string    `json:"cobrowseSessionId"`
 	CobrowseRole      string    `json:"cobrowseRole"`
-	Controlling       []string  `json"controlling"`
+	Controlling       []string  `json:"controlling"`
 	ViewerURL         *url.URL  `json:"viewerUrl"`
 }
