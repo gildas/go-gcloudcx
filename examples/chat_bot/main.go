@@ -102,6 +102,13 @@ func mainRouteHandler() http.Handler {
 								log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 								continue
 							}
+							// Now we need to "answer" the participant, i.e. turn them connected
+							participant := conversation.Participants[3]
+							err = conversation.SetStateParticipant(participant, "connected")
+							if err != nil {
+								log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
+								continue
+							}
 						}
 					case *purecloud.ConversationChatMessageTopic:
 						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.ConversationID, topic.BodyType, topic.Body)
@@ -112,15 +119,21 @@ func mainRouteHandler() http.Handler {
 							continue
 						}
 						participant := conversation.Participants[3]
-						wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
 						if strings.Contains(topic.Body, "stop") { // disconnect
-							if err := conversation.WrapupParticipant(participant, wrapup); err != nil {
+							if err := conversation.DisconnectParticipant(participant); err != nil {
 								log.Errorf("Failed to Wrapup Participant %s", &participant, err)
 								continue
 							}
 						} else if strings.Contains(topic.Body, "agent") { // transfer
 							if err := conversation.TransferParticipant(participant, Queue); err != nil {
 								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
+								continue
+							}
+							// Once the transfer is initiated, we should "Wrapup" the participant
+							//   if needed (queue request a wrapup)
+							wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
+							if err := conversation.WrapupParticipant(participant, wrapup); err != nil {
+								log.Errorf("Failed to wrapup Partitipant %s", participant)
 								continue
 							}
 						} else {

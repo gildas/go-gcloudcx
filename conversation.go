@@ -95,11 +95,29 @@ func (conversation Conversation) GetID() string {
 	return conversation.ID
 }
 
+// DisconnectParticipant set the Conversation State of  a participant
+func (conversation Conversation) DisconnectParticipant(participant *Participant) error {
+	return conversation.Client.Patch(
+		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
+		MediaParticipantRequest{State: "disconnected", WrapupSkipped: true},
+		nil,
+	)
+}
+
+// SetStateParticipant set the Conversation State of  a participant
+func (conversation Conversation) SetStateParticipant(participant *Participant, state string) error {
+	return conversation.Client.Patch(
+		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
+		MediaParticipantRequest{State: state},
+		nil,
+	)
+}
+
 // WrapupParticipant wraps up a Participant of this Conversation
 func (conversation Conversation) WrapupParticipant(participant *Participant, wrapup *Wrapup) error {
 	return conversation.Client.Patch(
 		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
-		struct{Wrapup *Wrapup `json:"wrapup"`}{Wrapup: wrapup},
+		MediaParticipantRequest{Wrapup: wrapup},
 		nil,
 	)
 }
