@@ -24,6 +24,9 @@ var Log *logger.Logger
 // Client is the PureCloud Client
 var Client *purecloud.Client
 
+// The Queue to transfer to
+var Queue *purecloud.Queue
+
 func loggedInHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log, err := logger.FromContext(r.Context())
@@ -109,7 +112,7 @@ func mainRouteHandler() http.Handler {
 							continue
 						}
 						participant := conversation.Participants[3]
-						queueID     := user.ID
+						queueID     := Queue.ID
 						wrapup      := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
 						if strings.Contains(topic.Body, "stop") { // disconnect
 							if err := conversation.WrapupParticipant(&participant, wrapup); err != nil {
@@ -155,6 +158,7 @@ func main() {
 		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
 		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
 		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
+		queueID      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "The queue to transfer to")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
 	flag.Parse()
@@ -181,6 +185,9 @@ func main() {
 		Secret:      *secret,
 		RedirectURL: redirectURL,
 	})
+
+	// TODO: Make this better... Too Simple for now
+	Queue := purecloud.Queue{ID: *queueID}
 
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)

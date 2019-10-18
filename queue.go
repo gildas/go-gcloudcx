@@ -2,7 +2,8 @@ package purecloud
 
 // Quieue defines a PureCloud Queue
 type Queue struct {
-	ID string `json:"id"`
+	ID string   `json:"id"`
+	Name string `json:"name"`
 }
 
 // GetID gets the identifier of this
