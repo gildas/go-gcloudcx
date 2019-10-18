@@ -11,7 +11,7 @@ import (
 type UserActivityTopic struct {
 	Name     string
 	UserID   string
-	Activity UserActivity
+	Presence UserPresence
 	Client   *Client
 }
 
@@ -36,7 +36,7 @@ func (topic UserActivityTopic) TopicFor(identifiables ...Identifiable) string {
 // Send sends the current topic to the Channel's chan
 func (topic *UserActivityTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Scope(topic.Name)
-	log.Infof("User: %s, New Activity: %s", topic.UserID, topic.Activity)
+	log.Infof("User: %s, New Presence: %s", topic.UserID, topic.Presence)
 	topic.Client = channel.Client
 	channel.TopicReceived <- topic
 }
@@ -71,7 +71,7 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	*/
 	var inner struct {
 		TopicName string       `json:"topicName"`
-		Activity  UserActivity `json:"eventBody"`
+		Presence  UserPresence `json:"eventBody"`
 		Metadata struct {
 			CorrelationID string `json:"correlationId"`
 		}                      `json:"metadata"`
@@ -82,12 +82,12 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	}
 	topic.Name     = inner.TopicName
 	topic.UserID   = strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity")
-	topic.Activity = inner.Activity
+	topic.Presence = inner.Presence
 	return
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (topic UserActivityTopic) String() string {
-	return fmt.Sprintf("%s=%s", topic.Name, topic.Activity)
+	return fmt.Sprintf("%s=%s", topic.Name, topic.Presence)
 }
