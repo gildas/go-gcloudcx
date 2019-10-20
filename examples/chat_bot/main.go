@@ -34,7 +34,7 @@ func loggedInHandler() http.Handler {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		log = log.Scope("logged_in")
+		log = log.Topic("route").Scope("logged_in")
 		log.Infof("Redirecting to /")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
@@ -47,7 +47,7 @@ func mainRouteHandler() http.Handler {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		log = log.Scope("main")
+		log = log.Topic("route").Scope("main")
 
 		client, err := purecloud.ClientFromContext(r.Context())
 		if err != nil {
@@ -212,6 +212,10 @@ func main() {
 	//   otherwise, the AuthorizeHandler will redirect the user to the PureCloud Login page
 	//   that will end up with the grant.RedirectURL defined ealier
 	router.Methods("GET").Path("/").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(mainRouteHandler())))
+
+	// This route will configure the PureCloud Widget for Chat
+	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
+	router.Methods("GET").Path("/widget").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(WidgetHandler())))
 
 	WebServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
