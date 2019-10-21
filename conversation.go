@@ -116,7 +116,7 @@ func (conversation Conversation) String() string {
 // DisconnectParticipant set the Conversation State of  a participant
 func (conversation Conversation) DisconnectParticipant(participant *Participant) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, participant.ID),
 		MediaParticipantRequest{State: "disconnected", WrapupSkipped: true},
 		nil,
 	)
@@ -125,7 +125,7 @@ func (conversation Conversation) DisconnectParticipant(participant *Participant)
 // SetStateParticipant set the Conversation State of  a participant
 func (conversation Conversation) SetStateParticipant(participant *Participant, state string) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, participant.ID),
 		MediaParticipantRequest{State: state},
 		nil,
 	)
@@ -134,7 +134,7 @@ func (conversation Conversation) SetStateParticipant(participant *Participant, s
 // WrapupParticipant wraps up a Participant of this Conversation
 func (conversation Conversation) WrapupParticipant(participant *Participant, wrapup *Wrapup) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chat/%s/participants/%s", conversation.ID, participant.ID),
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, participant.ID),
 		MediaParticipantRequest{Wrapup: wrapup},
 		nil,
 	)
@@ -143,7 +143,7 @@ func (conversation Conversation) WrapupParticipant(participant *Participant, wra
 // TransferParticipant transfers a participant of this Conversation to the given Queue
 func (conversation Conversation) TransferParticipant(participant *Participant, queue Identifiable) error {
 	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chat/%s/participants/%s/replace", conversation.ID, participant.ID),
+		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, participant.ID),
 		struct{ID string `json:"queueId"`}{ID: queue.GetID()},
 		nil,
 	)
