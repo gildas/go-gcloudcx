@@ -113,9 +113,9 @@ func (conversation Conversation) String() string {
 	return conversation.ID
 }
 
-func (conversation Conversation) Post(member *ChatMember, text string) error {
+func (conversation Conversation) Post(member Identifiable, text string) error {
 	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.ID),
+		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
 		struct{
 			BodyType string `json:"bodyType"`
 			Body     string `json:"body"`

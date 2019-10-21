@@ -47,3 +47,15 @@ type JourneyContext struct {
 		}                   `json:"actionMap"`
 	} `json:"triggeringAction"`
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (conversation ConversationChat) GetID() string {
+	return conversation.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (conversation ConversationChat) String() string {
+	return conversation.ID
+}

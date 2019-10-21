@@ -36,16 +36,16 @@ type Participant struct {
   Locale                 string                  `json:"locale"`
 
   Attributes             map[string]string       `json:"attributes"`
-  Calls                  []ConversationCall      `json:"calls"`
-  Callbacks              []ConversationCallback  `json:"callbacks"`
-  Chats                  []ConversationChat      `json:"chats"`
-  CobrowseSessions       []CobrowseSession       `json:"cobrowseSession"`
-  Emails                 []ConversationEmail     `json:"emails"`
-  Messages               []ConversationMessage   `json:"messages"`
-  ScreenShares           []ScreenShare           `json:"screenShares"`
-  SocialExpressions      []SocialExpression      `json:"socialExpressions"`
-  Videos                 []ConversationVideo     `json:"videos"`
-  Evaluations            []Evaluation            `json:"evaluations"`
+  Calls                  []*ConversationCall     `json:"calls"`
+  Callbacks              []*ConversationCallback `json:"callbacks"`
+  Chats                  []*ConversationChat     `json:"chats"`
+  CobrowseSessions       []*CobrowseSession      `json:"cobrowseSession"`
+  Emails                 []*ConversationEmail    `json:"emails"`
+  Messages               []*ConversationMessage  `json:"messages"`
+  ScreenShares           []*ScreenShare          `json:"screenShares"`
+  SocialExpressions      []*SocialExpression     `json:"socialExpressions"`
+  Videos                 []*ConversationVideo    `json:"videos"`
+  Evaluations            []*Evaluation           `json:"evaluations"`
 
   WrapupRequired         bool                    `json:"wrapupRequired"`
   WrapupPrompt           string                  `json:"wrapupPrompt"`

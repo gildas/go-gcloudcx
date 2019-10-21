@@ -194,7 +194,7 @@ func mainRouteHandler() http.Handler {
 										}
 
 										log.Debugf("Received: %s", response.FulfillmentText)
-										err = topic.Conversation.Post(topic.Sender, response.FulfillmentText)
+										err = topic.Conversation.Post(participant.Chats[0], response.FulfillmentText)
 										if err != nil {
 											log.Errorf("Failed to send Text to Chat Member", err)
 										}
