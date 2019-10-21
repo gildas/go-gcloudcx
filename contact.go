@@ -8,3 +8,9 @@ type Contact struct {
 	Address   string `json:"address,omitempty"`   // If present, there is no Extension
 	Extension string `json:"extension,omitempty"` // If present, there is no Address
 }
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (contact Contact) String() string {
+	return contact.Display
+}

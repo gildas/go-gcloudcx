@@ -83,3 +83,18 @@ func (locationImage *LocationImage) UnmarshalJSON(payload []byte) (err error) {
 	locationImage.ImageURL = (*url.URL)(inner.I)
 	return
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (location LocationDefinition) GetID() string {
+	return location.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (location LocationDefinition) String() string {
+	if len(location.Name) != 0 {
+		return location.Name
+	}
+	return location.ID
+}

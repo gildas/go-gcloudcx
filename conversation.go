@@ -95,6 +95,15 @@ func (conversation Conversation) GetID() string {
 	return conversation.ID
 }
 
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (conversation Conversation) String() string {
+	if len(conversation.Name) != 0 {
+		return conversation.Name
+	}
+	return conversation.ID
+}
+
 // DisconnectParticipant set the Conversation State of  a participant
 func (conversation Conversation) DisconnectParticipant(participant *Participant) error {
 	return conversation.Client.Patch(

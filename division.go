@@ -7,3 +7,18 @@ type Division struct {
 	SelfURI string  `json:"selfUri"`
 	Client  *Client `json:"-"`
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (division Division) GetID() string {
+	return division.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (division Division) String() string {
+	if len(division.Name) != 0 {
+		return division.Name
+	}
+	return division.ID
+}

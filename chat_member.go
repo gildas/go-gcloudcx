@@ -15,3 +15,18 @@ type ChatMember struct {
 	Authenticated bool              `json:"authenticatedGuest,omitempty"`
 	Custom        map[string]string `json:"customFields,omitempty"`
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (member ChatMember) GetID() string {
+	return member.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (member ChatMember) String() string {
+	if len(member.DisplayName) != 0 {
+		return member.DisplayName
+	}
+	return member.ID
+}

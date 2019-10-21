@@ -15,6 +15,7 @@ type Participant struct {
 
   UserURI                string                  `json:"userUri"`
   UserID                 string                  `json:"userId"`
+  User                   *User                   `json:"user"`
   ExternalContactID      string                  `json:"externalContactId"`
   ExternalOrganizationID string                  `json:"externalOrganizationId"`
 
@@ -121,5 +122,14 @@ type Participant struct {
 // GetID gets the identifier of this
 //   implements Identifiable
 func (participant Participant) GetID() string {
+	return participant.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (participant Participant) String() string {
+	if len(participant.Name) != 0 {
+		return participant.Name
+	}
 	return participant.ID
 }

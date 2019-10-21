@@ -30,3 +30,15 @@ type SocialExpression struct {
 
 	DisconnectType    string             `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (socialExpression SocialExpression) GetID() string {
+	return socialExpression.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (socialExpression SocialExpression) String() string {
+	return socialExpression.ID
+}

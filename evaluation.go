@@ -118,3 +118,18 @@ type EvaluationScoringSet struct {
 	TotalCriticalScore float64 `json:"totalCriticalScore"`
 	//...
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (evaluation Evaluation) GetID() string {
+	return evaluation.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (evaluation Evaluation) String() string {
+	if len(evaluation.Name) != 0 {
+		return evaluation.Name
+	}
+	return evaluation.ID
+}

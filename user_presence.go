@@ -23,6 +23,12 @@ type PresenceDefinition struct {
 	SelfURI        string `json:"selfUri"`
 }
 
+// GetID gets the identifier of this
+//   implements Identifiable
+func (presence UserPresence) GetID() string {
+	return presence.ID
+}
+
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (presence UserPresence) String() string {

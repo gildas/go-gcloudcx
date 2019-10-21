@@ -27,3 +27,15 @@ type CobrowseSession struct {
 	Controlling       []string  `json:"controlling"`
 	ViewerURL         *url.URL  `json:"viewerUrl"`
 }
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (session CobrowseSession) GetID() string {
+	return session.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (session CobrowseSession) String() string {
+	return session.ID
+}
