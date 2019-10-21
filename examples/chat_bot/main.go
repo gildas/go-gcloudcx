@@ -129,6 +129,13 @@ func mainRouteHandler() http.Handler {
 							case "disconnected": // Finally, if we need tp wrap up the chat, let's do it
 								if participant.WrapupRequired && participant.Wrapup == nil {
 									log.Infof("Wrapping up chat")
+									// Once the transfer is initiated, we should "Wrapup" the participant
+									//   if needed (queue request a wrapup)
+									wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
+									if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
+										log.Errorf("Failed to wrapup Partitipant %s", participant)
+										continue
+									}
 								}
 							}
 						}
@@ -156,13 +163,6 @@ func mainRouteHandler() http.Handler {
 									log.Infof("Transferring Participant %s to Queue %s", participant, Queue)
 									if err := topic.Conversation.TransferParticipant(participant, Queue); err != nil {
 										log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
-										continue
-									}
-									// Once the transfer is initiated, we should "Wrapup" the participant
-									//   if needed (queue request a wrapup)
-									wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-									if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
-										log.Errorf("Failed to wrapup Partitipant %s", participant)
 										continue
 									}
 								default: // send the message to the Chat Bot (customer side only)
