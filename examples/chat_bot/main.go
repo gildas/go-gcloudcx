@@ -125,6 +125,7 @@ func mainRouteHandler() http.Handler {
 					case *purecloud.ConversationChatMessageTopic:
 						log = log.Record("conversation", topic.Conversation.ID)
 						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation, topic.BodyType, topic.Body)
+						// TODO: We are interested in standard body type only!
 						// We need a real conversation object, so we can operate on it
 						err = topic.Conversation.GetMyself()
 						if err != nil {
@@ -159,6 +160,8 @@ func mainRouteHandler() http.Handler {
 								// Send stuff to Google
 
 							}
+						} else {
+							log.Warnf("Failed to find Agent Participant in Conversation")
 						}
 					case *purecloud.UserPresenceTopic:
 						log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
@@ -166,7 +169,7 @@ func mainRouteHandler() http.Handler {
 						log.Warnf("Unknown topic: %s", topic)
 					}
 				case <-time.After(30 * time.Second):
-					log.Debugf("Nothing in the last 30 seconds")
+					// log.Debugf("Nothing in the last 30 seconds")
 				}
 			}
 		}()
