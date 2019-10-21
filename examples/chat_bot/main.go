@@ -133,43 +133,53 @@ func mainRouteHandler() http.Handler {
 					case *purecloud.ConversationChatMessageTopic:
 						log = log.Record("conversation", topic.Conversation.ID)
 						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation, topic.BodyType, topic.Body)
-						// TODO: We are interested in standard body type only!
-						// We need a real conversation object, so we can operate on it
-						err = topic.Conversation.GetMyself()
-						if err != nil {
-							log.Errorf("Failed to retreive a Conversation for ID %s", topic.Conversation, err)
-							continue
-						}
-						participant := findParticipant(topic.Conversation.Participants, user, "agent")
-						if participant != nil {
-							log = log.Record("participant", participant.ID)
-							switch {
-							case strings.Contains(topic.Body, "stop"): // the agent wants to disconnect
-								log.Infof("Disconnecting Participant %s", participant)
-								if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
-									log.Errorf("Failed to Wrapup Participant %s", &participant, err)
-									continue
-								}
-							case strings.Contains(topic.Body, "agent"):
-								log.Infof("Transferring Participant %s to Queue %s", participant, Queue)
-								if err := topic.Conversation.TransferParticipant(participant, Queue); err != nil {
-									log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
-									continue
-								}
-								// Once the transfer is initiated, we should "Wrapup" the participant
-								//   if needed (queue request a wrapup)
-								wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-								if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
-									log.Errorf("Failed to wrapup Partitipant %s", participant)
-									continue
-								}
-							default: // send the topic Body to the ChatBot
-								log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
-								// Send stuff to Google
-
+						if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
+							// We need a real conversation object, so we can operate on it
+							err = topic.Conversation.GetMyself()
+							if err != nil {
+								log.Errorf("Failed to retreive a Conversation for ID %s", topic.Conversation, err)
+								continue
 							}
-						} else {
-							log.Warnf("Failed to find Agent Participant in Conversation")
+							participant := findParticipant(topic.Conversation.Participants, user, "agent")
+							if participant != nil {
+								log = log.Record("participant", participant.ID)
+								switch {
+								case strings.Contains(topic.Body, "stop"): // the agent wants to disconnect
+									log.Infof("Disconnecting Participant %s", participant)
+									if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
+										log.Errorf("Failed to Wrapup Participant %s", &participant, err)
+										continue
+									}
+								case strings.Contains(topic.Body, "agent"):
+									log.Infof("Transferring Participant %s to Queue %s", participant, Queue)
+									if err := topic.Conversation.TransferParticipant(participant, Queue); err != nil {
+										log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
+										continue
+									}
+									// Once the transfer is initiated, we should "Wrapup" the participant
+									//   if needed (queue request a wrapup)
+									wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
+									if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
+										log.Errorf("Failed to wrapup Partitipant %s", participant)
+										continue
+									}
+								default: // send the message to the Chat Bot (customer side only)
+									found := false
+									for _, chat := range participant.Chats {
+										if topic.Sender.ID == chat.ID {
+											found = true
+											break
+										}
+									}
+									if !found {
+										log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
+										// Send stuff to Google
+
+									}
+								}
+							} else {
+								log.Warnf("Failed to find Agent Participant in Conversation")
+							}
 						}
 					case *purecloud.UserPresenceTopic:
 						log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
