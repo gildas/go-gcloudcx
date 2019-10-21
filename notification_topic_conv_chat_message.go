@@ -14,9 +14,11 @@ type ConversationChatMessageTopic struct {
 	Name           string
 	Conversation   *Conversation
 	Sender         *ChatMember
+	Type           string     // message, typing-indicator, 
 	Body           string
-	BodyType       string
+	BodyType       string     // standard,
 	TimeStamp      time.Time
+	CorrelationID  string
 	Client         *Client
 }
 
@@ -40,8 +42,8 @@ func (topic ConversationChatMessageTopic) TopicFor(identifiables ...Identifiable
 
 // Send sends the current topic to the Channel's chan
 func (topic *ConversationChatMessageTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Scope(topic.Name)
-	log.Infof("Conversation: %s, Sender: %s", topic.Conversation, topic.Sender.DisplayName)
+	log := channel.Logger.Topic("conversation_chat_message").Scope("send")
+	log.Debugf("Conversation: %s, Type: %s, Body Type: %s, Sender: %s", topic.Conversation, topic.Type, topic.BodyType, topic.Sender)
 	topic.Client              = channel.Client
 	topic.Conversation.Client = channel.Client
 	channel.TopicReceived <- topic
@@ -59,6 +61,7 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 			Timestamp time.Time   `json:"timestamp,omitempty"`
 		} `json:"eventBody"`
 		Metadata struct {
+			CorrelationID string `json:"correlationId,omitempty"`
 			Type          string `json:"type,omitempty"`
 		} `json:"metadata,omitempty"`
 		Version   string `json:"version"` // all
@@ -67,12 +70,14 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 		return errors.WithStack(err)
 	}
 	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
-	topic.Name         = inner.TopicName
-	topic.Conversation = &Conversation{ID:conversationID}
-	topic.Sender       = inner.EventBody.Sender
-	topic.BodyType     = inner.EventBody.BodyType
-	topic.Body         = inner.EventBody.Body
-	topic.TimeStamp    = inner.EventBody.Timestamp
+	topic.Name          = inner.TopicName
+	topic.Type          = inner.Metadata.Type
+	topic.Conversation  = &Conversation{ID:conversationID}
+	topic.Sender        = inner.EventBody.Sender
+	topic.BodyType      = inner.EventBody.BodyType
+	topic.Body          = inner.EventBody.Body
+	topic.TimeStamp     = inner.EventBody.Timestamp
+	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }
 

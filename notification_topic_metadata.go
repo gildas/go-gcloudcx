@@ -34,7 +34,7 @@ func (topic *MetadataTopic) Send(channel *NotificationChannel) {
 	}
 	log := channel.Logger.Scope(topic.Name)
 	
-	log.Infof("Topic Message: %s", topic.Message)
+	log.Debugf("Topic Message: %s", topic.Message)
 	topic.Client = channel.Client
 	channel.TopicReceived <- topic
 }

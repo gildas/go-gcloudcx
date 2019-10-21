@@ -9,10 +9,11 @@ import (
 
 // UserActivityTopic describes a Topic about User's Activity
 type UserActivityTopic struct {
-	Name     string
-	User     *User
-	Presence UserPresence
-	Client   *Client
+	Name          string
+	User          *User
+	Presence      *UserPresence
+	CorrelationID string
+	Client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -35,8 +36,8 @@ func (topic UserActivityTopic) TopicFor(identifiables ...Identifiable) string {
 
 // Send sends the current topic to the Channel's chan
 func (topic *UserActivityTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Scope(topic.Name)
-	log.Infof("User: %s, New Presence: %s", topic.User, topic.Presence)
+	log := channel.Logger.Topic("user_activity").Scope("send")
+	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
 	topic.Client      = channel.Client
 	topic.User.Client = channel.Client
 	channel.TopicReceived <- topic
@@ -71,20 +72,21 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 }
 	*/
 	var inner struct {
-		TopicName string       `json:"topicName"`
-		Presence  UserPresence `json:"eventBody"`
+		TopicName string        `json:"topicName"`
+		Presence  *UserPresence `json:"eventBody"`
 		Metadata struct {
 			CorrelationID string `json:"correlationId"`
-		}                      `json:"metadata"`
-		Version   string       `json:"version"`
+		}                       `json:"metadata"`
+		Version   string        `json:"version"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
 	}
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity")
-	topic.Name     = inner.TopicName
-	topic.User     = &User{ID:userID}
-	topic.Presence = inner.Presence
+	topic.Name          = inner.TopicName
+	topic.User          = &User{ID:userID}
+	topic.Presence      = inner.Presence
+	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }
 

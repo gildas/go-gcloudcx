@@ -9,10 +9,11 @@ import (
 
 // UserPresenceTopic describes a Topic about User's Presence
 type UserPresenceTopic struct {
-	Name     string
-	User     *User
-	Presence UserPresence
-	Client   *Client
+	Name          string
+	User          *User
+	Presence      UserPresence
+	CorrelationID string
+	Client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -35,8 +36,8 @@ func (topic UserPresenceTopic) TopicFor(identifiables ...Identifiable) string {
 
 // Send sends the current topic to the Channel's chan
 func (topic *UserPresenceTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Scope(topic.Name)
-	log.Infof("User: %s, New Presence: %s", topic.User, topic.Presence)
+	log := channel.Logger.Topic("user_presence").Scope("send")
+	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
 	topic.Client      = channel.Client
 	topic.User.Client = channel.Client
 	channel.TopicReceived <- topic
@@ -56,9 +57,10 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 		return errors.WithStack(err)
 	}
 	userID   := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
-	topic.Name     = inner.TopicName
-	topic.Presence = inner.Presence
-	topic.User     = &User{ID: userID}
+	topic.Name          = inner.TopicName
+	topic.Presence      = inner.Presence
+	topic.User          = &User{ID: userID}
+	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }
 
