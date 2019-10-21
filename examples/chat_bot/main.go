@@ -24,6 +24,7 @@ var Log *logger.Logger
 // Client is the PureCloud Client
 var Client *purecloud.Client
 
+// The Organization this session belongs to
 // The Queue to transfer to
 var Queue *purecloud.Queue
 
@@ -45,6 +46,16 @@ func loggedInHandler() http.Handler {
 			return
 		}
 		log = log.Topic("route").Scope("logged_in")
+
+		client, err := purecloud.ClientFromContext(r.Context())
+		if err != nil {
+			log.Errorf("Failed to retrieve the PureCloud Client", err)
+			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
+		}
+
+		client.Organization, _ = client.GetMyOrganization()
+
 		log.Infof("Redirecting to /")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
@@ -166,14 +177,7 @@ func mainRouteHandler() http.Handler {
 										continue
 									}
 								default: // send the message to the Chat Bot (customer side only)
-									found := false
-									for _, chat := range participant.Chats {
-										if topic.Sender.ID == chat.ID {
-											found = true
-											break
-										}
-									}
-									if !found {
+									if !participant.IsMember("chat", topic.Sender) {
 										log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
 										// Send stuff to Google
 

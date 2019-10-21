@@ -1,6 +1,7 @@
 package purecloud
 
 import (
+	"strings"
 	"encoding/json"
   "time"
 
@@ -58,6 +59,74 @@ type Participant struct {
 
   RoutingData            ConversationRoutingData `json:"conversationRoutingData"`
 	SelfURI                string                  `json:"selfUri"`
+}
+
+func (participant Participant) IsMember(mediaType string, identifiable Identifiable) bool {
+  switch strings.ToLower(mediaType) {
+  case "call":
+    for _, conversation := range participant.Calls {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "chat":
+    for _, conversation := range participant.Chats {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "callback":
+    for _, conversation := range participant.Callbacks {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "cobrowsesession", "cobrowse":
+    for _, conversation := range participant.CobrowseSessions {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "email":
+    for _, conversation := range participant.Emails {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "evaluation":
+    for _, conversation := range participant.Evaluations {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "message":
+    for _, conversation := range participant.Messages {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "screenshare":
+    for _, conversation := range participant.ScreenShares {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "socialexpression":
+    for _, conversation := range participant.SocialExpressions {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  case "video":
+    for _, conversation := range participant.Videos {
+      if identifiable.GetID() == conversation.ID {
+        return true
+      }
+    }
+  default:
+    return false
+  }
+  return false
 }
 
 // GetID gets the identifier of this

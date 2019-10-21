@@ -52,6 +52,8 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	grant.Token.Token     = response.AccessToken
 	grant.Token.ExpiresOn = time.Now().Add(time.Duration(int64(response.ExpiresIn)))
 
+	client.Organization, _ = client.GetMyOrganization()
+
 	return
 }
 

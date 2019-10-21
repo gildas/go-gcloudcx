@@ -10,6 +10,7 @@ import (
 type Client struct {
 	Region              string             `json:"region"`
 	DeploymentID        string             `json:"deploymentId"`
+	Organization        *Organization      `json:"-"`
 	API                 *url.URL           `json:"apiUrl,omitempty"`
 	Proxy               *url.URL           `json:"proxyUrl,omitempty"`
 	AuthorizationGrant  AuthorizationGrant `json:"auth"`
