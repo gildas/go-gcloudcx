@@ -1,20 +1,22 @@
 package purecloud
 
 import (
-	"time"
+	"encoding/json"
+  "time"
+
+	"github.com/pkg/errors"
 )
 
 type Participant struct {
   ID                     string                  `json:"id"`
-	Name                   string                  `json:"name"`
+  Name                   string                  `json:"name"`
+  State                  string                  `json:"state"`
 	StartTime              time.Time               `json:"startTime"`
 	ConnectedTime          time.Time               `json:"connectedTime"`
 	EndTime                time.Time               `json:"endTime"`
 	StartHoldTime          time.Time               `json:"startHoldTime"`
   Purpose                string                  `json:"purpose"`
 
-  UserURI                string                  `json:"userUri"`
-  UserID                 string                  `json:"userId"`
   User                   *User                   `json:"user"`
   ExternalContactID      string                  `json:"externalContactId"`
   ExternalOrganizationID string                  `json:"externalOrganizationId"`
@@ -48,7 +50,7 @@ type Participant struct {
   WrapupPrompt           string                  `json:"wrapupPrompt"`
   WrapupTimeout          int                     `json:"wrapupTimeoutMs"` // time.Duration
   WrapupSkipped          bool                    `json:"wrapupSkipped"`
-  Wrapup                 Wrapup                  `json:"wrapup"`
+  Wrapup                 *Wrapup                 `json:"wrapup"`
 
   AlertingTimeout        int                     `json:"alertingTimeoutMs"` // time.Duration
   ScreenRecordingState   string                  `json:"screenRecordingState"`
@@ -56,67 +58,6 @@ type Participant struct {
 
   RoutingData            ConversationRoutingData `json:"conversationRoutingData"`
 	SelfURI                string                  `json:"selfUri"`
-
-/*
-      "script": "object",
-      "wrapupTimeoutMs": 0,
-      "wrapupSkipped": true,
-      "alertingTimeoutMs": 0,
-      "provider": "string",
-      "externalContact": "object",
-      "externalOrganization": "object",
-      "wrapup": {
-        "code": "string",
-        "notes": "string",
-        "tags": [
-          {}
-        ],
-        "durationSeconds": 0,
-        "endTime": "string",
-        "additionalProperties": "object"
-      },
-      "conversationRoutingData": {
-        "queue": "object",
-        "language": "object",
-        "priority": 0,
-        "skills": [
-          {}
-        ],
-        "scoredAgents": [
-          {
-            "agent": "object",
-            "score": 0
-          }
-        ]
-      },
-      "peer": "string",
-      "screenRecordingState": "string",
-      "flaggedReason": "general",
-      "journeyContext": {
-        "customer": {
-          "id": "string",
-          "idType": "string"
-        },
-        "customerSession": {
-          "id": "string",
-          "type": "string"
-        },
-        "triggeringAction": {
-          "id": "string",
-          "actionMap": {
-            "id": "string",
-            "version": 0
-          }
-        }
-      },
-      "roomId": "string",
-      "avatarImageUrl": "string"
-    }
-  ],
-  "otherMediaUris": [
-    {}
-  ]
-*/
 }
 
 // GetID gets the identifier of this
@@ -132,4 +73,23 @@ func (participant Participant) String() string {
 		return participant.Name
 	}
 	return participant.ID
+}
+
+// UnmarshalJSON unmarshals JSON into this
+func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
+  type surrogate Participant
+  var inner struct {
+    surrogate
+    UserID    string `json:"userId"`
+    UserURI   string `json:"userUri"`
+  }
+
+	if err = json.Unmarshal(payload, &inner); err != nil {
+		return errors.WithStack(err)
+  }
+  *participant = Participant(inner.surrogate)
+  if participant.User == nil && len(inner.UserID) > 0 {
+    participant.User = &User{ID: inner.UserID, SelfURI: inner.UserURI}
+  }
+  return
 }
