@@ -28,6 +28,7 @@ func New(options ClientOptions) *Client {
 	client := Client{
 		Proxy:        options.Proxy,
 		DeploymentID: options.DeploymentID,
+		Organization: &Organization{ID: options.OrganizationID},
 		Logger:       options.Logger,
 	}
 	return client.SetLogger(options.Logger).SetRegion(options.Region)
