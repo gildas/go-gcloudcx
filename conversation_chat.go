@@ -1,8 +1,12 @@
 package purecloud
 
 import (
+	"encoding/json"
 	"net/url"
 	"time"
+
+	"github.com/gildas/go-core"
+	"github.com/pkg/errors"
 )
 
 // ConversationChat describes a Chat (like belonging to Participant)
@@ -25,7 +29,7 @@ type ConversationChat struct {
 	RoomID         string          `json:"roomId"`
 	ScriptID       string          `json:"scriptId"`
 	RecordingID    string          `json:"recordingId"`
-	AvatarImageURL *url.URL        `json:"avatarImageUrl"`
+	AvatarImageURL *url.URL        `json:"-"`
 	JourneyContext *JourneyContext `json:"journeyContext"`
 }
 
@@ -58,4 +62,19 @@ func (conversation ConversationChat) GetID() string {
 //   implements the fmt.Stringer interface
 func (conversation ConversationChat) String() string {
 	return conversation.ID
+}
+
+// UnmarshalJSON unmarshals JSON into this
+func (conversation *ConversationChat) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate ConversationChat
+	var inner struct {
+		surrogate
+		A *core.URL `json:"avatarImageUrl"`
+	}
+	if err = json.Unmarshal(payload, &inner); err != nil {
+		return errors.WithStack(err)
+	}
+	*conversation = ConversationChat(inner.surrogate)
+	conversation.AvatarImageURL = (*url.URL)(inner.A)
+	return
 }
