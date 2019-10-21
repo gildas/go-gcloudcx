@@ -104,7 +104,7 @@ func MainHandler() http.Handler {
 						switch topic := receivedTopic.(type) {
 						case *purecloud.UserConversationChatTopic:
 							log = log.Record("user", topic.User.ID).Record("conversation", topic.Conversation.ID)
-							log.Infof("User %s, Conversation: %s", topic.User, topic.Conversation)
+							log.Infof("User %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
 							for i, participant := range topic.Participants {
 								log.Infof("  Participant #%d: id=%s, name=%s, purpose=%s, state=%s", i, participant.ID, participant.Name, participant.Purpose, participant.State)
 							}
@@ -142,7 +142,7 @@ func MainHandler() http.Handler {
 							}
 						case *purecloud.ConversationChatMessageTopic:
 							log = log.Record("conversation", topic.Conversation.ID)
-							log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation, topic.BodyType, topic.Body)
+							log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.Conversation, topic.BodyType, topic.Body, topic.Sender)
 							if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
 								// We need a real conversation object, so we can operate on it
 								err = topic.Conversation.GetMyself()
@@ -169,6 +169,12 @@ func MainHandler() http.Handler {
 									default: // send the message to the Chat Bot (customer side only)
 										if !participant.IsMember("chat", topic.Sender) {
 											log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
+
+											err = topic.Conversation.SetTyping(participant.Chats[0])
+											if err != nil {
+												log.Errorf("Failed to send Typing to Chat Member", err)
+											}
+
 											// Send stuff to Google
 											googleBotURL, _ := url.Parse("https://newpod-gaap.live.genesys.com/MattGDF/")
 											response := struct {
@@ -188,6 +194,7 @@ func MainHandler() http.Handler {
 												&response)
 											if err != nil {
 												log.Errorf("Failed to send text to Google", err)
+												continue
 											}
 
 											log.Record("response", response).Debugf("Received: %s", response.FulfillmentText)
