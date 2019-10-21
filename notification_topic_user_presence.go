@@ -10,7 +10,7 @@ import (
 // UserPresenceTopic describes a Topic about User's Presence
 type UserPresenceTopic struct {
 	Name     string
-	UserID   string
+	User     *User
 	Presence UserPresence
 	Client   *Client
 }
@@ -36,8 +36,9 @@ func (topic UserPresenceTopic) TopicFor(identifiables ...Identifiable) string {
 // Send sends the current topic to the Channel's chan
 func (topic *UserPresenceTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Scope(topic.Name)
-	log.Infof("User: %s, New Presence: %s", topic.UserID, topic.Presence)
-	topic.Client = channel.Client
+	log.Infof("User: %s, New Presence: %s", topic.User, topic.Presence)
+	topic.Client      = channel.Client
+	topic.User.Client = channel.Client
 	channel.TopicReceived <- topic
 }
 
@@ -54,9 +55,10 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
 	}
+	userID   := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
 	topic.Name     = inner.TopicName
-	topic.UserID   = strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
 	topic.Presence = inner.Presence
+	topic.User     = &User{ID: userID}
 	return
 }
 

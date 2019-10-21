@@ -27,6 +27,16 @@ var Client *purecloud.Client
 // The Queue to transfer to
 var Queue *purecloud.Queue
 
+// findParticipant finds a participant after its user id and purpose
+func findParticipant(participants []*purecloud.Participant, user *purecloud.User, purpose string) *purecloud.Participant {
+	for _, participant := range participants {
+		if participant.Purpose == purpose && participant.User != nil && strings.Compare(user.ID, participant.User.ID) == 0 {
+			return participant
+		}
+	}
+	return nil
+}
+
 func loggedInHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log, err := logger.FromContext(r.Context())
@@ -92,56 +102,66 @@ func mainRouteHandler() http.Handler {
 					log.Infof("Received topic: %s", receivedTopic)
 					switch topic := receivedTopic.(type) {
 					case *purecloud.UserConversationChatTopic:
-						log.Infof("User %s, Conversation: %s", topic.UserID, topic.ConversationID)
+						log = log.Record("user", topic.User.ID).Record("conversation", topic.Conversation.ID)
+						log.Infof("User %s, Conversation: %s", topic.User, topic.Conversation)
 						// TODO: Matt => What is that connected variable in index.html?!?
-						if len(topic.Participants) >= 4 && len(topic.Participants[3].ID) != 0 {
-							log.Infof("Subscribing to Conversation %s", topic.ConversationID)
-							conversation := purecloud.Conversation{ID: topic.ConversationID}
-							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(conversation))
+						participant := findParticipant(topic.Participants, topic.User, "agent")
+						if participant != nil {
+							log = log.Record("participant", participant.ID)
+							log.Infof("Subscribing to Conversation %s", topic.Conversation)
+							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
 							if err != nil {
 								log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 								continue
 							}
 							// Now we need to "answer" the participant, i.e. turn them connected
-							participant := conversation.Participants[3]
-							err = conversation.SetStateParticipant(participant, "connected")
+							log.Infof("Setting Participant %s state to %s", participant, "connected")
+							err = topic.Conversation.SetStateParticipant(participant, "connected")
 							if err != nil {
 								log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
 								continue
 							}
 						}
 					case *purecloud.ConversationChatMessageTopic:
-						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.ConversationID, topic.BodyType, topic.Body)
+						log = log.Record("conversation", topic.Conversation.ID)
+						log.Infof("Conversation: %s, BodyType: %s, Body: %s", topic.Conversation, topic.BodyType, topic.Body)
 						// We need a real conversation object, so we can operate on it
-						conversation, err := topic.GetClient().GetConversation(topic.ConversationID)
+						err = topic.Conversation.GetMyself()
 						if err != nil {
-							log.Errorf("Failed to retreive a Conversation for ID %s", topic.ConversationID, err)
+							log.Errorf("Failed to retreive a Conversation for ID %s", topic.Conversation, err)
 							continue
 						}
-						participant := conversation.Participants[3]
-						if strings.Contains(topic.Body, "stop") { // disconnect
-							if err := conversation.DisconnectParticipant(participant); err != nil {
-								log.Errorf("Failed to Wrapup Participant %s", &participant, err)
-								continue
+						participant := findParticipant(topic.Conversation.Participants, user, "agent")
+						if participant != nil {
+							log = log.Record("participant", participant.ID)
+							switch {
+							case strings.Contains(topic.Body, "stop"): // the agent wants to disconnect
+								log.Infof("Disconnecting Participant %s", participant)
+								if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
+									log.Errorf("Failed to Wrapup Participant %s", &participant, err)
+									continue
+								}
+							case strings.Contains(topic.Body, "agent"):
+								log.Infof("Transferring Participant %s to Queue %s", participant, Queue)
+								if err := topic.Conversation.TransferParticipant(participant, Queue); err != nil {
+									log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
+									continue
+								}
+								// Once the transfer is initiated, we should "Wrapup" the participant
+								//   if needed (queue request a wrapup)
+								wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
+								if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
+									log.Errorf("Failed to wrapup Partitipant %s", participant)
+									continue
+								}
+							default: // send the topic Body to the ChatBot
+								log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
+								// Send stuff to Google
+
 							}
-						} else if strings.Contains(topic.Body, "agent") { // transfer
-							if err := conversation.TransferParticipant(participant, Queue); err != nil {
-								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, Queue, err)
-								continue
-							}
-							// Once the transfer is initiated, we should "Wrapup" the participant
-							//   if needed (queue request a wrapup)
-							wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-							if err := conversation.WrapupParticipant(participant, wrapup); err != nil {
-								log.Errorf("Failed to wrapup Partitipant %s", participant)
-								continue
-							}
-						} else {
-							log.Infof("Sending %s Body to Google: %s", topic.BodyType, topic.Body)
-							// Send stuff to Google
 						}
 					case *purecloud.UserPresenceTopic:
-						log.Infof("User %s, Presence: %s", topic.UserID, topic.Presence)
+						log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
 					default:
 						log.Warnf("Unknown topic: %s", topic)
 					}

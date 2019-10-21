@@ -12,8 +12,8 @@ import (
 // ConversationChatMessageTopic describes a Topic about User's Presence
 type ConversationChatMessageTopic struct {
 	Name           string
-	ConversationID string
-	Sender         ChatMember
+	Conversation   *Conversation
+	Sender         *ChatMember
 	Body           string
 	BodyType       string
 	TimeStamp      time.Time
@@ -41,8 +41,9 @@ func (topic ConversationChatMessageTopic) TopicFor(identifiables ...Identifiable
 // Send sends the current topic to the Channel's chan
 func (topic *ConversationChatMessageTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Scope(topic.Name)
-	log.Infof("Conversation: %s, Sender: %s", topic.ConversationID, topic.Sender.DisplayName)
-	topic.Client = channel.Client
+	log.Infof("Conversation: %s, Sender: %s", topic.Conversation, topic.Sender.DisplayName)
+	topic.Client              = channel.Client
+	topic.Conversation.Client = channel.Client
 	channel.TopicReceived <- topic
 }
 
@@ -51,11 +52,11 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	var inner struct {
 		TopicName string       `json:"topicName"`
 		EventBody struct {
-			ID        string     `json:"id,omitempty"`
-			Sender    ChatMember `json:"sender,omitempty"`
-			Body      string     `json:"body,omitempty"`
-			BodyType  string     `json:"bodyType,omitempty"`
-			Timestamp time.Time  `json:"timestamp,omitempty"`
+			ID        string      `json:"id,omitempty"`
+			Sender    *ChatMember `json:"sender,omitempty"`
+			Body      string      `json:"body,omitempty"`
+			BodyType  string      `json:"bodyType,omitempty"`
+			Timestamp time.Time   `json:"timestamp,omitempty"`
 		} `json:"eventBody"`
 		Metadata struct {
 			Type          string `json:"type,omitempty"`
@@ -65,17 +66,18 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
 	}
-	topic.Name           = inner.TopicName
-	topic.ConversationID = strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.v2.conversations.chats."), ".messages")
-	topic.Sender         = inner.EventBody.Sender
-	topic.BodyType       = inner.EventBody.BodyType
-	topic.Body           = inner.EventBody.Body
-	topic.TimeStamp      = inner.EventBody.Timestamp
+	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.v2.conversations.chats."), ".messages")
+	topic.Name         = inner.TopicName
+	topic.Conversation = &Conversation{ID:conversationID}
+	topic.Sender       = inner.EventBody.Sender
+	topic.BodyType     = inner.EventBody.BodyType
+	topic.Body         = inner.EventBody.Body
+	topic.TimeStamp    = inner.EventBody.Timestamp
 	return
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (topic ConversationChatMessageTopic) String() string {
-	return fmt.Sprintf("%s=%s", topic.Name, topic.Sender.ID)
+	return fmt.Sprintf("%s=%s", topic.Name, topic.Sender)
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-logger"
+	"github.com/pkg/errors"
 )
 
 // Conversation contains the details of a live conversation
@@ -87,6 +88,14 @@ func (client *Client) GetConversation(conversationID string) (*Conversation, err
 	conversation.Client = client
 	conversation.Logger = client.Logger.Topic("conversation").Scope("conversation")
 	return conversation, nil
+}
+
+// GetMyself fetches the details of this conversation
+func (conversation *Conversation) GetMyself() error {
+	if conversation.Client == nil {
+		return errors.Errorf("Nil Client in conversation %s", conversation.ID)
+	}
+	return conversation.Client.Get("/conversations/" + conversation.ID, &conversation)
 }
 
 // GetID gets the identifier of this
