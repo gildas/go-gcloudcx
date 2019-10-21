@@ -66,7 +66,7 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
 	}
-	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.v2.conversations.chats."), ".messages")
+	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
 	topic.Name         = inner.TopicName
 	topic.Conversation = &Conversation{ID:conversationID}
 	topic.Sender       = inner.EventBody.Sender
