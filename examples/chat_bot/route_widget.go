@@ -53,11 +53,8 @@ const widgetJS = `
     }
   };
 `
-//        dataURL:         "https://api.mypurecloud.com.au",
-//        deploymentKey:   "b1a956a4-946a-46ef-a7f1-1a6de6402c18",
-//        orgGuid:         "ab560fec-a07e-4e8c-bba6-c68539f42b0e",
-//            targetAddress: "AltoCloud_Demo_Queue"
 
+// WidgetHandler gives the Javascript to help configuring a PureCloud Widget
 func WidgetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
 		log, err := logger.FromContext(r.Context())
@@ -74,15 +71,6 @@ func WidgetHandler() http.Handler {
 			return
 		}
 
-		if client.Organization == nil {
-			client.Organization, err = client.GetMyOrganization()
-			if err != nil {
-				log.Errorf("Failed to retrieve my Organization", err)
-				core.RespondWithError(w, http.StatusServiceUnavailable, err)
-				return
-			}
-		}
-
 		log.Infof("Providing PureCloud Config")
 		dictionary := struct {
 			Region         string
@@ -93,15 +81,9 @@ func WidgetHandler() http.Handler {
 			Region:         client.Region,
 			DeploymentID:   client.DeploymentID,
 			OrganizationID: client.Organization.ID,
-			QueueName:      Queue.ID,
+			QueueName:      AgentQueue.ID,
 		}
-		// script := template.Must(template.New("script").Parse(widgetJS))
-		scriptTemplate, err := template.New("script").Parse(widgetJS)
-		if err != nil {
-			log.Errorf("Failed to read the template", err)
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
-		}
+		scriptTemplate := template.Must(template.New("script").Parse(widgetJS))
 		w.Header().Set("Content-Type", "text/javascript")
 		w.WriteHeader(http.StatusOK)
 		err = scriptTemplate.Execute(w, dictionary)
