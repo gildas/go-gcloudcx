@@ -52,6 +52,7 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 	options.Proxy     = client.Proxy
 	options.UserAgent = APP + " " + VERSION
 	options.Logger    = client.Logger
+	options.ResponseBodyLogSize = 4096
 
 	res, err := core.SendRequest(options, results)
 	if err != nil {
