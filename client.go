@@ -7,9 +7,16 @@ import (
 	"github.com/gildas/go-logger"
 )
 
-// See: https://developer.mypurecloud.com/api/webchat/agentchat.html
-// See: https://developer.mypurecloud.com/api/tutorials/
-// See: https://developer.mypurecloud.com/api/rest/authorization/
+// Client is the primary object to use PureCloud
+type Client struct {
+	Region              string             `json:"region"`
+	DeploymentID        string             `json:"deploymentId"`
+	Organization        *Organization      `json:"-"`
+	API                 *url.URL           `json:"apiUrl,omitempty"`
+	Proxy               *url.URL           `json:"proxyUrl,omitempty"`
+	AuthorizationGrant  AuthorizationGrant `json:"auth"`
+	Logger              *logger.Logger     `json:"-"`
+}
 
 // ClientOptions contains the options to create a new Client
 type ClientOptions struct {
@@ -21,7 +28,7 @@ type ClientOptions struct {
 }
 
 // New creates a new PureCloud Client
-func New(options ClientOptions) *Client {
+func NewClient(options ClientOptions) *Client {
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}

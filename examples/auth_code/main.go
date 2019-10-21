@@ -104,7 +104,7 @@ func main() {
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.New(purecloud.ClientOptions{
+	Client = purecloud.NewClient(purecloud.ClientOptions{
 		Region:       *region,
 		DeploymentID: *deploymentID,
 		Logger:       Log,

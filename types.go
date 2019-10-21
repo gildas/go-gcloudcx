@@ -1,22 +1,5 @@
 package purecloud
 
-import (
-	"net/url"
-
-	"github.com/gildas/go-logger"
-)
-
-// Client is the primary object to use PureCloud
-type Client struct {
-	Region              string             `json:"region"`
-	DeploymentID        string             `json:"deploymentId"`
-	Organization        *Organization      `json:"-"`
-	API                 *url.URL           `json:"apiUrl,omitempty"`
-	Proxy               *url.URL           `json:"proxyUrl,omitempty"`
-	AuthorizationGrant  AuthorizationGrant `json:"auth"`
-	Logger              *logger.Logger     `json:"-"`
-}
-
 // Identifiable describes things that carry an identifier
 type Identifiable interface {
 	// GetID gets the identifier of this
