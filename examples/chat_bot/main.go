@@ -99,12 +99,14 @@ func mainRouteHandler() http.Handler {
 			for {
 				select {
 				case receivedTopic := <-channel.TopicReceived:
-					log.Infof("Received topic: %s", receivedTopic)
+					log.Debugf("Received topic: %s", receivedTopic)
 					switch topic := receivedTopic.(type) {
 					case *purecloud.UserConversationChatTopic:
 						log = log.Record("user", topic.User.ID).Record("conversation", topic.Conversation.ID)
 						log.Infof("User %s, Conversation: %s", topic.User, topic.Conversation)
-						// TODO: Matt => What is that connected variable in index.html?!?
+						for i, participant := range topic.Participants {
+							log.Infof("  Participant #%d: id=%s, name=%s, purpose=%s, state=%s", i, participant.ID, participant.Name, participant.Purpose, participant.State)
+						}
 						participant := findParticipant(topic.Participants, topic.User, "agent")
 						if participant != nil {
 							log = log.Record("participant", participant.ID)
