@@ -56,6 +56,16 @@ func loggedInHandler() http.Handler {
 
 		client.Organization, _ = client.GetMyOrganization()
 
+		if len(Queue.ID) == 0 {
+			// TODO: Code this again and cleanly!
+			queueName := Queue.Name
+			Queue, err = Client.FindQueueByName(queueName)
+			if err != nil {
+				log.Errorf("Failed to retrieve the PureCloud Queue %s", queueName, err)
+				core.RespondWithError(w, http.StatusServiceUnavailable, err)
+				return
+			}
+		}
 		log.Infof("Redirecting to /")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
@@ -181,14 +191,21 @@ func mainRouteHandler() http.Handler {
 										log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
 										// Send stuff to Google
 										googleBotURL, _ := url.Parse("https://newpod-gaap.live.genesys.com/MattGDF/")
-										response := struct{FulfillmentText string `json:"fulfillmenttext"`}{}
+										response := struct {
+											Intent          string            `json:"intent"`
+											Confidence      int               `json:"confidence"`
+											FulfillmentText string            `json:"fulfillmenttext"`
+											Entities        map[string]string `json:"entities"`
+										}{}
 										_, err := core.SendRequest(&core.RequestOptions{
-											URL:     googleBotURL,
-											Payload: struct{Message string `json:"message"`}{
+											URL: googleBotURL,
+											Payload: struct {
+												Message string `json:"message"`
+											}{
 												Message: topic.Body,
 											},
 										},
-										&response)
+											&response)
 										if err != nil {
 											log.Errorf("Failed to send text to Google", err)
 										}
@@ -219,10 +236,12 @@ func mainRouteHandler() http.Handler {
 			UserName     string `json:"user"`
 			ChannelID    string `json:"channelId"`
 			WebsocketURL string `json:"websocketUrl"`
+			Queue        *purecloud.Queue `json:"queue"`
 		}{
 			UserName:     user.Name,
 			ChannelID:    channel.ID,
 			WebsocketURL: channel.ConnectURL.String(),
+			Queue:        Queue,
 		})
 	})
 }
@@ -234,7 +253,7 @@ func main() {
 		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
 		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
 		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
-		queueID      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "The queue to transfer to")
+		queueName    = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "The queue to transfer to")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
 	flag.Parse()
@@ -263,7 +282,7 @@ func main() {
 	})
 
 	// TODO: Make this better... Too Simple for now
-	Queue = &purecloud.Queue{ID: *queueID}
+	Queue = &purecloud.Queue{Name: *queueName}
 
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)
