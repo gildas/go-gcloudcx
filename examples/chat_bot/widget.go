@@ -74,11 +74,13 @@ func WidgetHandler() http.Handler {
 			return
 		}
 
-		organization, err := client.GetMyOrganization()
-		if err != nil {
-			log.Errorf("Failed to retrieve my Organization", err)
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
+		if client.Organization == nil {
+			client.Organization, err = client.GetMyOrganization()
+			if err != nil {
+				log.Errorf("Failed to retrieve my Organization", err)
+				core.RespondWithError(w, http.StatusServiceUnavailable, err)
+				return
+			}
 		}
 
 		log.Infof("Providing PureCloud Config")
@@ -90,7 +92,7 @@ func WidgetHandler() http.Handler {
 		}{
 			Region:         client.Region,
 			DeploymentID:   client.DeploymentID,
-			OrganizationID: organization.ID,
+			OrganizationID: client.Organization.ID,
 			QueueName:      Queue.ID,
 		}
 		// script := template.Must(template.New("script").Parse(widgetJS))
