@@ -108,18 +108,26 @@ func mainRouteHandler() http.Handler {
 						participant := findParticipant(topic.Participants, topic.User, "agent")
 						if participant != nil {
 							log = log.Record("participant", participant.ID)
-							log.Infof("Subscribing to Conversation %s", topic.Conversation)
-							_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
-							if err != nil {
-								log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
-								continue
-							}
-							// Now we need to "answer" the participant, i.e. turn them connected
-							log.Infof("Setting Participant %s state to %s", participant, "connected")
-							err = topic.Conversation.SetStateParticipant(participant, "connected")
-							if err != nil {
-								log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
-								continue
+							log.Infof("User's Participant %s state: %s", participant, participant.State)
+							switch participant.State {
+							case "alerting": // Now we need to "answer" the participant, i.e. turn them connected
+								log.Infof("Subscribing to Conversation %s", topic.Conversation)
+								_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+								if err != nil {
+									log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
+									continue
+								}
+
+								log.Infof("Setting Participant %s state to %s", participant, "connected")
+								err = topic.Conversation.SetStateParticipant(participant, "connected")
+								if err != nil {
+									log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
+									continue
+								}
+							case "disconnected": // Finally, if we need tp wrap up the chat, let's do it
+								if participant.WrapupRequired && participant.Wrapup == nil {
+									log.Infof("Wrapping up chat")
+								}
 							}
 						}
 					case *purecloud.ConversationChatMessageTopic:
