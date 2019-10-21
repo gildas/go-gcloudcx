@@ -180,7 +180,24 @@ func mainRouteHandler() http.Handler {
 									if !participant.IsMember("chat", topic.Sender) {
 										log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
 										// Send stuff to Google
+										googleBotURL, _ := url.Parse("https://newpod-gaap.live.genesys.com/MattGDF/")
+										response := struct{FulfillmentText string `json:"fulfillmenttext"`}{}
+										_, err := core.SendRequest(&core.RequestOptions{
+											URL:     googleBotURL,
+											Payload: struct{Message string `json:"message"`}{
+												Message: topic.Body,
+											},
+										},
+										&response)
+										if err != nil {
+											log.Errorf("Failed to send text to Google", err)
+										}
 
+										log.Debugf("Received: %s", response.FulfillmentText)
+										err = topic.Conversation.Post(topic.Sender, response.FulfillmentText)
+										if err != nil {
+											log.Errorf("Failed to send Text to Chat Member", err)
+										}
 									}
 								}
 							} else {
