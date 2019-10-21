@@ -132,11 +132,18 @@ func (channel *NotificationChannel) messageLoop() (err error) {
 			continue
 		}
 
-		log.Tracef("Request %d bytes: %s", len(body), string(body))
 		topic, err := NotificationTopicFromJSON(body)
 		if err != nil {
 			log.Warnf("%s, Body size: %d, Content: %s", err.Error(), len(body), string(body))
 			continue
+		}
+		switch topic.(type) {
+		case *MetadataTopic:
+			if channel.LogHeartbeat {
+				log.Tracef("Request %d bytes: %s", len(body), string(body))
+			}
+		default:
+			log.Tracef("Request %d bytes: %s", len(body), string(body))
 		}
 		topic.Send(channel)
 	}
