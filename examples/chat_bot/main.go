@@ -233,15 +233,19 @@ func mainRouteHandler() http.Handler {
 		}()
 
 		core.RespondWithJSON(w, http.StatusOK, struct {
-			UserName     string `json:"user"`
+			UserName     string `json:"userName"`
+			UserID       string `json:"userId"`
+			QueueName    string `json:"queueName"`
+			QueueID      string `json:"queueId"`
 			ChannelID    string `json:"channelId"`
 			WebsocketURL string `json:"websocketUrl"`
-			Queue        *purecloud.Queue `json:"queue"`
 		}{
 			UserName:     user.Name,
+			UserID:       user.ID,
+			QueueName:    Queue.Name,
+			QueueID:      Queue.ID,
 			ChannelID:    channel.ID,
 			WebsocketURL: channel.ConnectURL.String(),
-			Queue:        Queue,
 		})
 	})
 }
