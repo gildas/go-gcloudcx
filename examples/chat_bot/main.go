@@ -27,7 +27,23 @@ var Client *purecloud.Client
 // The Queue to transfer to
 var AgentQueue *purecloud.Queue
 
+// WebRootPath contains the root path to prepend to URL when redirecting or in the web pages
 var WebRootPath string
+
+// NotFoundHandler is called when all other routes did not match
+func NotFoundHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log, err := logger.FromContext(r.Context())
+		if err != nil {
+			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
+		}
+		log = log.Topic("route").Scope("notfound")
+		log.Errorf("Route not Found %s", r.URL.String())
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 Path Not Found"))
+	})
+}
 
 func main() {
 	var (
@@ -91,6 +107,9 @@ func main() {
 	// This route gives the PureCloud Widget Javascript config to use
 	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
 	router.Methods("GET").Path("/widget").Handler(Client.HttpHandler()(WidgetHandler()))
+
+	// This route catches all other routes
+	router.PathPrefix("/").Handler(NotFoundHandler())
 
 	WebServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
