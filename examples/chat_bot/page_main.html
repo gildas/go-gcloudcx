@@ -53,6 +53,7 @@
 {{if .LoggedIn}}
         <!-- PureCloud Widget-->
         <script id="widget-config">
+  // See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
   if (!window._genesys) window._genesys = {};
   if (!window._gt)      window._gt = [];
 
@@ -88,7 +89,7 @@
         orgGuid:         "{{.OrganizationID}}",
         interactionData: {
           routing: {
-			targetType:    "QUEUE",
+            targetType:    "QUEUE",
             targetAddress: "{{.AgentQueueName}}"
           }
         }
