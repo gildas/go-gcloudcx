@@ -50,9 +50,11 @@ func MainHandler() http.Handler {
 			UserID         string
 			ChannelID      string
 			WebsocketURL   string
+			WebRootPath    string
 			LoggedIn       bool
 		}{
-			LoggedIn: client.IsAuthorized(),
+			WebRootPath: WebRootPath,
+			LoggedIn:    client.IsAuthorized(),
 		}
 
 		// We can use the client only if the agent is logged in...

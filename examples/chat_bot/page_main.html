@@ -17,9 +17,9 @@
     <body>
         <div class="container-fluid">
 {{if .LoggedIn}}
-            <form action="/logout" method="POST">
+            <form action="{{.WebRootPath}}/logout" method="POST">
 {{else}}
-            <form action="/login" method="POST">
+            <form action="{{.WebRootPath}}/login" method="POST">
 {{end}}
                 <div class="form-group">
                     <label for="chatbot_user">ChatBot User:</label>

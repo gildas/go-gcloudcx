@@ -37,8 +37,13 @@ func LoggedInHandler() http.Handler {
 				return
 			}
 		}
-		log.Infof("Redirecting to /")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		if len(WebRootPath) > 0 {
+			log.Infof("Redirecting to %s", WebRootPath)
+			http.Redirect(w, r, WebRootPath, http.StatusTemporaryRedirect)
+		} else {
+			log.Infof("Redirecting to /")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		}
 	})
 }
 
@@ -67,8 +72,13 @@ func LoginHandler() http.Handler {
 				return
 			}
 		}
-		log.Infof("Redirecting to /")
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		if len(WebRootPath) > 0 {
+			log.Infof("Redirecting to %s", WebRootPath)
+			http.Redirect(w, r, WebRootPath, http.StatusTemporaryRedirect)
+		} else {
+			log.Infof("Redirecting to /")
+			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		}
 	})
 
 }

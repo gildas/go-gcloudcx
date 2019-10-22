@@ -27,6 +27,8 @@ var Client *purecloud.Client
 // The Queue to transfer to
 var AgentQueue *purecloud.Queue
 
+var WebRootPath string
+
 func main() {
 	var (
 		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
@@ -35,6 +37,7 @@ func main() {
 		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
 		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
 		queueName    = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "The queue to transfer to")
+		webrootpath  = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
 	flag.Parse()
@@ -50,6 +53,9 @@ func main() {
 		os.Exit(-1)
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
+
+	WebRootPath = *webrootpath
+	Log.Infof("Web root path: %s", WebRootPath)
 
 	Client = purecloud.NewClient(purecloud.ClientOptions{
 		Region:       *region,
