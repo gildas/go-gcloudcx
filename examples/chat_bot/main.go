@@ -72,22 +72,25 @@ func main() {
 
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)
+	// All routes will use the Logger
+	router.Use(Log.HttpHandler())
+
 	// This route actually performs login the user using the grant of the purecloud.Client
 	//   Upon success, your route httpHandler is called
-	router.Methods("GET").Path("/token").Handler(Log.HttpHandler()(Client.LoginHandler()(LoggedInHandler())))
+	router.Methods("GET").Path("/token").Handler(Client.LoginHandler()(LoggedInHandler()))
 	// This route performs the login process makes sure the client is authorized,
 	//   if authorized, the LoginHandler is called to setup some variables
 	//   otherwise, the purecloud.AuthorizeHandler will redirect the user to the PureCloud Login page
 	//   that will end up with the grant.RedirectURL defined ealier
-	router.Methods("POST").Path("/login").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(LoginHandler())))
+	router.Methods("POST").Path("/login").Handler(Client.AuthorizeHandler()(LoginHandler()))
 
 	// This route shows the main page, with login infor and a Chat Widget
 	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
-	router.Methods("GET").Path("/").Handler(Log.HttpHandler()(Client.HttpHandler()(MainHandler())))
+	router.Methods("GET").Path("/").Handler(Client.HttpHandler()(MainHandler()))
 
 	// This route gives the PureCloud Widget Javascript config to use
 	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
-	router.Methods("GET").Path("/widget").Handler(Log.HttpHandler()(Client.HttpHandler()(WidgetHandler())))
+	router.Methods("GET").Path("/widget").Handler(Client.HttpHandler()(WidgetHandler()))
 
 	WebServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
