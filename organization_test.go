@@ -57,7 +57,7 @@ func (suite *OrganizationSuite) SetupSuite() {
 		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
 	)
 
-	suite.Client = purecloud.New(purecloud.ClientOptions{
+	suite.Client = purecloud.NewClient(purecloud.ClientOptions{
 		Region:       region,
 		DeploymentID: deploymentID,
 		Logger:       suite.Logger,
