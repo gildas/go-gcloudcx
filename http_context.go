@@ -1,9 +1,10 @@
 package purecloud
 
 import (
-	"net/http"
-	"github.com/pkg/errors"
 	"context"
+	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // ClientContextKey is the key to store Client in context.Context
@@ -30,6 +31,13 @@ func ClientFromContext(context context.Context) (*Client, error) {
 func (client *Client) HttpHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log := client.Logger.Scope("middleware")
+
+			if client.AuthorizationGrant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
+				log.Infof("PureCloud Token loaded from cookies")
+			} else {
+				log.Debugf("PureCloud Token not found in cookies")
+			}
 			next.ServeHTTP(w, r.WithContext(client.ToContext(r.Context())))
 		})
 	}
