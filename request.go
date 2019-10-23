@@ -45,8 +45,17 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 	if err != nil {
 		return APIError{ Code: "url.parse", Message: err.Error() }
 	}
-	if len(options.Authorization) == 0 && client.AuthorizationGrant.AccessToken().IsValid() {
-		options.Authorization = client.AuthorizationGrant.AccessToken().String()
+	if len(options.Authorization) == 0 {
+		if client.IsAuthorized() {
+			options.Authorization = client.AuthorizationGrant.AccessToken().String()
+		} else {
+			if err = client.Login(); err != nil {
+				return errors.WithStack(err)
+			}
+			if !client.IsAuthorized() {
+				return errors.Errorf("Not Authorized Yet")
+			}
+		}
 	}
 
 	options.Proxy     = client.Proxy
