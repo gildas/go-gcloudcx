@@ -86,8 +86,8 @@ func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 	}
 }
 
-// LoginHandler gets a valid Token from PureCloud using an AuthorizationGrant
-func (client *Client) LoginHandler() func(http.Handler) http.Handler {
+// LoggedInHandler gets a valid Token from PureCloud using an AuthorizationGrant
+func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log := client.Logger.Scope("login")

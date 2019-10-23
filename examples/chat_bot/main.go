@@ -109,7 +109,7 @@ func main() {
 
 	// This route actually performs login the user using the grant of the purecloud.Client
 	//   Upon success, your route httpHandler is called
-	router.Methods("GET").Path("/token").Handler(Client.LoginHandler()(LoggedInHandler()))
+	router.Methods("GET").Path("/token").Handler(Client.LoggedInHandler()(LoggedInHandler()))
 	// This route performs the login process makes sure the client is authorized,
 	//   if authorized, the LoginHandler is called to setup some variables
 	//   otherwise, the purecloud.AuthorizeHandler will redirect the user to the PureCloud Login page
