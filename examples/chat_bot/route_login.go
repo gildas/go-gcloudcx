@@ -28,12 +28,12 @@ func LoggedInHandler() http.Handler {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		if len(appConfig.WebRootPath) > 0 {
-			log.Infof("Redirecting to %s", appConfig.WebRootPath)
-			http.Redirect(w, r, appConfig.WebRootPath, http.StatusTemporaryRedirect)
-		} else {
-			log.Infof("Redirecting to /")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		redirectPath := appConfig.WebRootPath
+		if len(redirectPath) == 0 {
+			redirectPath = "/"
 		}
+		log.Infof("Redirecting to %s", redirectPath)
+		// See: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
+		http.Redirect(w, r, redirectPath, http.StatusSeeOther)
 	})
 }
