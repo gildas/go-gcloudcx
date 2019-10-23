@@ -164,6 +164,7 @@ func MainHandler() http.Handler {
 										}
 									case strings.Contains(topic.Body, "agent"):
 										log.Infof("Transferring Participant %s to Queue %s", participant, AgentQueue)
+										log.Record("queue", AgentQueue).Debugf("Agent Queue: %s (%s)", AgentQueue.Name, AgentQueue.ID)
 										if err := topic.Conversation.TransferParticipant(participant, AgentQueue); err != nil {
 											log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, AgentQueue, err)
 											continue

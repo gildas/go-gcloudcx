@@ -36,6 +36,7 @@ func LoggedInHandler() http.Handler {
 				core.RespondWithError(w, http.StatusServiceUnavailable, err)
 				return
 			}
+			log.Record("queue", AgentQueue).Infof("Agent Queue: %s (%s)", AgentQueue.Name, AgentQueue.ID)
 		}
 		if len(WebRootPath) > 0 {
 			log.Infof("Redirecting to %s", WebRootPath)
@@ -71,6 +72,7 @@ func LoginHandler() http.Handler {
 				core.RespondWithError(w, http.StatusServiceUnavailable, err)
 				return
 			}
+			log.Record("queue", AgentQueue).Infof("Agent Queue: %s (%s)", AgentQueue.Name, AgentQueue.ID)
 		}
 		if len(WebRootPath) > 0 {
 			log.Infof("Redirecting to %s", WebRootPath)
