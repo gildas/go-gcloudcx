@@ -13,6 +13,7 @@ type Queue struct {
 	ID                    string        `json:"id"`
 	Name                  string        `json:"name"`
 	CreatedBy             *User         `json:"-"`
+	ModifiedBy            string        `json:"modifiedBy"`
 	DateCreated           time.Time     `json:"dateCreated"`
 	Division              *Division     `json:"division"`
 	MemberCount           int           `json:"memberCount"`
@@ -38,15 +39,19 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	}{}
 	query := url.Values{}
 	query.Add("name", name)
-	err := client.Get("/routing/queues?" + query.Encode(), &response)
+	err := client.Get("/routing/queues?"+query.Encode(), &response)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
 	for _, queue := range response.Entities {
 		if queue.Name == name {
-			queue.Client           = client
-			queue.CreatedBy.Client = client
-			queue.Division.Client  = client
+			queue.Client = client
+			if queue.CreatedBy != nil {
+				queue.CreatedBy.Client = client
+			}
+			if queue.Division != nil {
+				queue.Division.Client = client
+			}
 			return queue, nil
 		}
 	}
