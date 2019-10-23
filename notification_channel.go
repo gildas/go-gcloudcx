@@ -62,16 +62,64 @@ func (channel *NotificationChannel) Close() (err error) {
 	return
 }
 
-// Subscribe subscribes to a list of topics in the NotificationChannel
-func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error) {
-	type idHolder struct {ID string `json:"id"`}
-	channelTopics := make([]idHolder, len(topics))
+// GetTopics gets all subscription topics set on this
+func (channel *NotificationChannel) GetTopics() ([]string, error) {
+	results := struct{Entities []AddressableEntityRef}{}
+	if err := channel.Client.Get(
+		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
+		&results,
+	); err != nil {
+		return []string{}, errors.WithStack(err)
+	}
+	ids := make([]string, len(results.Entities))
+	for i, entity := range results.Entities {
+		ids[i] = entity.ID
+	}
+	return ids, nil
+}
+
+// SetTopics sets the subscriptions. It overrides any previous subscriptions
+func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error) {
+	channelTopics := make([]AddressableEntityRef, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
-	results := &struct {
-		Entities []idHolder `json:"entities"`
-	}{}
+	results := struct {Entities []AddressableEntityRef `json:"entities"`}{}
+	if err := channel.Client.Put(
+		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
+		channelTopics,
+		&results,
+	); err != nil {
+		return []string{}, errors.WithStack(err)
+	}
+	ids := make([]string, len(results.Entities))
+	for i, entity := range results.Entities {
+		ids[i] = entity.ID
+	}
+	return ids, nil
+}
+
+// IsSubscribed tells if the channel is subscribed to the given topic
+func (channel *NotificationChannel) IsSubscribed(topic string) bool {
+	topics, err := channel.GetTopics()
+	if err != nil {
+		return false
+	}
+	for _, t := range topics {
+		if t == topic {
+			return true
+		}
+	}
+	return false
+}
+
+// Subscribe subscribes to a list of topics in the NotificationChannel
+func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error) {
+	channelTopics := make([]AddressableEntityRef, len(topics))
+	for i, topic := range topics {
+		channelTopics[i].ID = topic
+	}
+	results := struct {Entities []AddressableEntityRef `json:"entities"`}{}
 	if err := channel.Client.Post(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
@@ -86,9 +134,30 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 	return ids, nil
 }
 
-// Unsubscribe unsubscribes from all topics
-func (channel *NotificationChannel) Unsubscribe() error {
-	return channel.Client.Delete(fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID), nil)
+// Unsubscribe unsubscribes from some topics, if there is no argument, unsubscribe from all topics
+func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
+	if len(topics) == 0 {
+		return channel.Client.Delete(fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID), nil)
+	}
+	currentTopics, err := channel.GetTopics()
+	if err != nil {
+		return err
+	}
+	filteredTopics := []string{}
+	for _, current := range currentTopics {
+		found := false
+		for _, topic := range topics {
+			if current == topic {
+				found = true
+				break
+			}
+		}
+		if !found {
+			filteredTopics = append(filteredTopics, current)
+		}
+	}
+	_, err = channel.SetTopics(filteredTopics...)
+	return err
 }
 
 // MarshalJSON marshals this into JSON
