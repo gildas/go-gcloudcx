@@ -117,6 +117,9 @@ func MainHandler() http.Handler {
 								log.Infof("User's Participant %s state: %s", participant, participant.State)
 								switch participant.State {
 								case "alerting": // Now we need to "answer" the participant, i.e. turn them connected
+									if channel.IsSubscribed(chatTopic) {
+										continue
+									}
 									log.Infof("Subscribing to Conversation %s", topic.Conversation)
 									_, err := channel.Subscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
 									if err != nil {
@@ -131,6 +134,9 @@ func MainHandler() http.Handler {
 										continue
 									}
 								case "disconnected": // Finally, if we need tp wrap up the chat, let's do it
+									if !channel.IsSubscribed(chatTopic) {
+										continue
+									}
 									if participant.WrapupRequired && participant.Wrapup == nil {
 										log.Infof("Wrapping up chat")
 										// Once the transfer is initiated, we should "Wrapup" the participant
