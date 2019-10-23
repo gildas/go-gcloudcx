@@ -55,6 +55,7 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 			if !client.IsAuthorized() {
 				return errors.Errorf("Not Authorized Yet")
 			}
+			options.Authorization = client.AuthorizationGrant.AccessToken().String()
 		}
 	}
 
@@ -65,13 +66,17 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 
 	res, err := core.SendRequest(options, results)
 	if err != nil {
-		if res != nil {
-			apiError := APIError{}
+		if requestError, ok := errors.Cause(err).(core.RequestError); ok {
+			if requestError.StatusCode == http.StatusUnauthorized && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
+				// This means our token most probably expired, we should try again without it
+				client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
+				options.Authorization = ""
+				client.AuthorizationGrant.AccessToken().Reset()
+				return client.SendRequest(path, options, results)
+			}
+			apiError := APIError{ Status: requestError.StatusCode, Code: requestError.Status }
 			if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
 				return errors.Wrap(err, "Failed to extract an error from the response")
-			}
-			if err, ok := errors.Cause(err).(core.RequestError); ok {
-				apiError.Status = err.StatusCode
 			}
 			return errors.WithStack(apiError)
 		}

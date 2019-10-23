@@ -58,6 +58,6 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 }
 
 // AccessToken gives the access Token carried by this Grant
-func (grant ClientCredentialsGrant) AccessToken() *AccessToken {
+func (grant *ClientCredentialsGrant) AccessToken() *AccessToken {
 	return &grant.Token
 }
