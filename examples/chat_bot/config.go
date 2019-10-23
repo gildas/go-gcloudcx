@@ -1,21 +1,34 @@
 package main
 
 import (
-	"github.com/pkg/errors"
+	"github.com/gildas/go-logger"
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gildas/go-purecloud"
+	"github.com/pkg/errors"
 )
 
 // AppConfig describes An Application Configuration
 type AppConfig struct {
 	// WebRootPath contains the root path to prepend to URL when redirecting or in the web pages
 	WebRootPath string
+
 	// BotQueue is the Queue used for sending the initial chat to
 	BotQueue    *purecloud.Queue
+
 	// AgentQueue is the Queue used when the customer wants to talk to an agent
 	AgentQueue  *purecloud.Queue
+
+	// User is the currently Logged in User
+	User *purecloud.User
+
+	// NotificationChannel is the channel used to receive notifications from PureCloud
+	NotificationChannel *purecloud.NotificationChannel
+
+	// Logger is the Logger for the configuration
+	Logger *logger.Logger
 }
 
 // AppConfigKey is the key to store AppConfig in context.Context
@@ -49,6 +62,8 @@ func (config *AppConfig) HttpHandler() func(http.Handler) http.Handler {
 
 // Initialize configures this AppConfig by calling PureCloud as needed
 func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
+	config.Logger = client.Logger.Topic("config")
+	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
 		return errors.New("Agent Queue is nil")
 	}
@@ -69,5 +84,50 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 			return errors.Wrapf(err, "Failed to retrieve the Bot Queue %s", queueName)
 		}
 	}
+
+	config.User, err = client.GetMyUser()
+	if err != nil {
+		log.Errorf("Failed to retrieve my User", err)
+		return
+	}
+	log.Infof("Current User: %s", config.User)
+
+	config.NotificationChannel, err = client.CreateNotificationChannel()
+	if err != nil {
+		log.Errorf("Failed to create a notification channel", err)
+		return
+	}
+
+	topics, err := config.NotificationChannel.Subscribe(
+		purecloud.UserPresenceTopic{}.TopicFor(config.User),
+		purecloud.UserConversationChatTopic{}.TopicFor(config.User),
+	)
+	if err != nil {
+		log.Errorf("Failed to subscribe to topics", err)
+		return
+	}
+	log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
+
+	// Call the PureCloud Notification Topic loop
+	go MessageLoop(config)
+
 	return nil
+}
+
+func (config *AppConfig) Reset() (err error) {
+	log := config.Logger.Scope("reset")
+
+	if config.NotificationChannel != nil {
+		log.Debugf("Closing Notification Channel %s", config.NotificationChannel)
+		err = config.NotificationChannel.Close()
+		if err != nil {
+			config.NotificationChannel.Logger.Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
+			return err
+		}
+		log.Infof("Closed Notification Channel %s", config.NotificationChannel)
+		config.NotificationChannel = nil
+	}
+	config.User = nil
+	log.Infof("Config is reset")
+	return
 }

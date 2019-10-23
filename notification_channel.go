@@ -40,6 +40,9 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	channel.TopicReceived = make(chan NotificationTopic)
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
+		if err != nil {
+			return nil, errors.WithStack(err)
+		}
 	}
 	// Start the message loop
 	go channel.messageLoop()
@@ -49,8 +52,8 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 
 // Close unsubscribes from all subscriptions and closes the websocket
 func (channel *NotificationChannel) Close() (err error) {
-	if err = channel.Unsubscribe(); err != nil {
-		return err
+	if channel.Client != nil && channel.Client.IsAuthorized() {
+		channel.Unsubscribe()
 	}
 	if channel.Socket != nil {
 		close(channel.TopicReceived)
@@ -59,6 +62,7 @@ func (channel *NotificationChannel) Close() (err error) {
 		}
 		channel.Socket = nil
 	}
+	channel.ID = ""
 	return
 }
 
@@ -194,7 +198,7 @@ func (channel *NotificationChannel) messageLoop() (err error) {
 
 		if _, body, err = channel.Socket.ReadMessage(); err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
-				log.Infof("Websocket was closed, stopping the message loop")
+				log.Infof("Websocket was closed, stopping the Channel's websocket message loop")
 				return nil
 			}
 			log.Errorf("Failed to read incoming message", err)
@@ -216,4 +220,16 @@ func (channel *NotificationChannel) messageLoop() (err error) {
 		}
 		topic.Send(channel)
 	}
+}
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (channel NotificationChannel) GetID() string {
+	return channel.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (channel NotificationChannel) String() string {
+	return channel.ID
 }

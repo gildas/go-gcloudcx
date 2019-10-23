@@ -12,6 +12,8 @@ func LoggedOutHandler() http.Handler {
 		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("logged_out")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
+		appConfig.Reset()
+
 		redirectPath := appConfig.WebRootPath
 		if len(redirectPath) == 0 {
 			redirectPath = "/"
