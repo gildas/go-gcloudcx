@@ -113,6 +113,7 @@ func MainHandler() http.Handler {
 							participant := findParticipant(topic.Participants, topic.User, "agent")
 							if participant != nil {
 								log = log.Record("participant", participant.ID)
+								chatTopic := purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)
 								log.Infof("User's Participant %s state: %s", participant, participant.State)
 								switch participant.State {
 								case "alerting": // Now we need to "answer" the participant, i.e. turn them connected
@@ -136,9 +137,13 @@ func MainHandler() http.Handler {
 										//   if needed (queue request a wrapup)
 										wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
 										if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
-											log.Errorf("Failed to wrapup Partitipant %s", participant)
+											log.Errorf("Failed to wrapup Participant %s", participant)
 											continue
 										}
+									}
+									if err := channel.Unsubscribe(purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)); err != nil {
+										log.Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, purecloud.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+										continue
 									}
 								}
 							}
