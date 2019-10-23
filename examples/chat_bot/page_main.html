@@ -23,12 +23,29 @@
 {{end}}
                 <div class="form-group">
                     <label for="chatbot_user">ChatBot User:</label>
-                    <input id="chatbot_user" class="form-control" type="text" placeholder="Not Logged In..." value="{{.UserName}}" readonly>
+{{if .User}}
+                    <input id="chatbot_user" class="form-control" type="text" placeholder="Not Logged In..." value="{{.User.Name}}" readonly>
+{{else}}                    
+                    <input id="chatbot_user" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
                 </div>
 
                 <div class="form-group">
                     <label for="agent_queue">Agent Queue:</label>
-                    <input id="agent_queue" class="form-control" type="text" placeholder="Not Logged In..." value="{{.AgentQueueName}}" readonly>
+{{if .AgentQueue}}
+                    <input id="agent_queue" class="form-control" type="text" placeholder="Not Logged In..." value="{{.AgentQueue.Name}}" readonly>
+{{else}}                    
+                    <input id="agent_queue" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
+                </div>
+
+                <div class="form-group">
+                    <label for="bot_queue">Bot Queue:</label>
+{{if .BotQueue}}
+                    <input id="bot_queue" class="form-control" type="text" placeholder="Not Logged In..." value="{{.BotQueue.Name}}" readonly>
+{{else}}                    
+                    <input id="bot_queue" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
                 </div>
 
                 <div class="form-group">
@@ -90,7 +107,11 @@
         interactionData: {
           routing: {
             targetType:    "QUEUE",
-            targetAddress: "{{.AgentQueueName}}"
+{{if .BotQueue}}
+            targetAddress: "{{.BotQueue.Name}}"
+{{else}}                    
+            targetAddress: ""
+{{end}}
           }
         }
       }

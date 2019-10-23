@@ -23,21 +23,13 @@ var Log *logger.Logger
 // Client is the PureCloud Client
 var Client *purecloud.Client
 
-// The Organization this session belongs to
-// The Queue to transfer to
-var AgentQueue *purecloud.Queue
-
-// WebRootPath contains the root path to prepend to URL when redirecting or in the web pages
-var WebRootPath string
+// MyAppConfig holds the configuration of this Application
+var MyAppConfig *AppConfig
 
 // NotFoundHandler is called when all other routes did not match
 func NotFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log, err := logger.FromContext(r.Context())
-		if err != nil {
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
-		}
+		log, _ := logger.FromContext(r.Context())
 		log = log.Topic("route").Scope("notfound")
 		log.Errorf("Route not Found %s", r.URL.String())
 		w.WriteHeader(http.StatusNotFound)
@@ -47,18 +39,47 @@ func NotFoundHandler() http.Handler {
 
 func main() {
 	var (
-		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
-		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the PureCloud Client ID for authentication")
-		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
-		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
-		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
-		queueName    = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "The queue to transfer to")
-		webrootpath  = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
-		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
+		region         = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
+		clientID       = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the PureCloud Client ID for authentication")
+		secret         = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
+		deploymentID   = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
+		redirectRoot   = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
+		agentQueueName = flag.String("agentqueue", core.GetEnvAsString("PURECLOUD_AGENTQUEUE", ""), "The queue to transfer to agents")
+		botQueueName   = flag.String("botqueue", core.GetEnvAsString("PURECLOUD_BOTQUEUE", ""), "The queue to send customers to initially")
+		queueName      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "(legacy) the queue to send to")
+		webrootpath    = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
+		port           = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
 	flag.Parse()
 
 	Log = logger.Create("ChatBot_Example")
+
+	if len(*agentQueueName) == 0 && len(*botQueueName) == 0 && len(*queueName) == 0 {
+		Log.Fatalf("Agent and Bot Queues are empty")
+		os.Stderr.WriteString("Agent and Bot Queues are empty, please use --agentqueue and/or --botqueue")
+		os.Exit(-2)
+	} else if len(*agentQueueName) == 0 && len(*botQueueName) == 0 {
+		Log.Warnf("Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
+		fmt.Fprintf(os.Stderr, "Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
+		agentQueueName = queueName
+		botQueueName   = queueName
+	} else if len(*agentQueueName) == 0 {
+		Log.Warnf("Bot Queue %s will be used also for the Agent Queue", *botQueueName)
+		agentQueueName = botQueueName
+	} else if len(*botQueueName) == 0 {
+		Log.Warnf("Agent Queue %s will be used also for the Bot Queue", *agentQueueName)
+		botQueueName = agentQueueName
+	}
+
+	MyAppConfig = &AppConfig{
+		AgentQueue:  &purecloud.Queue{Name: *agentQueueName},
+		BotQueue:    &purecloud.Queue{Name: *botQueueName},
+		WebRootPath: *webrootpath,
+	}
+
+	if len(MyAppConfig.WebRootPath) > 0 {
+		Log.Infof("Web root path: %s, Please use this path in your NGINX", MyAppConfig.WebRootPath)
+	}
 
 	if len(*redirectRoot) == 0 {
 		*redirectRoot = fmt.Sprintf("http://localhost:%d", *port)
@@ -70,9 +91,6 @@ func main() {
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	WebRootPath = *webrootpath
-	Log.Infof("Web root path: %s", WebRootPath)
-
 	Client = purecloud.NewClient(purecloud.ClientOptions{
 		Region:       *region,
 		DeploymentID: *deploymentID,
@@ -83,13 +101,11 @@ func main() {
 		RedirectURL: redirectURL,
 	})
 
-	// TODO: Make this better... Too Simple for now
-	AgentQueue = &purecloud.Queue{Name: *queueName}
-
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)
-	// All routes will use the Logger
+	// All routes will use the Logger and the AppConfig
 	router.Use(Log.HttpHandler())
+	router.Use(MyAppConfig.HttpHandler())
 
 	// This route actually performs login the user using the grant of the purecloud.Client
 	//   Upon success, your route httpHandler is called

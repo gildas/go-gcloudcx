@@ -25,12 +25,13 @@ func findParticipant(participants []*purecloud.Participant, user *purecloud.User
 // MainHandler is the main webpage. It displays some login info and a WebChat widget
 func MainHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log, err := logger.FromContext(r.Context())
+		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("main")
+		appConfig, err := AppConfigFromContext(r.Context())
 		if err != nil {
+			log.Errorf("Failed to retrieve the Application Configuration", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		log = log.Topic("route").Scope("main")
 
 		client, err := purecloud.ClientFromContext(r.Context())
 		if err != nil {
@@ -40,30 +41,30 @@ func MainHandler() http.Handler {
 		}
 
 		// Initialize data for the Main Page Template
-		mainPageData := struct {
+		viewData := struct {
 			Region         string
 			DeploymentID   string
 			OrganizationID string
-			AgentQueueName string
-			AgentQueueID   string
-			UserName       string
-			UserID         string
+			AgentQueue     *purecloud.Queue
+			BotQueue       *purecloud.Queue
+			BotQueueID     string
+			User           *purecloud.User
 			ChannelID      string
 			WebsocketURL   string
 			WebRootPath    string
 			LoggedIn       bool
 		}{
-			WebRootPath: WebRootPath,
+			WebRootPath: appConfig.WebRootPath,
 			LoggedIn:    client.IsAuthorized(),
 		}
 
 		// We can use the client only if the agent is logged in...
-		if mainPageData.LoggedIn {
-			mainPageData.Region         = client.Region
-			mainPageData.DeploymentID   = client.DeploymentID
-			mainPageData.OrganizationID = client.Organization.ID
-			mainPageData.AgentQueueName = AgentQueue.Name
-			mainPageData.AgentQueueID   = AgentQueue.ID
+		if viewData.LoggedIn {
+			viewData.Region         = client.Region
+			viewData.DeploymentID   = client.DeploymentID
+			viewData.OrganizationID = client.Organization.ID
+			viewData.AgentQueue     = appConfig.AgentQueue
+			viewData.BotQueue       = appConfig.BotQueue
 
 			user, err := client.GetMyUser()
 			if err != nil {
@@ -71,8 +72,7 @@ func MainHandler() http.Handler {
 				core.RespondWithError(w, http.StatusServiceUnavailable, err)
 				return
 			}
-			mainPageData.UserName = user.Name
-			mainPageData.UserID   = user.ID
+			viewData.User = user
 
 			channel, err := client.CreateNotificationChannel()
 			if err != nil {
@@ -80,8 +80,8 @@ func MainHandler() http.Handler {
 				core.RespondWithError(w, http.StatusServiceUnavailable, err)
 				return
 			}
-			mainPageData.ChannelID    = channel.ID
-			mainPageData.WebsocketURL = channel.ConnectURL.String()
+			viewData.ChannelID    = channel.ID
+			viewData.WebsocketURL = channel.ConnectURL.String()
 
 			topics, err := channel.Subscribe(
 				purecloud.UserPresenceTopic{}.TopicFor(user),
@@ -174,10 +174,10 @@ func MainHandler() http.Handler {
 											continue
 										}
 									case strings.Contains(topic.Body, "agent"):
-										log.Infof("Transferring Participant %s to Queue %s", participant, AgentQueue)
-										log.Record("queue", AgentQueue).Debugf("Agent Queue: %s (%s)", AgentQueue.Name, AgentQueue.ID)
-										if err := topic.Conversation.TransferParticipant(participant, AgentQueue); err != nil {
-											log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, AgentQueue, err)
+										log.Infof("Transferring Participant %s to Queue %s", participant, appConfig.AgentQueue)
+										log.Record("queue", appConfig.AgentQueue).Debugf("Agent Queue: %s", appConfig.AgentQueue)
+										if err := topic.Conversation.TransferParticipant(participant, appConfig.AgentQueue); err != nil {
+											log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, appConfig.AgentQueue, err)
 											continue
 										}
 									default: // send the message to the Chat Bot (customer side only)
@@ -241,7 +241,7 @@ func MainHandler() http.Handler {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
-		err = pageTemplate.Execute(w, mainPageData)
+		err = pageTemplate.Execute(w, viewData)
 		if err != nil {
 			log.Errorf(`Failed to render page "page_main"`, err)
 		}

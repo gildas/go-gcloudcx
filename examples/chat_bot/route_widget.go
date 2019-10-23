@@ -57,12 +57,8 @@ const widgetJS = `
 // WidgetHandler gives the Javascript to help configuring a PureCloud Widget
 func WidgetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-		log, err := logger.FromContext(r.Context())
-		if err != nil {
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
-		}
-		log = log.Topic("route").Scope("widget")
+		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("widget")
+		appConfig, _ := AppConfigFromContext(r.Context())
 
 		client, err := purecloud.ClientFromContext(r.Context())
 		if err != nil {
@@ -72,7 +68,7 @@ func WidgetHandler() http.Handler {
 		}
 
 		log.Infof("Providing PureCloud Config")
-		dictionary := struct {
+		viewData := struct {
 			Region         string
 			DeploymentID   string
 			OrganizationID string
@@ -81,12 +77,12 @@ func WidgetHandler() http.Handler {
 			Region:         client.Region,
 			DeploymentID:   client.DeploymentID,
 			OrganizationID: client.Organization.ID,
-			QueueName:      AgentQueue.ID,
+			QueueName:      appConfig.AgentQueue.ID,
 		}
 		scriptTemplate := template.Must(template.New("script").Parse(widgetJS))
 		w.Header().Set("Content-Type", "text/javascript")
 		w.WriteHeader(http.StatusOK)
-		err = scriptTemplate.Execute(w, dictionary)
+		err = scriptTemplate.Execute(w, viewData)
 		if err != nil {
 			log.Errorf("Failed to execute the template", err)
 		}
