@@ -8,7 +8,7 @@ import (
 )
 
 // ClientContextKey is the key to store Client in context.Context
-const ClientContextKey = iota
+const ClientContextKey = iota + 54329
 
 // ToContext stores this Client in the given context
 func (client *Client) ToContext(parent context.Context) context.Context {
