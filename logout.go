@@ -12,6 +12,11 @@ func (client *Client) Logout() {
 	}
 }
 
+// DeleteCookie deletes the PureCloud Client cookie from the response writer
+func (client *Client) DeleteCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: "", Path: "/", HttpOnly: true, MaxAge: -1})
+}
+
 // LogoutHandler logs out the current user
 func (client *Client) LogoutHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -20,7 +25,7 @@ func (client *Client) LogoutHandler() func(http.Handler) http.Handler {
 
 			if client.AuthorizationGrant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
 				client.Logout()
-				http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: "", Path: "/", HttpOnly: true, MaxAge: -1})
+				client.DeleteCookie(w)
 				log.Infof("User is now logged out from PureCloud")
 			}
 			next.ServeHTTP(w, r.WithContext(client.ToContext(r.Context())))

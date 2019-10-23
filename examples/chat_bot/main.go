@@ -75,6 +75,7 @@ func main() {
 		AgentQueue:  &purecloud.Queue{Name: *agentQueueName},
 		BotQueue:    &purecloud.Queue{Name: *botQueueName},
 		WebRootPath: *webrootpath,
+		Logger:      Log.Topic("config"),
 	}
 
 	if len(MyAppConfig.WebRootPath) > 0 {
