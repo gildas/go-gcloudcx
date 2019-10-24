@@ -87,62 +87,62 @@ func MessageLoop(config* AppConfig) {
 						continue
 					}
 					participant := findParticipant(topic.Conversation.Participants, config.User, "agent")
-					if participant != nil {
-						log = log.Record("participant", participant.ID)
-						switch {
-						case strings.Contains(topic.Body, "stop"): // the agent wants to disconnect
-							log.Infof("Disconnecting Participant %s", participant)
-							if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
-								log.Errorf("Failed to Wrapup Participant %s", &participant, err)
-								continue
-							}
-						case strings.Contains(topic.Body, "agent"):
-							log.Infof("Transferring Participant %s to Queue %s", participant, config.AgentQueue)
-							log.Record("queue", config.AgentQueue).Debugf("Agent Queue: %s", config.AgentQueue)
-							if err := topic.Conversation.TransferParticipant(participant, config.AgentQueue); err != nil {
-								log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
-								continue
-							}
-						default: // send the message to the Chat Bot (customer side only)
-							if !participant.IsMember("chat", topic.Sender) {
-								log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
+					if participant == nil {
+						log.Debugf("%s is not one of the participants of this conversation", config.User)
+						continue
+					}
+					if participant.IsMember("chat", topic.Sender) {
+						log.Debugf("%s is the sender of this Notification Topic, nothing to do", config.User)
+						continue
+					}
+					log = log.Record("participant", participant.ID)
+					// send the message to the Chat Bot (customer side only)
+					log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
 
-								err = topic.Conversation.SetTyping(participant.Chats[0])
-								if err != nil {
-									log.Errorf("Failed to send Typing to Chat Member", err)
-								}
+					// Pretend the Chat Bot is typing... (whereis it is thinking... isn't it?)
+					err = topic.Conversation.SetTyping(participant.Chats[0])
+					if err != nil {
+						log.Errorf("Failed to send Typing to Chat Member", err)
+					}
 
-								// Send stuff to Google
-								googleBotURL, _ := url.Parse("https://newpod-gaap.live.genesys.com/MattGDF/")
-								response := struct {
-									Intent          string            `json:"intent"`
-									Confidence      int               `json:"confidence"`
-									FulfillmentText string            `json:"fulfillmenttext"`
-									Entities        map[string]string `json:"entities"`
-								}{}
-								_, err := core.SendRequest(&core.RequestOptions{
-									URL: googleBotURL,
-									Payload: struct {
-										Message string `json:"message"`
-									}{
-										Message: topic.Body,
-									},
-								},
-									&response)
-								if err != nil {
-									log.Errorf("Failed to send text to Google", err)
-									continue
-								}
-
-								log.Record("response", response).Debugf("Received: %s", response.FulfillmentText)
-								err = topic.Conversation.Post(participant.Chats[0], response.FulfillmentText)
-								if err != nil {
-									log.Errorf("Failed to send Text to Chat Member", err)
-								}
-							}
+					// Send stuff to Matt's Google Dialog Flow webservice
+					response := struct {
+						Intent          string  `json:"intent"`
+						Confidence      float64 `json:"confidence"`
+						Fulfillment     string  `json:"fulfillmentmessage"`
+						EndConversation bool    `json:"end_conversation"` 
+					}{EndConversation: false}
+					if _, err = core.SendRequest(&core.RequestOptions{
+							URL: &url.URL{Scheme: "https", Host: "newpod-gaap.live.genesys.com", Path: "/MattGDF"},
+							Payload: struct {
+								Message string `json:"message"`
+							}{
+								Message: topic.Body,
+							},
+							Logger: log,
+						},
+						&response); err != nil {
+						log.Errorf("Failed to send text to Google", err)
+						continue
+					}
+					log.Record("response", response).Debugf("Received: %s", response.Fulfillment)
+					if err = topic.Conversation.Post(participant.Chats[0], response.Fulfillment); err != nil {
+						log.Errorf("Failed to send Text to Chat Member", err)
+					}
+					switch {
+					case response.EndConversation:
+						log.Infof("Disconnecting Participant %s", participant)
+						if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
+							log.Errorf("Failed to Wrapup Participant %s", &participant, err)
+							continue
 						}
-					} else {
-						log.Warnf("Failed to find Agent Participant in Conversation")
+					case "agenttransfer" == strings.ToLower(response.Intent):
+						log.Infof("Transferring Participant %s to Queue %s", participant, config.AgentQueue)
+						log.Record("queue", config.AgentQueue).Debugf("Agent Queue: %s", config.AgentQueue)
+						if err := topic.Conversation.TransferParticipant(participant, config.AgentQueue); err != nil {
+							log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
+							continue
+						}
 					}
 				}
 			case *purecloud.UserPresenceTopic:
