@@ -56,11 +56,11 @@ func main() {
 
 	if len(*agentQueueName) == 0 && len(*botQueueName) == 0 && len(*queueName) == 0 {
 		Log.Fatalf("Agent and Bot Queues are empty")
-		os.Stderr.WriteString("Agent and Bot Queues are empty, please use --agentqueue and/or --botqueue")
+		os.Stderr.WriteString("Agent and Bot Queues are empty, please use --agentqueue and/or --botqueue\n")
 		os.Exit(-2)
 	} else if len(*agentQueueName) == 0 && len(*botQueueName) == 0 {
 		Log.Warnf("Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
-		fmt.Fprintf(os.Stderr, "Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
+		fmt.Fprintf(os.Stderr, "Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue\n", *queueName)
 		agentQueueName = queueName
 		botQueueName   = queueName
 	} else if len(*agentQueueName) == 0 {
