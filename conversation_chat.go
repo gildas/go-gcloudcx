@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ConversationChat describes a Chat (like belonging to Participant)
+// ConversationChat describes a Agent-side Chat
 type ConversationChat struct {
 	ID             string `json:"id"`
 	SelfURI        string `json:"selfUri,omitempty"`
