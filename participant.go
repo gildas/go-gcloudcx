@@ -144,6 +144,11 @@ func (participant Participant) String() string {
 	return participant.ID
 }
 
+// UpdateState updates the state of the Participant in target
+func (participant *Participant) UpdateState(target StateUpdater, state string) error {
+  return target.UpdateState(participant, state)
+}
+
 // UnmarshalJSON unmarshals JSON into this
 func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
   type surrogate Participant

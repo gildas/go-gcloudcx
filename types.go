@@ -16,6 +16,9 @@ type Initializable interface {
 	Initialize(parameters ...interface{}) error
 }
 
+// StateUpdater describes things than can update the state of an Identifiable
+type StateUpdater interface {
+	UpdateState(identifiable Identifiable, state string) error
 }
 
 // Address describes an Addres (telno, etc)

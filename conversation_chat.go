@@ -94,6 +94,16 @@ func (conversation ConversationChat) String() string {
 	return conversation.ID
 }
 
+// UpdateState update the state of an identifiable in this
+//   implements StateUpdater
+func (conversation ConversationChat) UpdateState(identifiable Identifiable, state string) error {
+	return conversation.Client.Patch(
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		MediaParticipantRequest{State: state},
+		nil,
+	)
+}
+
 // UnmarshalJSON unmarshals JSON into this
 func (conversation *ConversationChat) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate ConversationChat
