@@ -70,3 +70,8 @@ func (client *Client) SetAuthorizationGrant(grant AuthorizationGrant) (*Client) 
 func (client *Client) IsAuthorized() bool {
 	return client.AuthorizationGrant.AccessToken().IsValid()
 }
+
+// Fetch fetches an initializable object
+func (client *Client) Fetch(object Initializable) error {
+	return object.Initialize(client)
+}

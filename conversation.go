@@ -2,6 +2,7 @@ package purecloud
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/gildas/go-logger"
@@ -12,6 +13,7 @@ import (
 //   See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
 	ID              string          `json:"id"`
+	SelfURI         string          `json:"selfUri,omitempty"`
 	Name            string          `json:"name"`
 	StartTime       time.Time       `json:"startTime"`
 	EndTime         time.Time       `json:"endTime"`
@@ -25,7 +27,6 @@ type Conversation struct {
 		Division DomainEntityRef     `json:"division"`
 		Entities []DomainEntityRef   `json:"entities"`
 	}                               `json:"divisions"`
-	SelfURI         string          `json:"selfUri,omitempty"`
 
 	Client          *Client         `json:"-"`
 	Logger          *logger.Logger  `json:"-"`
@@ -78,24 +79,28 @@ type Voicemail struct {
 
 }
 
-// GetConversation get a ConversationChat from its ID
-func (client *Client) GetConversation(conversationID string) (*Conversation, error) {
-	conversation := &Conversation{}
-
-	if err := client.Get("/conversations/" + conversationID, &conversation); err != nil {
-		return nil, err
+// Initialize initializes this from the given Client
+//   implements Initializable
+func (conversation *Conversation) Initialize(parameters ...interface{}) error {
+	client := conversation.Client
+	log    := conversation.Logger
+	for _, parameter := range parameters {
+		if paramClient, ok := parameter.(*Client); ok {
+			client = paramClient
+		}
+		if paramLogger, ok := parameter.(*logger.Logger); ok {
+			log = paramLogger.Topic("conversation").Scope("conversation")
+		}
+	}
+	if client == nil {
+		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
+	}
+	if log == nil {
+		log = client.Logger.Topic("conversation").Scope("conversation")
 	}
 	conversation.Client = client
-	conversation.Logger = client.Logger.Topic("conversation").Scope("conversation")
-	return conversation, nil
-}
-
-// GetMyself fetches the details of this conversation
-func (conversation *Conversation) GetMyself() error {
-	if conversation.Client == nil {
-		return errors.Errorf("Nil Client in conversation %s", conversation.ID)
-	}
-	return conversation.Client.Get("/conversations/" + conversation.ID, &conversation)
+	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
+	return conversation.Client.Get("/conversations/" + conversation.GetID(), &conversation)
 }
 
 // GetID gets the identifier of this

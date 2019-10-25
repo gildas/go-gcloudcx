@@ -2,10 +2,13 @@ package purecloud
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-logger"
 	"github.com/pkg/errors"
 )
 
@@ -31,6 +34,9 @@ type ConversationChat struct {
 	RecordingID    string          `json:"recordingId"`
 	AvatarImageURL *url.URL        `json:"-"`
 	JourneyContext *JourneyContext `json:"journeyContext"`
+
+	Client          *Client         `json:"-"`
+	Logger          *logger.Logger  `json:"-"`
 }
 
 // JourneyContext  describes a Journey Context
@@ -50,6 +56,30 @@ type JourneyContext struct {
 			Version int    `json:"version"`
 		}                   `json:"actionMap"`
 	} `json:"triggeringAction"`
+}
+
+// Initialize initializes this from the given Client
+//   implements Initializable
+func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
+	client := conversation.Client
+	var log *logger.Logger
+	for _, parameter := range parameters {
+		if paramClient, ok := parameter.(*Client); ok {
+			client = paramClient
+		}
+		if paramLogger, ok := parameter.(*logger.Logger); ok {
+			log = paramLogger.Topic("conversation").Scope("conversation").Record("media", "chat")
+		}
+	}
+	if client == nil {
+		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
+	}
+	if log == nil {
+		log = client.Logger.Topic("conversation").Scope("conversation").Record("media", "chat")
+	}
+	conversation.Client = client
+	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
+	return conversation.Client.Get("/conversations/chat/" + conversation.GetID(), &conversation)
 }
 
 // GetID gets the identifier of this
