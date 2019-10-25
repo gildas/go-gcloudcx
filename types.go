@@ -6,29 +6,16 @@ type Identifiable interface {
 	GetID() string
 }
 
-// AddressableEntityRef describes an Entity that can be addressed
-type AddressableEntityRef struct {
-	ID      string `json:"id"`
-	SelfURI string `json:"selfUri"`
+// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
+type Addressable interface {
+	GetURI() string
 }
 
-// GetID gets the identifier of this
-//   implements Identifiable
-func (ref AddressableEntityRef) GetID() string {
-	return ref.ID
+// Initializable describes things that can be initialized
+type Initializable interface {
+	Initialize(parameters ...interface{}) error
 }
 
-// DomainEntityRef describes a DomainEntity Reference
-type DomainEntityRef struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	SelfURI  string `json:"self_uri"`
-}
-
-// GetID gets the identifier of this
-//   implements Identifiable
-func (ref DomainEntityRef) GetID() string {
-	return ref.ID
 }
 
 // Address describes an Addres (telno, etc)
