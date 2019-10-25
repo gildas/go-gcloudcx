@@ -12,7 +12,7 @@ import (
 // ConversationChatMessageTopic describes a Topic about User's Presence
 type ConversationChatMessageTopic struct {
 	Name           string
-	Conversation   *Conversation
+	Conversation   *ConversationChat
 	Sender         *ChatMember
 	Type           string     // message, typing-indicator, 
 	Body           string
@@ -72,7 +72,7 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
 	topic.Name          = inner.TopicName
 	topic.Type          = inner.Metadata.Type
-	topic.Conversation  = &Conversation{ID:conversationID}
+	topic.Conversation  = &ConversationChat{ID:conversationID}
 	topic.Sender        = inner.EventBody.Sender
 	topic.BodyType      = inner.EventBody.BodyType
 	topic.Body          = inner.EventBody.Body

@@ -11,7 +11,7 @@ import (
 type UserConversationChatTopic struct {
 	Name           string
 	User           *User
-	Conversation   *Conversation
+	Conversation   *ConversationChat
 	Participants   []*Participant
 	CorrelationID  string
 	Client         *Client
@@ -65,7 +65,7 @@ func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".conversations.chats")
 	topic.Name          = inner.TopicName
 	topic.User          = &User{ID:userID}
-	topic.Conversation  = &Conversation{ID:inner.EventBody.ConversationID}
+	topic.Conversation  = &ConversationChat{ID:inner.EventBody.ConversationID}
 	topic.Participants  = inner.EventBody.Participants
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
