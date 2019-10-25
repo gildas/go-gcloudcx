@@ -10,24 +10,33 @@ import (
 
 type Participant struct {
   ID                     string                  `json:"id"`
+	SelfURI                string                  `json:"selfUri"`
   Name                   string                  `json:"name"`
+  ParticipantType        string                  `json:"participantType"`
   State                  string                  `json:"state"`
+  Held                   bool                    `json:"held"`
+  Direction              string                  `json:"direction"`
+
 	StartTime              time.Time               `json:"startTime"`
 	ConnectedTime          time.Time               `json:"connectedTime"`
 	EndTime                time.Time               `json:"endTime"`
 	StartHoldTime          time.Time               `json:"startHoldTime"`
   Purpose                string                  `json:"purpose"`
+  DisconnectType         string                  `json:"disconnectType"`
 
   User                   *User                   `json:"user"`
+  ExternalContact        *DomainEntityRef        `json:"externalContact"`
   ExternalContactID      string                  `json:"externalContactId"`
+  ExternalOrganization   *DomainEntityRef        `json:"externalOrganization"`
   ExternalOrganizationID string                  `json:"externalOrganizationId"`
 
+  Queue                  *Queue                  `json:"queue"`
   QueueID                string                  `json:"queueId"`
   GroupID                string                  `json:"groupId"`
   QueueName              string                  `json:"queueName"`
-  ParticipantType        string                  `json:"participantType"`
   ConsultParticipantID   string                  `json:"consultParticipantId"`
   MonitoredParticipantID string                  `json:"monitoredParticipantId"`
+  Script                 *DomainEntityRef        `json:"script"`
 
   Address                string                  `json:"address"`
   ANI                    string                  `json:"ani"`
@@ -49,16 +58,17 @@ type Participant struct {
 
   WrapupRequired         bool                    `json:"wrapupRequired"`
   WrapupPrompt           string                  `json:"wrapupPrompt"`
-  WrapupTimeout          int                     `json:"wrapupTimeoutMs"` // time.Duration
+  WrapupTimeout          int                     `json:"wrapupTimeoutMs"` // TODO: time.Duration
   WrapupSkipped          bool                    `json:"wrapupSkipped"`
   Wrapup                 *Wrapup                 `json:"wrapup"`
 
-  AlertingTimeout        int                     `json:"alertingTimeoutMs"` // time.Duration
+  AlertingTimeout        int                     `json:"alertingTimeoutMs"` // TODO: time.Duration
   ScreenRecordingState   string                  `json:"screenRecordingState"`
   FlaggedReason          string                  `json:"flaggedReason"`
-
+  Peer                   string                  `json:"peer"`
   RoutingData            ConversationRoutingData `json:"conversationRoutingData"`
-	SelfURI                string                  `json:"selfUri"`
+	JourneyContext         *JourneyContext         `json:"journeyContext"`
+  ErrorInfo              *ErrorBody              `json:"errorInfo"`
 }
 
 func (participant Participant) IsMember(mediaType string, identifiable Identifiable) bool {

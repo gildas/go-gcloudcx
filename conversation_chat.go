@@ -14,18 +14,21 @@ import (
 
 // ConversationChat describes a Chat (like belonging to Participant)
 type ConversationChat struct {
-	ID        string `json:"id"`
-	State     string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction string `json:"direction"` // inbound,outbound
-	Held      bool   `json:"held"`
+	ID             string `json:"id"`
+	SelfURI        string `json:"selfUri,omitempty"`
+	State          string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Direction      string `json:"direction"` // inbound,outbound
+	DisconnectType string `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
+	Held           bool   `json:"held"`
+
 
 	ConnectedTime     time.Time `json:"connectedTime"`
 	DisconnectedTime  time.Time `json:"disconnectedTime"`
 	StartAlertingTime time.Time `json:"startAlertingTime"`
 	StartHoldTime     time.Time `json:"startHoldTime"`
 
-	DisconnectType string `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
 
+	Participants   []*Participant  `json:"participants"`
 	Segments       []Segment       `json:"segments"`
 	Provider       string          `json:"provider"`
 	PeerID         string          `json:"peerId"`
