@@ -65,7 +65,7 @@ func MessageLoop(config* AppConfig) {
 							// Once the transfer is initiated, we should "Wrapup" the participant
 							//   if needed (queue request a wrapup)
 							wrapup := &purecloud.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-							if err := topic.Conversation.WrapupParticipant(participant, wrapup); err != nil {
+							if err := topic.Conversation.Wrapup(participant, wrapup); err != nil {
 								log.Errorf("Failed to wrapup Participant %s", participant)
 								continue
 							}
@@ -132,14 +132,14 @@ func MessageLoop(config* AppConfig) {
 					switch {
 					case response.EndConversation:
 						log.Infof("Disconnecting Participant %s", participant)
-						if err := topic.Conversation.DisconnectParticipant(participant); err != nil {
+						if err := topic.Conversation.Disconnect(participant); err != nil {
 							log.Errorf("Failed to Wrapup Participant %s", &participant, err)
 							continue
 						}
 					case "agenttransfer" == strings.ToLower(response.Intent):
 						log.Infof("Transferring Participant %s to Queue %s", participant, config.AgentQueue)
 						log.Record("queue", config.AgentQueue).Debugf("Agent Queue: %s", config.AgentQueue)
-						if err := topic.Conversation.TransferParticipant(participant, config.AgentQueue); err != nil {
+						if err := topic.Conversation.Transfer(participant, config.AgentQueue); err != nil {
 							log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
 							continue
 						}

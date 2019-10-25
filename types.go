@@ -16,9 +16,19 @@ type Initializable interface {
 	Initialize(parameters ...interface{}) error
 }
 
-// StateUpdater describes things than can update the state of an Identifiable
+// StateUpdater describes objects than can update the state of an Identifiable
 type StateUpdater interface {
 	UpdateState(identifiable Identifiable, state string) error
+}
+
+// Disconnecter describes objects that can disconnect an Identifiable from themselves
+type Disconnecter interface {
+	Disconnect(identifiable Identifiable) error
+}
+
+// Transferer describes objects that can transfer an Identifiable somewhere else
+type Transferer interface {
+	Transfer(identifiable Identifiable, target Identifiable) error
 }
 
 // Address describes an Addres (telno, etc)

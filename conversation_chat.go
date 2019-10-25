@@ -97,12 +97,61 @@ func (conversation ConversationChat) String() string {
 	return conversation.ID
 }
 
+// Disconnect disconnect an Identifiable from this
+//   implements Disconnecter
+func (conversation ConversationChat) Disconnect(identifiable Identifiable) error {
+	return conversation.Client.Patch(
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		MediaParticipantRequest{State: "disconnected"},
+		nil,
+	)
+}
+
 // UpdateState update the state of an identifiable in this
 //   implements StateUpdater
 func (conversation ConversationChat) UpdateState(identifiable Identifiable, state string) error {
 	return conversation.Client.Patch(
 		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
+		nil,
+	)
+}
+
+// Transfer transfers a participant of this Conversation to the given Queue
+//   implement Transferer
+func (conversation ConversationChat) Transfer(identifiable Identifiable, queue Identifiable) error {
+	return conversation.Client.Post(
+		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
+		struct{ID string `json:"queueId"`}{ID: queue.GetID()},
+		nil,
+	)
+}
+
+// Post sends a text message to a chat member
+func (conversation ConversationChat) Post(member Identifiable, text string) error {
+	return conversation.Client.Post(
+		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
+		struct{
+			BodyType string `json:"bodyType"`
+			Body     string `json:"body"`
+		}{
+			BodyType: "standard",
+			Body:     text,
+		},
+		nil,
+	)
+}
+
+// SetTyping send a typing indicator to the chat member
+func (conversation ConversationChat) SetTyping(member Identifiable) error {
+	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil,)
+}
+
+// WrapupParticipant wraps up a Participant of this Conversation
+func (conversation ConversationChat) Wrapup(identifiable Identifiable, wrapup *Wrapup) error {
+	return conversation.Client.Patch(
+		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		MediaParticipantRequest{Wrapup: wrapup},
 		nil,
 	)
 }

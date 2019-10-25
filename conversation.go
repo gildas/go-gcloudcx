@@ -1,7 +1,6 @@
 package purecloud
 
 import (
-	"fmt"
 	"reflect"
 	"time"
 
@@ -116,51 +115,4 @@ func (conversation Conversation) String() string {
 		return conversation.Name
 	}
 	return conversation.ID
-}
-
-// Post sends a text message to a chat member
-func (conversation Conversation) Post(member Identifiable, text string) error {
-	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
-		struct{
-			BodyType string `json:"bodyType"`
-			Body     string `json:"body"`
-		}{
-			BodyType: "standard",
-			Body:     text,
-		},
-		nil,
-	)
-}
-
-// SetTyping send a typing indicator to the chat member
-func (conversation Conversation) SetTyping(member Identifiable) error {
-	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil,)
-}
-
-// DisconnectParticipant set the Conversation State of  a participant
-func (conversation Conversation) DisconnectParticipant(participant *Participant) error {
-	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, participant.ID),
-		MediaParticipantRequest{State: "disconnected"},
-		nil,
-	)
-}
-
-// WrapupParticipant wraps up a Participant of this Conversation
-func (conversation Conversation) WrapupParticipant(participant *Participant, wrapup *Wrapup) error {
-	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, participant.ID),
-		MediaParticipantRequest{Wrapup: wrapup},
-		nil,
-	)
-}
-
-// TransferParticipant transfers a participant of this Conversation to the given Queue
-func (conversation Conversation) TransferParticipant(participant *Participant, queue Identifiable) error {
-	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, participant.ID),
-		struct{ID string `json:"queueId"`}{ID: queue.GetID()},
-		nil,
-	)
 }
