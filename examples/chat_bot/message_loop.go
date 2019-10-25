@@ -51,7 +51,7 @@ func MessageLoop(config* AppConfig) {
 						}
 
 						log.Infof("Setting Participant %s state to %s", participant, "connected")
-						err = topic.Conversation.SetStateParticipant(participant, "connected")
+						err = participant.UpdateState(topic.Conversation, "connected")
 						if err != nil {
 							log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
 							continue
@@ -80,10 +80,10 @@ func MessageLoop(config* AppConfig) {
 				log = log.Record("conversation", topic.Conversation.ID)
 				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.Conversation, topic.BodyType, topic.Body, topic.Sender)
 				if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
-					// We need a real conversation object, so we can operate on it
-					err := topic.Conversation.GetMyself()
+					// We need a full conversation object, so we can operate on it
+					err := topic.Client.Fetch(topic.Conversation)
 					if err != nil {
-						log.Errorf("Failed to retreive a Conversation for ID %s", topic.Conversation, err)
+						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.Conversation, err)
 						continue
 					}
 					participant := findParticipant(topic.Conversation.Participants, config.User, "agent")
