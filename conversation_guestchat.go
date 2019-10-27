@@ -17,29 +17,9 @@ import (
 type ConversationGuestChat struct {
 	ID             string `json:"id"`
 	SelfURI        string `json:"selfUri,omitempty"`
-	State          string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction      string `json:"direction"` // inbound,outbound
-	DisconnectType string `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
-	Held           bool   `json:"held"`
-
-
-	ConnectedTime     time.Time `json:"connectedTime"`
-	DisconnectedTime  time.Time `json:"disconnectedTime"`
-	StartAlertingTime time.Time `json:"startAlertingTime"`
-	StartHoldTime     time.Time `json:"startHoldTime"`
-
 
 	Guest          *ChatMember            `json:"member,omitempty"`
 	Members        map[string]*ChatMember `json:"-"`
-
-	Segments       []Segment       `json:"segments"`
-	Provider       string          `json:"provider"`
-	PeerID         string          `json:"peerId"`
-	RoomID         string          `json:"roomId"`
-	ScriptID       string          `json:"scriptId"`
-	RecordingID    string          `json:"recordingId"`
-	AvatarImageURL *url.URL        `json:"-"`
-	JourneyContext *JourneyContext `json:"journeyContext"`
 
 	JWT             string          `json:"jwt,omitempty"`
 	EventStream     string          `json:"eventStreamUri,omitempty"`
