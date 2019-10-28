@@ -63,7 +63,7 @@ type JourneyContext struct {
 //   implements Initializable
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
 	client := conversation.Client
-	var log *logger.Logger
+	log    := conversation.Logger
 	for _, parameter := range parameters {
 		if paramClient, ok := parameter.(*Client); ok {
 			client = paramClient
@@ -78,6 +78,8 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	if log == nil {
 		log = client.Logger.Topic("conversation").Scope("conversation").Record("media", "chat")
 	}
+	// TODO get /conversations/chats/$id when that REST call works better
+	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
 	if err := conversation.Client.Get("/conversations/"+conversation.GetID(), &conversation); err != nil {
 		return errors.WithStack(err)
 	}
@@ -85,7 +87,6 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
 	return nil
 }
-n	
 
 // GetID gets the identifier of this
 //   implements Identifiable
