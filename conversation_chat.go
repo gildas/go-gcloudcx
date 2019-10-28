@@ -16,17 +16,15 @@ import (
 type ConversationChat struct {
 	ID             string `json:"id"`
 	SelfURI        string `json:"selfUri,omitempty"`
-	State          string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction      string `json:"direction"` // inbound,outbound
+	State          string `json:"state"`          // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Direction      string `json:"direction"`      // inbound,outbound
 	DisconnectType string `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
 	Held           bool   `json:"held"`
-
 
 	ConnectedTime     time.Time `json:"connectedTime"`
 	DisconnectedTime  time.Time `json:"disconnectedTime"`
 	StartAlertingTime time.Time `json:"startAlertingTime"`
 	StartHoldTime     time.Time `json:"startHoldTime"`
-
 
 	Participants   []*Participant  `json:"participants"`
 	Segments       []Segment       `json:"segments"`
@@ -38,26 +36,26 @@ type ConversationChat struct {
 	AvatarImageURL *url.URL        `json:"-"`
 	JourneyContext *JourneyContext `json:"journeyContext"`
 
-	Client          *Client         `json:"-"`
-	Logger          *logger.Logger  `json:"-"`
+	Client *Client        `json:"-"`
+	Logger *logger.Logger `json:"-"`
 }
 
 // JourneyContext  describes a Journey Context
 type JourneyContext struct {
-	Customer         struct {
+	Customer struct {
 		ID     string `json:"id"`
 		IDType string `json:"idType"`
 	} `json:"customer"`
-	CustomerSession  struct {
+	CustomerSession struct {
 		ID   string `json:"id"`
 		Type string `json:"type"`
 	} `json:"customerSession"`
 	TriggeringAction struct {
-		ID        string    `json:"id"`
+		ID        string `json:"id"`
 		ActionMap struct {
 			ID      string `json:"id"`
 			Version int    `json:"version"`
-		}                   `json:"actionMap"`
+		} `json:"actionMap"`
 	} `json:"triggeringAction"`
 }
 
@@ -80,10 +78,14 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	if log == nil {
 		log = client.Logger.Topic("conversation").Scope("conversation").Record("media", "chat")
 	}
+	if err := conversation.Client.Get("/conversations/"+conversation.GetID(), &conversation); err != nil {
+		return errors.WithStack(err)
+	}
 	conversation.Client = client
 	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
-	return conversation.Client.Get("/conversations/chats/" + conversation.GetID(), &conversation)
+	return nil
 }
+n	
 
 // GetID gets the identifier of this
 //   implements Identifiable
@@ -122,7 +124,9 @@ func (conversation ConversationChat) UpdateState(identifiable Identifiable, stat
 func (conversation ConversationChat) Transfer(identifiable Identifiable, queue Identifiable) error {
 	return conversation.Client.Post(
 		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
-		struct{ID string `json:"queueId"`}{ID: queue.GetID()},
+		struct {
+			ID string `json:"queueId"`
+		}{ID: queue.GetID()},
 		nil,
 	)
 }
@@ -131,7 +135,7 @@ func (conversation ConversationChat) Transfer(identifiable Identifiable, queue I
 func (conversation ConversationChat) Post(member Identifiable, text string) error {
 	return conversation.Client.Post(
 		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
-		struct{
+		struct {
 			BodyType string `json:"bodyType"`
 			Body     string `json:"body"`
 		}{
@@ -144,7 +148,7 @@ func (conversation ConversationChat) Post(member Identifiable, text string) erro
 
 // SetTyping send a typing indicator to the chat member
 func (conversation ConversationChat) SetTyping(member Identifiable) error {
-	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil,)
+	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil)
 }
 
 // WrapupParticipant wraps up a Participant of this Conversation
