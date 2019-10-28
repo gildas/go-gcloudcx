@@ -26,6 +26,12 @@ type Queue struct {
 	Client                *Client       `json:"-"`
 }
 
+// RoutingTarget describes a routing target
+type RoutingTarget struct {
+	Type    string `json:"targetType,omitempty"`
+	Address string `json:"targetAddress,omitempty"`
+}
+
 func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	response := struct {
 		Entities   []*Queue `json:"entities"`
