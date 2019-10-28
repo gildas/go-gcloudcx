@@ -82,7 +82,7 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	}
 	conversation.Client = client
 	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
-	return conversation.Client.Get("/conversations/chat/" + conversation.GetID(), &conversation)
+	return conversation.Client.Get("/conversations/chats/" + conversation.GetID(), &conversation)
 }
 
 // GetID gets the identifier of this
