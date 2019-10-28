@@ -45,10 +45,12 @@ func main() {
 		deploymentID   = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
 		redirectRoot   = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
 		agentQueueName = flag.String("agentqueue", core.GetEnvAsString("PURECLOUD_AGENTQUEUE", ""), "The queue to transfer to agents")
+		botURL         = flag.String("boturl", core.GetEnvAsString("PURECLOUD_BOTURL", ""), "The Bot URL to query for interpretation")
 		botQueueName   = flag.String("botqueue", core.GetEnvAsString("PURECLOUD_BOTQUEUE", ""), "The queue to send customers to initially")
 		queueName      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "(legacy) the queue to send to")
 		webrootpath    = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
 		port           = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
+		err error
 	)
 	flag.Parse()
 
@@ -76,6 +78,11 @@ func main() {
 		BotQueue:    &purecloud.Queue{Name: *botQueueName},
 		WebRootPath: *webrootpath,
 		Logger:      Log.Topic("config"),
+	}
+	if MyAppConfig.BotURL, err = url.Parse(*botURL); err != nil {
+		Log.Fatalf("The Chat BOT URL %s is invalid", *botURL, err)
+		fmt.Fprintf(os.Stderr, "The Chat BOT URL %s is invalid. Error: %s", *botURL, err)
+		os.Exit(-2)
 	}
 
 	if len(MyAppConfig.WebRootPath) > 0 {

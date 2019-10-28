@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/url"
 	"github.com/gildas/go-logger"
 	"context"
 	"net/http"
@@ -14,6 +15,9 @@ import (
 type AppConfig struct {
 	// WebRootPath contains the root path to prepend to URL when redirecting or in the web pages
 	WebRootPath string
+
+	// BotURL is the Chat Bot's url
+	BotURL      *url.URL
 
 	// BotQueue is the Queue used for sending the initial chat to
 	BotQueue    *purecloud.Queue
