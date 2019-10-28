@@ -39,6 +39,8 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 	if options == nil { options = &core.RequestOptions{} }
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
+	} else if client.API == nil {
+		return errors.New("Client API is not set")
 	} else {
 		options.URL, err = client.API.Parse(strings.TrimPrefix(path, "/"))
 	}
