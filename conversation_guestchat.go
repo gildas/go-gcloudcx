@@ -225,6 +225,27 @@ func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []b
 	}
 }
 
+// GetMember fetches the given member of this Conversation (caches the member)
+func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) (*ChatMember, error) {
+	if member, ok := conversation.Members[identifiable.GetID()]; ok {
+		return member, nil
+	}
+	member := &ChatMember{}
+	err := conversation.Client.SendRequest(
+		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
+		&core.RequestOptions{
+			Authorization: "bearer " + conversation.JWT,
+		},
+		&member,
+	)
+	if err != nil {
+		return nil, err
+	}
+	conversation.Logger.Scope("getmember").Debugf("Response: %+v", member)
+	conversation.Members[member.ID] = member
+	return member, nil
+}
+
 // SendTyping sends a typing indicator to PureCloud as the chat guest
 func (conversation *ConversationGuestChat) SendTyping() (err error) {
 	response := &struct {
