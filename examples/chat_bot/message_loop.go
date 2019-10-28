@@ -91,21 +91,26 @@ func MessageLoop(config* AppConfig) {
 						log.Debugf("%s is not one of the participants of this conversation", config.User)
 						continue
 					}
+					log = log.Record("participant", participant.ID)
+
+					// skip the agent
 					if participant.IsMember("chat", topic.Sender) {
 						log.Debugf("%s is the sender of this Notification Topic, nothing to do", config.User)
 						continue
 					}
-					log = log.Record("participant", participant.ID)
-					// send the message to the Chat Bot (customer side only)
-					log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
-
+					if len(participant.Chats) == 0 {
+						log.Warnf("Participant's chat id does not exist yet, skipping")
+						continue
+					}
 					// Pretend the Chat Bot is typing... (whereis it is thinking... isn't it?)
+					log.Record("chat", participant.Chats[0]).Debugf("The agent is now typing")
 					err = topic.Conversation.SetTyping(participant.Chats[0])
 					if err != nil {
 						log.Errorf("Failed to send Typing to Chat Member", err)
 					}
 
 					// Send stuff to Matt's Google Dialog Flow webservice
+					log.Infof("Participant %s, Sending %s Body to Google: %s", participant, topic.BodyType, topic.Body)
 					response := struct {
 						Intent          string  `json:"intent"`
 						Confidence      float64 `json:"confidence"`
