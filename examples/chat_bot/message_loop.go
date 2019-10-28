@@ -118,7 +118,7 @@ func MessageLoop(config* AppConfig) {
 						EndConversation bool    `json:"end_conversation"` 
 					}{EndConversation: false}
 					if _, err = core.SendRequest(&core.RequestOptions{
-							URL: &url.URL{Scheme: "https", Host: "newpod-gaap.live.genesys.com", Path: "/MattGDF"},
+							URL: &url.URL{Scheme: "https", Host: "newpod-gaap.live.genesys.com", Path: "/MattGDF/"},
 							Payload: struct {
 								Message string `json:"message"`
 							}{
