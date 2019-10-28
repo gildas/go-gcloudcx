@@ -11,6 +11,7 @@ import (
 
 // ConversationChatMessageTopic describes a Topic about User's Presence
 type ConversationChatMessageTopic struct {
+	ID             string
 	Name           string
 	Conversation   *ConversationChat
 	Sender         *ChatMember
@@ -54,11 +55,12 @@ func (topic *ConversationChatMessageTopic) UnmarshalJSON(payload []byte) (err er
 	var inner struct {
 		TopicName string       `json:"topicName"`
 		EventBody struct {
-			ID        string      `json:"id,omitempty"`
-			Sender    *ChatMember `json:"sender,omitempty"`
-			Body      string      `json:"body,omitempty"`
-			BodyType  string      `json:"bodyType,omitempty"`
-			Timestamp time.Time   `json:"timestamp,omitempty"`
+			ID           string            `json:"id,omitempty"`
+			Conversation *ConversationChat `json:"conversation,omitempty"`
+			Sender       *ChatMember       `json:"sender,omitempty"`
+			Body         string            `json:"body,omitempty"`
+			BodyType     string            `json:"bodyType,omitempty"`
+			Timestamp    time.Time         `json:"timestamp,omitempty"`
 		} `json:"eventBody"`
 		Metadata struct {
 			CorrelationID string `json:"correlationId,omitempty"`
