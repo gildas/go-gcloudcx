@@ -88,9 +88,14 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	}
 	conversation.Client            = client
 	conversation.Logger            = log.Topic("conversation").Scope("conversation").Record("media", "chat").Record("conversation", conversation.ID)
-	conversation.Guest             = guest
+	// We get the guest's ID from PureCloud, the other fields should be from Initialize
+	conversation.Guest.DisplayName = guest.DisplayName
+	conversation.Guest.AvatarURL   = guest.AvatarURL
+	conversation.Guest.Role        = guest.Role
+	conversation.Guest.State       = guest.State
+	conversation.Guest.Custom      = guest.Custom
 	conversation.Members           = map[string]*ChatMember{}
-	conversation.Members[guest.ID] = guest
+	conversation.Members[conversation.Guest.ID] = conversation.Guest
 	conversation.TopicReceived     = make(chan NotificationTopic)
 	conversation.LogHeartbeat      = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
 	return
