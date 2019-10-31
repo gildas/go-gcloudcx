@@ -55,7 +55,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
 	}
 	if log == nil {
-		log = conversation.Client.Logger
+		log = client.Logger
 	}
 	if guest == nil {
 		return errors.New("Missing ChatMember guest")
