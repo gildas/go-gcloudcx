@@ -45,7 +45,7 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 		options.URL, err = client.API.Parse(strings.TrimPrefix(path, "/"))
 	}
 	if err != nil {
-		return APIError{ Code: "url.parse", Message: err.Error() }
+		return errors.WithStack(APIError{ Code: "url.parse", Message: err.Error() })
 	}
 	if len(options.Authorization) == 0 {
 		if client.IsAuthorized() {
@@ -80,9 +80,11 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 			if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
 				return errors.Wrap(err, "Failed to extract an error from the response")
 			}
+			apiError.Status = requestError.StatusCode
+			apiError.Code   = requestError.Status
 			return errors.WithStack(apiError)
 		}
-		return err // Make a nice APIError
+		return err
 	}
 	return nil
 }

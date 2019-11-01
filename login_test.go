@@ -49,7 +49,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 	suite.Require().True(ok, "Error is not a purecloud.APIError")
 	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
 	suite.Assert().Equal(400, apierr.Status)
-	suite.Assert().Equal("bad.credentials", apierr.Code)
+	suite.Assert().Equal("authentication failed: invalid_client", apierr.Error())
 }
 
 func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
