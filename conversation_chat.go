@@ -78,7 +78,7 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	if log == nil {
 		log = client.Logger.Topic("conversation").Scope("conversation").Record("media", "chat")
 	}
-	// TODO get /conversations/chats/$id when that REST call works better
+	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
 	if err := conversation.Client.Get("/conversations/"+conversation.GetID(), &conversation); err != nil {
 		return errors.WithStack(err)

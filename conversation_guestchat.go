@@ -172,7 +172,7 @@ func (conversation *ConversationGuestChat) messageLoop() (err error) {
 		}
 
 		// we have to use a custom version since topics are the same between agent chats and guest chats
-		// TODO: We should create a Conversation interface...
+		// TODO: Maybe, we should create a Conversation interface...
 		topic, err := conversation.notificationTopicFromJSON(body)
 		if err != nil {
 			log.Warnf("%s, Body size: %d, Content: %s", err.Error(), len(body), string(body))
