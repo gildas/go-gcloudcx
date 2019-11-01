@@ -27,7 +27,7 @@ type Organization struct {
 //   implements Initializable
 //   If the organzation ID is not given, /organizations/me is fetched
 func (organization *Organization) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters)
+	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
 		return err
 	}
