@@ -10,19 +10,19 @@ import (
 
 // LocationDefinition describes a location (office, etc)
 type LocationDefinition struct {
-	ID              string                  `json:"id"`
-	Name            string                  `json:"name"`
-	ContactUser     AddressableEntityRef    `json:"contactUser"`
-	EmergencyNumber LocationEmergencyNumber `json:"emergencyNumber"`
-	Address         LocationAddress         `json:"address"`
-	AddressVerified bool                    `json:"addressVerified"`
-	State           string                  `json:"state"`
-	Notes           string                  `json:"notes"`
-	Path            []string                `json:"path"`
-	ProfileImage    []LocationImage         `json:"profileImage"`
-	FloorplanImage  []LocationImage         `json:"flooreImage"`
-	Version         int                     `json:"version"`
-	SelfURI         string                  `json:"selfUri"`
+	ID              string                   `json:"id"`
+	SelfURI         string                   `json:"selfUri"`
+	Name            string                   `json:"name"`
+	ContactUser     *AddressableEntityRef    `json:"contactUser"`
+	EmergencyNumber *LocationEmergencyNumber `json:"emergencyNumber"`
+	Address         *LocationAddress         `json:"address"`
+	AddressVerified bool                     `json:"addressVerified"`
+	State           string                   `json:"state"`
+	Notes           string                   `json:"notes"`
+	Path            []string                 `json:"path"`
+	ProfileImage    []*LocationImage         `json:"profileImage"`
+	FloorplanImage  []*LocationImage         `json:"flooreImage"`
+	Version         int                      `json:"version"`
 }
 
 // LocationEmergencyNumber describes a Location's Emergency Number
@@ -50,11 +50,19 @@ type LocationImage struct {
 
 // GeoLocation describes a location with coordinates
 type GeoLocation struct {
-	ID         string               `json:"id"`
-	Name       string               `json:"name"`
-	Locations  []LocationDefinition `json:"locations"`
+	ID         string                `json:"id"`
+	SelfURI    string                `json:"selfUri"`
+	Name       string                `json:"name"`
+	Locations  []*LocationDefinition `json:"locations"`
+}
 
-	SelfURI        string         `json:"selfUri"`
+// Location describes a location in a building
+type Location struct {
+	ID                 string              `json:"id"`
+	FloorplanID        string              `json:"floorplanId"`
+	Coordinates        map[string]float64  `json:"coordinates"`
+	Notes              string              `json:"notes"`
+	LocationDefinition *LocationDefinition `json:"locationDefinition"`
 }
 
 // MarshalJSON marshals this into JSON

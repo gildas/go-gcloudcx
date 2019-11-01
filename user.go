@@ -1,30 +1,42 @@
 package purecloud
 
 import (
-	"github.com/gildas/go-logger"
 	"net/url"
 	"strings"
+	"github.com/gildas/go-logger"
 )
 
 // User describes a PureCloud User
 type User struct {
 	ID                  string                   `json:"id"`
+	SelfURI             string                   `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
 	Department          string                   `json:"department"`
 	Title               string                   `json:"title"`
-	Division            Division                 `json:"division"`
+	Division            *Division                `json:"division"`
 	Mail                string                   `json:"email"`
 	Images              []UserImage              `json:"images"`
-	PrimaryContact      []Contact                `json:"primaryContactInfo"`
-	Addresses           []Contact                `json:"addresses"`
+	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
+	Addresses           []*Contact               `json:"addresses"`
 	State               string                   `json:"state"`
-	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
 	Presence            *UserPresence            `json:"presence,omitempty"`
+	OutOfOffice         *OutOfOffice             `json:"outOfOffice"`
 	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`
+	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
+	ProfileSkills       []string                 `json:"profileSkills"`
+	Skills              []*UserRoutingSkill      `json:"skills"`
+	Languages           []*UserRoutingLanguage   `json:"languages"`
+	LanguagePreference  string                   `json:"languagePreference"`
+	Groups              []*Group                 `json:"groups"`
+	Station             *UserStations            `json:"station"`
+	Authorization       *UserAuthorization       `json:"authorization"`
 	Employer            *EmployerInfo            `json:"employerInfo,omitempty"`
 	Manager             *User                    `json:"manager,omitempty"`
+	Certifications      []string                 `json:"certifications"`
+	Biography           *Biography               `json:"biography"`
 	ConversationSummary *UserConversationSummary `json:"conversationSummary,omitempty"`
+	Locations           []*Location              `json:"locations"`
 	GeoLocation         *GeoLocation             `json:"geolocation"`
 	Chat                struct {
 		JabberID string `json:"jabberId"`
@@ -32,7 +44,6 @@ type User struct {
 	Version int            `json:"version"`
 	Client  *Client        `json:"-"`
 	Logger  *logger.Logger `json:"-"`
-	// TODO: Continue to add objects...
 }
 
 // Initialize initializes this from the given Client
