@@ -28,6 +28,12 @@ func (client *Client) GetMyOrganization() (*Organization, error) {
 	return organization, nil
 }
 
+// GetID gets the identifier of this
+//   implements Identifiable
+func (organization Organization) GetID() string {
+	return organization.ID
+}
+
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (organization Organization) String() string {
