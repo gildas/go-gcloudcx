@@ -1,6 +1,7 @@
 package purecloud
 
 import (
+	"github.com/gildas/go-logger"
 	"net/url"
 	"strings"
 )
@@ -28,10 +29,32 @@ type User struct {
 	Chat                struct {
 		JabberID string `json:"jabberId"`
 	} `json:"chat"`
-	SelfURI string  `json:"selfUri"`
-	Version int     `json:"version"`
-	Client  *Client `json:"-"`
+	Version int            `json:"version"`
+	Client  *Client        `json:"-"`
+	Logger  *logger.Logger `json:"-"`
 	// TODO: Continue to add objects...
+}
+
+// Initialize initializes this from the given Client
+//   implements Initializable
+//   if the user ID is not given, /users/me is fetched (if grant allows)
+func (user *User) Initialize(parameters ...interface{}) error {
+	client, logger, err := ExtractClientAndLogger(parameters)
+	if err != nil {
+		return err
+	}
+	if len(user.ID) > 0 {
+		if err := client.Get("/users/" + user.ID, &user); err != nil {
+			return err
+		}
+	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
+		if err := client.Get("/users/me", &user); err != nil {
+			return err
+		}
+	}
+	user.Client = client
+	user.Logger = logger.Topic("user").Scope("user").Record("user", user.ID)
+	return nil
 }
 
 // GetMyUser retrieves the User that authenticated with the client

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
@@ -33,29 +32,19 @@ type ConversationGuestChat struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client := conversation.Client
-	log    := conversation.Logger
+	client, logger, err := ExtractClientAndLogger(parameters)
+	if err != nil {
+		return err
+	}
 	guest  := conversation.Guest
 	target := conversation.Target
 	for _, parameter := range parameters {
-		if paramClient, ok := parameter.(*Client); ok {
-			client = paramClient
-		}
-		if paramLogger, ok := parameter.(*logger.Logger); ok {
-			log = paramLogger.Topic("conversation").Scope("conversation").Record("media", "chat")
-		}
 		if paramGuest, ok := parameter.(*ChatMember); ok {
 			guest = paramGuest
 		}
 		if paramTarget, ok := parameter.(*RoutingTarget); ok {
 			target = paramTarget
 		}
-	}
-	if client == nil {
-		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
-	}
-	if log == nil {
-		log = client.Logger
 	}
 	if guest == nil {
 		return errors.New("Missing ChatMember guest")
@@ -84,10 +73,10 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		},
 		&conversation,
 	); err != nil {
-		return errors.WithStack(err)
+		return err
 	}
 	conversation.Client            = client
-	conversation.Logger            = log.Topic("conversation").Scope("conversation").Record("media", "chat").Record("conversation", conversation.ID)
+	conversation.Logger            = logger.Topic("conversation").Scope("conversation").Record("media", "chat").Record("conversation", conversation.ID)
 	// We get the guest's ID from PureCloud, the other fields should be from Initialize
 	conversation.Guest.DisplayName = guest.DisplayName
 	conversation.Guest.AvatarURL   = guest.AvatarURL

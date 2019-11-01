@@ -1,5 +1,9 @@
 package purecloud
 
+import (
+	"github.com/gildas/go-logger"
+)
+
 // Organization describes a PureCloud Organization
 type Organization struct {
 	ID                         string          `json:"id"`
@@ -16,6 +20,29 @@ type Organization struct {
 	Features                   map[string]bool `json:"features"`
 	Version                    uint32          `json:"version"`
 	Client                     *Client         `json:"-"`
+	Logger                     *logger.Logger  `json:"-"`
+}
+
+// Initialize initializes this from the given Client
+//   implements Initializable
+//   If the organzation ID is not given, /organizations/me is fetched
+func (organization *Organization) Initialize(parameters ...interface{}) error {
+	client, logger, err := ExtractClientAndLogger(parameters)
+	if err != nil {
+		return err
+	}
+	if len(organization.ID) > 0 {
+		if err := client.Get("/organizations/" + organization.ID, &organization); err != nil {
+			return err
+		}
+	} else {
+		if err := client.Get("/organizations/me", &organization); err != nil {
+			return err
+		}
+	}
+	organization.Client = client
+	organization.Logger = logger.Topic("organization").Scope("organization").Record("organization", organization.ID)
+	return nil
 }
 
 // GetMyOrganization retrives the current Organization
@@ -25,6 +52,7 @@ func (client *Client) GetMyOrganization() (*Organization, error) {
 		return nil, err
 	}
 	organization.Client = client
+	organization.Logger = client.Logger.Topic("organization").Scope("organization").Record("organization", organization.ID)
 	return organization, nil
 }
 

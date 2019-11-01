@@ -1,11 +1,9 @@
 package purecloud
 
 import (
-	"reflect"
 	"time"
 
 	"github.com/gildas/go-logger"
-	"github.com/pkg/errors"
 )
 
 // Conversation contains the details of a live conversation
@@ -81,25 +79,18 @@ type Voicemail struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *Conversation) Initialize(parameters ...interface{}) error {
-	client := conversation.Client
-	log    := conversation.Logger
-	for _, parameter := range parameters {
-		if paramClient, ok := parameter.(*Client); ok {
-			client = paramClient
-		}
-		if paramLogger, ok := parameter.(*logger.Logger); ok {
-			log = paramLogger.Topic("conversation").Scope("conversation")
-		}
+	client, logger, err := ExtractClientAndLogger(parameters)
+	if err != nil {
+		return err
 	}
-	if client == nil {
-		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
-	}
-	if log == nil {
-		log = client.Logger.Topic("conversation").Scope("conversation")
+	if len(conversation.ID) > 0 {
+		if err := conversation.Client.Get("/conversations/" + conversation.ID, &conversation); err != nil {
+			return err
+		}
 	}
 	conversation.Client = client
-	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
-	return conversation.Client.Get("/conversations/" + conversation.GetID(), &conversation)
+	conversation.Logger = logger.Topic("conversation").Scope("conversation").Record("media", "chat")
+	return nil
 }
 
 // GetID gets the identifier of this

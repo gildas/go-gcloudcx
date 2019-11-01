@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"reflect"
 	"time"
 
 	"github.com/gildas/go-core"
@@ -62,29 +61,19 @@ type JourneyContext struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
-	client := conversation.Client
-	log    := conversation.Logger
-	for _, parameter := range parameters {
-		if paramClient, ok := parameter.(*Client); ok {
-			client = paramClient
-		}
-		if paramLogger, ok := parameter.(*logger.Logger); ok {
-			log = paramLogger.Topic("conversation").Scope("conversation").Record("media", "chat")
-		}
-	}
-	if client == nil {
-		return errors.Errorf("Missing Client in initialization of %s %s", reflect.TypeOf(conversation).String(), conversation.GetID())
-	}
-	if log == nil {
-		log = client.Logger.Topic("conversation").Scope("conversation").Record("media", "chat")
+	client, logger, err := ExtractClientAndLogger(parameters)
+	if err != nil {
+		return err
 	}
 	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
-	if err := conversation.Client.Get("/conversations/"+conversation.GetID(), &conversation); err != nil {
-		return errors.WithStack(err)
+	if len(conversation.ID) > 0 {
+		if err := conversation.Client.Get("/conversations/" + conversation.ID, &conversation); err != nil {
+			return err
+		}
 	}
 	conversation.Client = client
-	conversation.Logger = log.Topic("conversation").Scope("conversation").Record("media", "chat")
+	conversation.Logger = logger.Topic("conversation").Scope("conversation").Record("media", "chat")
 	return nil
 }
 
