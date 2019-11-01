@@ -50,7 +50,7 @@ type User struct {
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
 func (user *User) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters)
+	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
 		return err
 	}

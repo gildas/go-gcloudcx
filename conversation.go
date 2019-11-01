@@ -79,7 +79,7 @@ type Voicemail struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *Conversation) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters)
+	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
 		return err
 	}

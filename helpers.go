@@ -6,15 +6,14 @@ import (
 )
 
 // ExtractClientAndLogger extracts a Client and a logger.Logger from its parameters
-func ExtractClientAndLogger(object interface{}, parameters ...interface{}) (*Client, *logger.Logger, error) {
+func ExtractClientAndLogger(parameters ...interface{}) (*Client, *logger.Logger, error) {
 	var client *Client
 	var log    *logger.Logger
 
 	for _, parameter := range parameters {
 		if paramClient, ok := parameter.(*Client); ok {
 			client = paramClient
-		}
-		if paramLogger, ok := parameter.(*logger.Logger); ok {
+		} else if paramLogger, ok := parameter.(*logger.Logger); ok {
 			log = paramLogger
 		}
 	}

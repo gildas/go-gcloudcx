@@ -32,7 +32,7 @@ type ConversationGuestChat struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client, logger, err := ExtractClientAndLogger(parameters)
+	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
 		return err
 	}
