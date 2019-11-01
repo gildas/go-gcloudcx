@@ -23,10 +23,10 @@ func (wrapup Wrapup) MarshalJSON() ([]byte, error) {
   type surrogate Wrapup
 	return json.Marshal(struct {
     surrogate
-		D          int64   `json:"durationSeconds"`
+		DurationSeconds int64   `json:"durationSeconds"`
 	}{
-    surrogate: surrogate(wrapup),
-		D:         int64(wrapup.Duration.Seconds()),
+    surrogate:       surrogate(wrapup),
+		DurationSeconds: int64(wrapup.Duration.Seconds()),
 	})
 }
 
@@ -35,13 +35,13 @@ func (wrapup *Wrapup) UnmarshalJSON(payload []byte) (err error) {
   type surrogate Wrapup
 	var inner struct {
     surrogate
-		D          int64   `json:"durationSeconds"`
+		DurationSeconds int64   `json:"durationSeconds"`
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.WithStack(err)
   }
   *wrapup = Wrapup(inner.surrogate)
-	wrapup.Duration = time.Duration(inner.D) * time.Second
+	wrapup.Duration = time.Duration(inner.DurationSeconds) * time.Second
 	return
 }

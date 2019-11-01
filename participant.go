@@ -58,11 +58,11 @@ type Participant struct {
 
   WrapupRequired         bool                    `json:"wrapupRequired"`
   WrapupPrompt           string                  `json:"wrapupPrompt"`
-  WrapupTimeout          int                     `json:"wrapupTimeoutMs"` // TODO: time.Duration
+  WrapupTimeout          time.Duration           `json:"-"`
   WrapupSkipped          bool                    `json:"wrapupSkipped"`
   Wrapup                 *Wrapup                 `json:"wrapup"`
 
-  AlertingTimeout        int                     `json:"alertingTimeoutMs"` // TODO: time.Duration
+  AlertingTimeout        time.Duration           `json:"-"`
   ScreenRecordingState   string                  `json:"screenRecordingState"`
   FlaggedReason          string                  `json:"flaggedReason"`
   Peer                   string                  `json:"peer"`
@@ -159,13 +159,39 @@ func (participant *Participant) UpdateState(target StateUpdater, state string) e
   return target.UpdateState(participant, state)
 }
 
+// MarshalJSON marshals this into JSON
+func (participant Participant) MarshalJSON() ([]byte, error) {
+  userID  := ""
+  userURI := ""
+  if participant.User != nil {
+    userID  = participant.User.ID
+    userURI = participant.User.SelfURI
+  }
+  type surrogate Participant
+	return json.Marshal(struct {
+    surrogate
+    UserID            string `json:"userId"`
+    UserURI           string `json:"userUri"`
+    AlertingTimeoutMs int64  `json:"alertingTimeoutMs"`
+    WrapupTimeoutMs   int64  `json:"wrapupTimeoutMs"`
+	}{
+    surrogate:         surrogate(participant),
+    UserID:            userID,
+    UserURI:           userURI,
+    AlertingTimeoutMs: int64(participant.AlertingTimeout.Milliseconds()),
+    WrapupTimeoutMs:   int64(participant.WrapupTimeout.Milliseconds()),
+	})
+}
+
 // UnmarshalJSON unmarshals JSON into this
 func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
   type surrogate Participant
   var inner struct {
     surrogate
-    UserID    string `json:"userId"`
-    UserURI   string `json:"userUri"`
+    UserID            string `json:"userId"`
+    UserURI           string `json:"userUri"`
+    AlertingTimeoutMs int64  `json:"alertingTimeoutMs"`
+    WrapupTimeoutMs   int64  `json:"wrapupTimeoutMs"`
   }
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
@@ -175,5 +201,7 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
   if participant.User == nil && len(inner.UserID) > 0 {
     participant.User = &User{ID: inner.UserID, SelfURI: inner.UserURI}
   }
+  participant.AlertingTimeout = time.Duration(inner.AlertingTimeoutMs) * time.Millisecond
+  participant.WrapupTimeout   = time.Duration(inner.WrapupTimeoutMs) * time.Millisecond
   return
 }
