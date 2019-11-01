@@ -1,40 +1,68 @@
 package purecloud
 
-import (
-	"net/url"
-	"time"
-
-	"github.com/gildas/go-logger"
-)
-
-// Client is the primary object to use PureCloud
-type Client struct {
-	Region         string         `json:"region"`
-	Organization   *Organization  `json:"organization,omitempty"`
-	DeploymentID   string         `json:"deploymentId"`
-	API            *url.URL       `json:"apiUrl,omitempty"`
-	Proxy          *url.URL       `json:"proxyUrl,omitempty"`
-	Authorization  *Authorization `json:"auth"`
-	Logger         *logger.Logger `json:"-"`
+// Identifiable describes things that carry an identifier
+type Identifiable interface {
+	// GetID gets the identifier of this
+	GetID() string
 }
 
-// ClientOptions contains the options to create a new Client
-type ClientOptions struct {
-	Region         string
-	OrganizationID string
-	DeploymentID   string
-	ClientID       string
-	ClientSecret   string
-	Proxy          *url.URL
-	Logger         *logger.Logger
+// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
+type Addressable interface {
+	GetURI() string
 }
 
-// Authorization contains the login options to connect the client to PureCloud
-type Authorization struct {
-	GrantType    string    `json:"grantType"`
-	ClientID     string    `json:"clientId"`
-	Secret       string    `json:"clientSecret"`
-	TokenType    string    `json:"tokenType"`
-	Token        string    `json:"token"`
-	TokenExpires time.Time `json:"tokenExpires"`
+// Initializable describes things that can be initialized
+type Initializable interface {
+	Initialize(parameters ...interface{}) error
+}
+
+// StateUpdater describes objects than can update the state of an Identifiable
+type StateUpdater interface {
+	UpdateState(identifiable Identifiable, state string) error
+}
+
+// Disconnecter describes objects that can disconnect an Identifiable from themselves
+type Disconnecter interface {
+	Disconnect(identifiable Identifiable) error
+}
+
+// Transferer describes objects that can transfer an Identifiable somewhere else
+type Transferer interface {
+	Transfer(identifiable Identifiable, target Identifiable) error
+}
+
+// Address describes an Addres (telno, etc)
+type Address struct {
+	Name               string `json:"name"`
+	NameRaw            string `json:"nameRaw"`
+	AddressDisplayable string `json:"addressDisplayable"`
+	AddressRaw         string `json:"addressRaw"`
+	AddressNormalized  string `json:"addressNormalized"`
+}
+
+// ErrorBody describes errors in PureCloud objects
+type ErrorBody struct {
+	Status            int               `json:"status"`
+	Code              string            `json:"code"`
+	EntityID          string            `json:"entityId"`
+	EntityName        string            `json:"entityName"`
+	Message           string            `json:"message"`
+	MessageWithParams string            `json:"messageWithParams"`
+	MessageParams     map[string]string `json:"messageParams"`
+	ContextID         string            `json:"contextId"`
+	Details           []ErrorDetail     `json:"details"`
+	Errors            []*ErrorBody      `json:"errors"`
+}
+
+// ErrorDetail describes the details of an error
+type ErrorDetail struct {
+	ErrorCode  string `json:"errorCode"`
+	Fieldname  string `json:"fieldName"`
+	EntityID   string `json:"entityId"`
+	EntityName string `json:"entityName"`
+}
+
+// Error returns a string representation of this error
+func (err ErrorBody) Error() string {
+	return err.MessageWithParams
 }

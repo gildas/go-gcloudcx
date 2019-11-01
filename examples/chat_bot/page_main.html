@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="referrer" content="no-referrer-when-downgrade" />
+
+{{if .LoggedIn}}
+        <!-- PureCloud Widget-->
+        <link id="genesys-widgets-styles" href="https://apps.{{.Region}}/widgets/9.0/widgets.min.css" type="text/css" rel="stylesheet"/>
+{{end}}
+
+        <!-- Bootstrap -->
+        <!-- Boostrap styles should be loaded after PureCloud Widget's styles or the Widget will never show-->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    </head>
+    <body>
+        <div class="container-fluid">
+{{if .LoggedIn}}
+            <form action="{{.WebRootPath}}/logout" method="POST">
+{{else}}
+            <form action="{{.WebRootPath}}/login" method="POST">
+{{end}}
+                <div class="form-group">
+                    <label for="chatbot_user">ChatBot User:</label>
+{{if .User}}
+                    <input id="chatbot_user" class="form-control" type="text" placeholder="Not Logged In..." value="{{.User.Name}}" readonly>
+{{else}}                    
+                    <input id="chatbot_user" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
+                </div>
+
+                <div class="form-group">
+                    <label for="agent_queue">Agent Queue:</label>
+{{if .AgentQueue}}
+                    <input id="agent_queue" class="form-control" type="text" placeholder="Not Logged In..." value="{{.AgentQueue.Name}}" readonly>
+{{else}}                    
+                    <input id="agent_queue" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
+                </div>
+
+                <div class="form-group">
+                    <label for="bot_queue">Bot Queue:</label>
+{{if .BotQueue}}
+                    <input id="bot_queue" class="form-control" type="text" placeholder="Not Logged In..." value="{{.BotQueue.Name}}" readonly>
+{{else}}                    
+                    <input id="bot_queue" class="form-control" type="text" placeholder="Not Logged In..." readonly>
+{{end}}
+                </div>
+
+                <div class="form-group">
+                    <label for="channel">Notification Channel:</label>
+                    <input id="channel" class="form-control" type="text" placeholder="Not Logged In..." value="{{.ChannelID}}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label for="websocket_url">Websocket URL:</label>
+                    <input id="websocket_url" class="form-control" type="text" placeholder="Not Logged In..." value="{{.WebsocketURL}}" readonly>
+                </div>
+                <div class="btn-group" role="group" aria-label="Login">
+{{if .LoggedIn}}
+                    <button type="submit" class="btn btn-primary">Logout</button>
+{{else}}
+                    <button type="submit" class="btn btn-primary">Login</button>
+{{end}}
+                </div>
+            </form>
+        </div>
+
+{{if .LoggedIn}}
+        <!-- PureCloud Widget-->
+        <script id="widget-config">
+  // See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
+  if (!window._genesys) window._genesys = {};
+  if (!window._gt)      window._gt = [];
+
+  window._genesys.widgets = {
+    main: {
+      customStylesheetID: "genesys_widgets_custom",
+      theme: "dark",
+      lang:  "en",
+	  preload: [],
+	  debug:   true,
+    },
+    webchat: {
+      userData:           {},
+      emojis:             true,
+      cometD:             { enabled: false },
+      uploadsEnabled:     false,
+      enableCustomHeader: true,
+      autoInvite: {
+        enabled:              false,
+        timeToInviteSeconds:  5,
+        inviteTimeoutSeconds: 30
+      },
+      chatButton: {
+        enabled:          true,
+        openDelay:        1000,
+        effectDuration:   300,
+        hideDuringInvite: true
+      },
+      transport: {
+        type:            "purecloud-v2-sockets",
+        dataURL:         "https://api.{{.Region}}",
+        deploymentKey:   "{{.DeploymentID}}",
+        orgGuid:         "{{.OrganizationID}}",
+        interactionData: {
+          routing: {
+            targetType:    "QUEUE",
+{{if .BotQueue}}
+            targetAddress: "{{.BotQueue.Name}}"
+{{else}}                    
+            targetAddress: ""
+{{end}}
+          }
+        }
+      }
+    }
+  };
+        </script>
+        <script id="genesys-cx-widget-script" src="https://apps.{{.Region}}/widgets/9.0/widgets.min.js"></script>
+{{end}}
+        <!-- Bootstrap -->
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body>
+</html>

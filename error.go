@@ -55,13 +55,6 @@ type APIErrorDetails struct {
 	EntityName string `json:"entityName,omitempty"`
 }
 
-// String returns a string representation of this
-func (e APIError) String() string {
-	if len(e.MessageWithParams) > 0 { return e.MessageWithParams }
-	if len(e.Message) > 0           { return e.Message }
-	return e.Code
-}
-
 // Error returns a string representation of this error
 func (e APIError) Error() string {
 	if len(e.MessageWithParams) > 0 { return e.MessageWithParams }
