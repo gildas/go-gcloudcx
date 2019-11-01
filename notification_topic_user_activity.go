@@ -12,7 +12,9 @@ type UserActivityTopic struct {
 	Name          string
 	User          *User
 	Presence      *UserPresence
+	RoutingStatus *RoutingStatus
 	CorrelationID string
+	ActiveQueues  []*Queue
 	Client        *Client
 }
 
@@ -48,23 +50,6 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	// TODO: Put this schema:
 	/*
 {
-  "id": "string",
-  "routingStatus": {
-    "status": "OFF_QUEUE|IDLE|INTERACTING|NOT_RESPONDING|COMMUNICATING",
-    "startTime": "string"
-  },
-  "presence": {
-    "presenceDefinition": {
-      "id": "string",
-      "systemPresence": "string"
-    },
-    "presenceMessage": "string",
-    "modifiedDate": "string"
-  },
-  "outOfOffice": {
-    "active": true,
-    "modifiedDate": "string"
-  },
   "activeQueueIds": [
     {}
   ],
@@ -73,7 +58,15 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	*/
 	var inner struct {
 		TopicName string        `json:"topicName"`
-		Presence  *UserPresence `json:"eventBody"`
+		EventBody struct {
+			ID                      string         `json:"id"`
+			RoutingStatus           *RoutingStatus `json:"routingStatus"`
+			Presence                *UserPresence  `json:"presence"`
+			OutOfOffice             *OutOfOffice   `json:"outOfOffice"`
+			// TODO: Not sure about this (the doc says: "activeQueueIds": [{}])
+			ActiveQueueIDs          []string       `json:"activeQueueIds"`
+			DateActiveQueuesChanged string         `json:"dateActiveQueuesChanged"`
+		}
 		Metadata struct {
 			CorrelationID string `json:"correlationId"`
 		}                       `json:"metadata"`
@@ -85,7 +78,8 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity")
 	topic.Name          = inner.TopicName
 	topic.User          = &User{ID:userID}
-	topic.Presence      = inner.Presence
+	topic.Presence      = inner.EventBody.Presence
+	topic.RoutingStatus = inner.EventBody.RoutingStatus
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }

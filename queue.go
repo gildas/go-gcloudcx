@@ -1,6 +1,7 @@
 package purecloud
 
 import (
+	"github.com/gildas/go-logger"
 	"encoding/json"
 	"net/url"
 	"time"
@@ -10,20 +11,21 @@ import (
 
 // Quieue defines a PureCloud Queue
 type Queue struct {
-	ID                    string        `json:"id"`
-	Name                  string        `json:"name"`
-	CreatedBy             *User         `json:"-"`
-	ModifiedBy            string        `json:"modifiedBy"`
-	DateCreated           time.Time     `json:"dateCreated"`
-	Division              *Division     `json:"division"`
-	MemberCount           int           `json:"memberCount"`
-	MediaSettings         MediaSettings `json:"mediaSettings"`
-	ACWSettings           ACWSettings   `json:"acwSettings"`
-	SkillEvaluationMethod string        `json:"skillEvaluationMethod"`
-	AutoAnswerOnly        bool          `json:"true"`
-	DefaultScripts        interface{}   `json:"defaultScripts"`
-	SelfURI               string        `json:"selfUri"`
-	Client                *Client       `json:"-"`
+	ID                    string         `json:"id"`
+	Name                  string         `json:"name"`
+	CreatedBy             *User          `json:"-"`
+	ModifiedBy            string         `json:"modifiedBy"`
+	DateCreated           time.Time      `json:"dateCreated"`
+	Division              *Division      `json:"division"`
+	MemberCount           int            `json:"memberCount"`
+	MediaSettings         MediaSettings  `json:"mediaSettings"`
+	ACWSettings           ACWSettings    `json:"acwSettings"`
+	SkillEvaluationMethod string         `json:"skillEvaluationMethod"`
+	AutoAnswerOnly        bool           `json:"true"`
+	DefaultScripts        interface{}    `json:"defaultScripts"`
+	SelfURI               string         `json:"selfUri"`
+	Client                *Client        `json:"-"`
+	Logger                *logger.Logger `json:"-"`
 }
 
 // RoutingTarget describes a routing target
@@ -52,11 +54,10 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	for _, queue := range response.Entities {
 		if queue.Name == name {
 			queue.Client = client
+			queue.Logger = client.Logger.Topic("queue").Scope("queue").Record("queue", queue.ID)
 			if queue.CreatedBy != nil {
 				queue.CreatedBy.Client = client
-			}
-			if queue.Division != nil {
-				queue.Division.Client = client
+				queue.CreatedBy.Logger = client.Logger.Topic("user").Scope("user").Record("user", queue.CreatedBy.ID)
 			}
 			return queue, nil
 		}
