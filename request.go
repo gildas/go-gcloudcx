@@ -41,8 +41,10 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
 		return errors.New("Client API is not set")
+	} else if !strings.HasPrefix(path, "/api") {
+		options.URL, err = client.API.Parse("/api/v2/" + strings.TrimPrefix(path, "/"))
 	} else {
-		options.URL, err = client.API.Parse(strings.TrimPrefix(path, "/"))
+		options.URL, err = client.API.Parse(path)
 	}
 	if err != nil {
 		return errors.WithStack(APIError{ Code: "url.parse", Message: err.Error() })

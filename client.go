@@ -52,9 +52,9 @@ func (client *Client) SetRegion(region string) (*Client) {
 	var err error
 
 	client.Region = region
-	client.API, err = url.Parse(fmt.Sprintf("https://api.%s/api/v2/", region))
+	client.API, err = url.Parse(fmt.Sprintf("https://api.%s", region))
 	if err != nil {
-		client.API, _ = url.Parse("https://api.mypurecloud.com/api/v2/")
+		client.API, _ = url.Parse("https://api.mypurecloud.com")
 	}
 	return client
 }
