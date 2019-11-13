@@ -57,7 +57,7 @@ const widgetJS = `
 // WidgetHandler gives the Javascript to help configuring a PureCloud Widget
 func WidgetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
-		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("widget")
+		log := logger.Must(logger.FromContext(r.Context())).Child("route", "widget")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
 		client, err := purecloud.ClientFromContext(r.Context())

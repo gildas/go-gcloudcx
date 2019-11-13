@@ -11,7 +11,7 @@ import (
 // LoggedInHandler is called after the token is sent back to the app by PureCloud
 func LoggedInHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("logged_in")
+		log := logger.Must(logger.FromContext(r.Context())).Child("route", "logged_in")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
 		client, err := purecloud.ClientFromContext(r.Context())

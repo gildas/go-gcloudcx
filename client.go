@@ -43,7 +43,7 @@ func NewClient(options ClientOptions) *Client {
 
 // SetLogger sets the logger
 func (client *Client) SetLogger(log *logger.Logger) (*Client) {
-	client.Logger = logger.CreateIfNil(log, "PureCloud").Topic("purecloud").Scope("purecloud")
+	client.Logger = logger.CreateIfNil(log, "PureCloud").Child("purecloud", "purecloud")
 	return client
 }
 

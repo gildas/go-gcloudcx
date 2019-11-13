@@ -41,7 +41,7 @@ func (organization *Organization) Initialize(parameters ...interface{}) error {
 		}
 	}
 	organization.Client = client
-	organization.Logger = logger.Topic("organization").Scope("organization").Record("organization", organization.ID)
+	organization.Logger = logger.Child("organization", "organization", "organization", organization.ID)
 	return nil
 }
 
@@ -52,7 +52,7 @@ func (client *Client) GetMyOrganization() (*Organization, error) {
 		return nil, err
 	}
 	organization.Client = client
-	organization.Logger = client.Logger.Topic("organization").Scope("organization").Record("organization", organization.ID)
+	organization.Logger = client.Logger.Child("organization", "organization", "organization", organization.ID)
 	return organization, nil
 }
 

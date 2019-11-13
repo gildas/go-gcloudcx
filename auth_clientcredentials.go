@@ -18,7 +18,7 @@ type ClientCredentialsGrant struct {
 
 // Authorize this Grant with PureCloud
 func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
-	log := client.Logger.Scope("authorize").Record("grant", "client_credentials")
+	log := client.Logger.Child(nil, "authorize", "grant", "client_credentials")
 
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
 

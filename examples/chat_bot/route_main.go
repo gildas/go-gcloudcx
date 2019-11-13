@@ -23,7 +23,7 @@ func findParticipant(participants []*purecloud.Participant, user *purecloud.User
 // MainHandler is the main webpage. It displays some login info and a WebChat widget
 func MainHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("main")
+		log := logger.Must(logger.FromContext(r.Context())).Child("route", "main")
 		appConfig, err := AppConfigFromContext(r.Context())
 		if err != nil {
 			log.Errorf("Failed to retrieve the Application Configuration", err)

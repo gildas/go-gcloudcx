@@ -64,7 +64,7 @@ func (user *User) Initialize(parameters ...interface{}) error {
 		}
 	}
 	user.Client = client
-	user.Logger = logger.Topic("user").Scope("user").Record("user", user.ID)
+	user.Logger = logger.Child("user", "user", "user", user.ID)
 	return nil
 }
 

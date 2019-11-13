@@ -9,10 +9,12 @@ import (
 // LoggedOutHandler is called after the PureCloud user is logged out
 func LoggedOutHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log := logger.Must(logger.FromContext(r.Context())).Topic("route").Scope("logged_out")
+		log := logger.Must(logger.FromContext(r.Context())).Child("route", "logged_out")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
-		appConfig.Reset()
+		if err := appConfig.Reset(); err != nil {
+			log.Errorf("Failed to reset the app")
+		}
 
 		redirectPath := appConfig.WebRootPath
 		if len(redirectPath) == 0 {

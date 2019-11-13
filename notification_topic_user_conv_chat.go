@@ -37,7 +37,7 @@ func (topic UserConversationChatTopic) TopicFor(identifiables ...Identifiable) s
 
 // Send sends the current topic to the Channel's chan
 func (topic *UserConversationChatTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Topic("user_conversation_chat").Scope("send")
+	log := channel.Logger.Child("user_conversation_chat", "send")
 	log.Debugf("User: %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
 	topic.Client              = channel.Client
 	topic.User.Client         = channel.Client

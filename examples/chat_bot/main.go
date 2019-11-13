@@ -150,7 +150,7 @@ func main() {
 
 	// Starting the server
 	go func() {
-		log := Log.Topic("webserver").Scope("run")
+		log := Log.Child("webserver", "run")
 
 		log.Infof("Starting WEB server on port %d", *port)
 		if err := WebServer.ListenAndServe(); err != nil {
@@ -184,6 +184,7 @@ func main() {
 		} else {
 			Log.Infof("WEB server is stopped")
 		}
+		Log.Flush()
 		close(exitChannel)
 	}()
 

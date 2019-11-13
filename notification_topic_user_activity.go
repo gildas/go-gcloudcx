@@ -38,7 +38,7 @@ func (topic UserActivityTopic) TopicFor(identifiables ...Identifiable) string {
 
 // Send sends the current topic to the Channel's chan
 func (topic *UserActivityTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Topic("user_activity").Scope("send")
+	log := channel.Logger.Child("user_activity", "send")
 	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
 	topic.Client      = channel.Client
 	topic.User.Client = channel.Client

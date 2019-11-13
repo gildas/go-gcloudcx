@@ -76,7 +76,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		return err
 	}
 	conversation.Client            = client
-	conversation.Logger            = logger.Topic("conversation").Scope("conversation").Record("media", "chat").Record("conversation", conversation.ID)
+	conversation.Logger            = logger.Child("conversation", "conversation", "media", "chat", "conversation", conversation.ID)
 	// We get the guest's ID from PureCloud, the other fields should be from Initialize
 	conversation.Guest.DisplayName = guest.DisplayName
 	conversation.Guest.AvatarURL   = guest.AvatarURL
