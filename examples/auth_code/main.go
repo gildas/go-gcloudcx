@@ -61,12 +61,14 @@ func mainRouteHandler() http.Handler {
 		if err != nil {
 			log.Errorf("Failed to retrieve my Organization", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
 
 		user, err := client.GetMyUser("presence")
 		if err != nil {
 			log.Errorf("Failed to retrieve my User", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
 		core.RespondWithJSON(w, http.StatusOK, struct {
 			UserName string `json:"user"`
