@@ -50,7 +50,7 @@ func main() {
 		queueName      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "(legacy) the queue to send to")
 		webrootpath    = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
 		port           = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
-		err error
+		err            error
 	)
 	flag.Parse()
 
@@ -99,7 +99,7 @@ func main() {
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.NewClient(purecloud.ClientOptions{
+	Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       *region,
 		DeploymentID: *deploymentID,
 		Logger:       Log,

@@ -9,13 +9,13 @@ import (
 
 // Client is the primary object to use PureCloud
 type Client struct {
-	Region              string             `json:"region"`
-	DeploymentID        string             `json:"deploymentId"`
-	Organization        *Organization      `json:"-"`
-	API                 *url.URL           `json:"apiUrl,omitempty"`
-	Proxy               *url.URL           `json:"proxyUrl,omitempty"`
-	AuthorizationGrant  AuthorizationGrant `json:"auth"`
-	Logger              *logger.Logger     `json:"-"`
+	Region             string             `json:"region"`
+	DeploymentID       string             `json:"deploymentId"`
+	Organization       *Organization      `json:"-"`
+	API                *url.URL           `json:"apiUrl,omitempty"`
+	Proxy              *url.URL           `json:"proxyUrl,omitempty"`
+	AuthorizationGrant AuthorizationGrant `json:"auth"`
+	Logger             *logger.Logger     `json:"-"`
 }
 
 // ClientOptions contains the options to create a new Client
@@ -28,7 +28,10 @@ type ClientOptions struct {
 }
 
 // New creates a new PureCloud Client
-func NewClient(options ClientOptions) *Client {
+func NewClient(options *ClientOptions) *Client {
+	if options == nil {
+		return client.SetLogger(nil).SetRegion("mypurecloud.com")
+	}
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
@@ -42,13 +45,13 @@ func NewClient(options ClientOptions) *Client {
 }
 
 // SetLogger sets the logger
-func (client *Client) SetLogger(log *logger.Logger) (*Client) {
+func (client *Client) SetLogger(log *logger.Logger) *Client {
 	client.Logger = logger.CreateIfNil(log, "PureCloud").Child("purecloud", "purecloud")
 	return client
 }
 
 // SetRegion sets the region and its main API
-func (client *Client) SetRegion(region string) (*Client) {
+func (client *Client) SetRegion(region string) *Client {
 	var err error
 
 	client.Region = region
@@ -60,7 +63,7 @@ func (client *Client) SetRegion(region string) (*Client) {
 }
 
 // SetAuthorizationGrant sets the Authorization Grant
-func (client *Client) SetAuthorizationGrant(grant AuthorizationGrant) (*Client) {
+func (client *Client) SetAuthorizationGrant(grant AuthorizationGrant) *Client {
 	client.AuthorizationGrant = grant
 	return client
 }
