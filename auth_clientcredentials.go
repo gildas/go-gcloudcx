@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gildas/go-core"
+	"github.com/gildas/go-request"
 )
 
 // ClientCredentialsGrant implements PureCloud's Client Credentials Grants
@@ -37,7 +37,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 
 	err = client.SendRequest(
 		"https://login." + client.Region + "/oauth/token",
-		&core.RequestOptions{
+		&request.Options{
 			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(grant.ClientID + ":" + grant.Secret)),
 			Payload: map[string]string{
 				"grant_type": "client_credentials",

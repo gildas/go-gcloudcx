@@ -5,38 +5,38 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gildas/go-core"
+	"github.com/gildas/go-request"
 	"github.com/pkg/errors"
 )
 
 // Post sends a POST HTTP Request to PureCloud and gets the results
 func (client *Client) Post(path string, payload, results interface{}) error {
-	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPost, Payload: payload}, results)
+	return client.SendRequest(path, &request.Options{Method: http.MethodPost, Payload: payload}, results)
 }
 
 // Post sends a PATCH HTTP Request to PureCloud and gets the results
 func (client *Client) Patch(path string, payload, results interface{}) error {
-	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPatch, Payload: payload}, results)
+	return client.SendRequest(path, &request.Options{Method: http.MethodPatch, Payload: payload}, results)
 }
 
 // Post sends an UPDATE HTTP Request to PureCloud and gets the results
 func (client *Client) Put(path string, payload, results interface{}) error {
-	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodPut, Payload: payload}, results)
+	return client.SendRequest(path, &request.Options{Method: http.MethodPut, Payload: payload}, results)
 }
 
 // Get sends a GET HTTP Request to PureCloud and gets the results
 func (client *Client) Get(path string, results interface{}) error {
-	return client.SendRequest(path, &core.RequestOptions{}, results)
+	return client.SendRequest(path, &request.Options{}, results)
 }
 
 // Delete sends a DELETE HTTP Request to PureCloud and gets the results
 func (client *Client) Delete(path string, results interface{}) error {
-	return client.SendRequest(path, &core.RequestOptions{Method: http.MethodDelete}, results)
+	return client.SendRequest(path, &request.Options{Method: http.MethodDelete}, results)
 }
 
 // SendRequest sends a REST request to PureCloud via core.SendRequest
-func (client *Client) SendRequest(path string, options *core.RequestOptions, results interface{}) (err error) {
-	if options == nil { options = &core.RequestOptions{} }
+func (client *Client) SendRequest(path string, options *request.Options, results interface{}) (err error) {
+	if options == nil { options = &request.Options{} }
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
@@ -68,9 +68,9 @@ func (client *Client) SendRequest(path string, options *core.RequestOptions, res
 	options.Logger    = client.Logger
 	options.ResponseBodyLogSize = 4096
 
-	res, err := core.SendRequest(options, results)
+	res, err := request.Send(options, results)
 	if err != nil {
-		if requestError, ok := errors.Cause(err).(core.RequestError); ok {
+		if requestError, ok := errors.Cause(err).(request.Error); ok {
 			if requestError.StatusCode == http.StatusUnauthorized && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
 				// This means our token most probably expired, we should try again without it
 				client.Logger.Infof("Authorization Token is expired, we need to authenticate again")

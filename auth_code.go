@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/gildas/go-core"
+	"github.com/gildas/go-request"
 )
 
 // AuthorizationCodeGrant implements PureCloud's Client Authorization Code Grants
@@ -47,7 +47,7 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 
 	err = client.SendRequest(
 		"https://login."+client.Region+"/oauth/token",
-		&core.RequestOptions{
+		&request.Options{
 			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(grant.ClientID+":"+grant.Secret)),
 			Payload: map[string]string{
 				"grant_type":   "authorization_code",

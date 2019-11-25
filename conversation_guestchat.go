@@ -9,6 +9,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/gildas/go-request"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -227,7 +228,7 @@ func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) 
 	member := &ChatMember{}
 	err := conversation.Client.SendRequest(
 		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
-		&core.RequestOptions{
+		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 		},
 		&member,
@@ -251,7 +252,7 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 	}{}
 	if err = conversation.Client.SendRequest(
 		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
-		&core.RequestOptions{
+		&request.Options{
 			Method:        http.MethodPost, // since payload is empty
 			Authorization: "bearer " + conversation.JWT,
 		},
@@ -286,7 +287,7 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 	}{}
 	if err = conversation.Client.SendRequest(
 		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
-		&core.RequestOptions{
+		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 			Payload:       struct {
 				BodyType string `json:"bodyType"`

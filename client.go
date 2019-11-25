@@ -30,7 +30,7 @@ type ClientOptions struct {
 // New creates a new PureCloud Client
 func NewClient(options *ClientOptions) *Client {
 	if options == nil {
-		return client.SetLogger(nil).SetRegion("mypurecloud.com")
+		options = &ClientOptions{}
 	}
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
@@ -39,7 +39,6 @@ func NewClient(options *ClientOptions) *Client {
 		Proxy:        options.Proxy,
 		DeploymentID: options.DeploymentID,
 		Organization: &Organization{ID: options.OrganizationID},
-		Logger:       options.Logger,
 	}
 	return client.SetLogger(options.Logger).SetRegion(options.Region)
 }
