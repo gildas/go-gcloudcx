@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gildas/go-core"
+	"github.com/gildas/go-request"
 	"github.com/gildas/go-purecloud"
 )
 
@@ -116,7 +116,7 @@ func MessageLoop(config* AppConfig) {
 						Fulfillment     string  `json:"fulfillmentmessage"`
 						EndConversation bool    `json:"end_conversation"` 
 					}{EndConversation: false}
-					if _, err = core.SendRequest(&core.RequestOptions{
+					if _, err = request.Send(&request.Options{
 							URL: config.BotURL,
 							Payload: struct {
 								Message string `json:"message"`
