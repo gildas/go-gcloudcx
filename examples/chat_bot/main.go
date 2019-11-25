@@ -33,7 +33,7 @@ func NotFoundHandler() http.Handler {
 		log = log.Topic("route").Scope("notfound")
 		log.Errorf("Route not Found %s", r.URL.String())
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Path Not Found"))
+		_, _ = w.Write([]byte("404 Path Not Found"))
 	})
 }
 

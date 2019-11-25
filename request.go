@@ -34,7 +34,7 @@ func (client *Client) Delete(path string, results interface{}) error {
 	return client.SendRequest(path, &request.Options{Method: http.MethodDelete}, results)
 }
 
-// SendRequest sends a REST request to PureCloud via core.SendRequest
+// SendRequest sends a REST request to PureCloud
 func (client *Client) SendRequest(path string, options *request.Options, results interface{}) (err error) {
 	if options == nil { options = &request.Options{} }
 	if strings.HasPrefix(path, "http") {
