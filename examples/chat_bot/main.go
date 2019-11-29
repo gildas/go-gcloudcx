@@ -33,7 +33,7 @@ func NotFoundHandler() http.Handler {
 		log = log.Topic("route").Scope("notfound")
 		log.Errorf("Route not Found %s", r.URL.String())
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Path Not Found"))
+		_, _ = w.Write([]byte("404 Path Not Found"))
 	})
 }
 
@@ -50,7 +50,7 @@ func main() {
 		queueName      = flag.String("queue", core.GetEnvAsString("PURECLOUD_QUEUE", ""), "(legacy) the queue to send to")
 		webrootpath    = flag.String("webrootpath", core.GetEnvAsString("WEBROOT_PATH", ""), "The path to use before each endpoint (useful for nginx config)")
 		port           = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
-		err error
+		err            error
 	)
 	flag.Parse()
 
@@ -99,7 +99,7 @@ func main() {
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.NewClient(purecloud.ClientOptions{
+	Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       *region,
 		DeploymentID: *deploymentID,
 		Logger:       Log,
@@ -150,7 +150,7 @@ func main() {
 
 	// Starting the server
 	go func() {
-		log := Log.Topic("webserver").Scope("run")
+		log := Log.Child("webserver", "run")
 
 		log.Infof("Starting WEB server on port %d", *port)
 		if err := WebServer.ListenAndServe(); err != nil {
@@ -184,6 +184,7 @@ func main() {
 		} else {
 			Log.Infof("WEB server is stopped")
 		}
+		Log.Flush()
 		close(exitChannel)
 	}()
 

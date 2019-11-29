@@ -54,10 +54,10 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	for _, queue := range response.Entities {
 		if queue.Name == name {
 			queue.Client = client
-			queue.Logger = client.Logger.Topic("queue").Scope("queue").Record("queue", queue.ID)
+			queue.Logger = client.Logger.Child("queue", "queue", "queue", queue.ID)
 			if queue.CreatedBy != nil {
 				queue.CreatedBy.Client = client
-				queue.CreatedBy.Logger = client.Logger.Topic("user").Scope("user").Record("user", queue.CreatedBy.ID)
+				queue.CreatedBy.Logger = client.Logger.Child("user", "user", "user", queue.CreatedBy.ID)
 			}
 			return queue, nil
 		}

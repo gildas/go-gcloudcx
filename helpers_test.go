@@ -11,7 +11,7 @@ import (
 
 func TestCanExtractClientAndLogger(t *testing.T) {
 	logger := CreateLogger("test-helpers")
-	client := purecloud.NewClient(purecloud.ClientOptions{
+	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
 		Logger:       logger,
 	})
@@ -24,7 +24,7 @@ func TestCanExtractClientAndLogger(t *testing.T) {
 
 func TestCanRunInitializable(t *testing.T) {
 	logger := CreateLogger("test-helpers")
-	client := purecloud.NewClient(purecloud.ClientOptions{
+	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
 		Logger:       logger,
 	})
@@ -39,7 +39,7 @@ func TestCanRunInitializable(t *testing.T) {
 
 func TestCanInitializeWithFetch(t *testing.T) {
 	logger := CreateLogger("test-helpers")
-	client := purecloud.NewClient(purecloud.ClientOptions{
+	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
 		Logger:       logger,
 	})

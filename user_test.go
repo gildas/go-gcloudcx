@@ -49,7 +49,7 @@ func (suite *UserSuite) SetupSuite() {
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
 
-	suite.Client = purecloud.NewClient(purecloud.ClientOptions{
+	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       region,
 		Logger:       suite.Logger,
 	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{

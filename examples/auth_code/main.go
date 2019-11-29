@@ -61,12 +61,14 @@ func mainRouteHandler() http.Handler {
 		if err != nil {
 			log.Errorf("Failed to retrieve my Organization", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
 
 		user, err := client.GetMyUser("presence")
 		if err != nil {
 			log.Errorf("Failed to retrieve my User", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
+			return
 		}
 		core.RespondWithJSON(w, http.StatusOK, struct {
 			UserName string `json:"user"`
@@ -104,7 +106,7 @@ func main() {
 	}
 	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.NewClient(purecloud.ClientOptions{
+	Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       *region,
 		DeploymentID: *deploymentID,
 		Logger:       Log,
@@ -118,7 +120,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	// This route actually performs login the user using the grant of the purecloud.Client
 	//   Upon success, your route httpHandler is called
-	router.Methods("GET").Path("/token").Handler(Log.HttpHandler()(Client.LoginHandler()(loggedInHandler())))
+	router.Methods("GET").Path("/token").Handler(Log.HttpHandler()(Client.LoggedInHandler()(loggedInHandler())))
 
 	// This route performs your actions, but makes sure the client is authorized,
 	//   if authorized, your route http.Handler is called
@@ -151,27 +153,34 @@ func main() {
 	interruptChannel := make(chan os.Signal, 1)
 	exitChannel := make(chan struct{})
 
-	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGUSR1)
 
 	// The go routine that wait for cleaning stuff when exiting
 	go func() {
-		sig := <-interruptChannel // Block until we have to stop
+		// Block until we have to stop
+		for sig := range interruptChannel {
+			switch sig {
+			case syscall.SIGUSR1:
+				Log.Flush()
+			default:
+				context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 
-		context, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-		defer cancel()
+				Log.Infof("Application is stopping (%+v)", sig)
 
-		Log.Infof("Application is stopping (%+v)", sig)
-
-		// Stopping the WEB server
-		Log.Debugf("WEB server is shutting down")
-		WebServer.SetKeepAlivesEnabled(false)
-		err := WebServer.Shutdown(context)
-		if err != nil {
-			Log.Errorf("Failed to stop the WEB server", err)
-		} else {
-			Log.Infof("WEB server is stopped")
+				// Stopping the WEB server
+				Log.Debugf("WEB server is shutting down")
+				WebServer.SetKeepAlivesEnabled(false)
+				err := WebServer.Shutdown(context)
+				if err != nil {
+					Log.Errorf("Failed to stop the WEB server", err)
+				} else {
+					Log.Infof("WEB server is stopped")
+				}
+				Log.Flush()
+				close(exitChannel)
+				cancel()
+			}
 		}
-		close(exitChannel)
 	}()
 
 	<-exitChannel

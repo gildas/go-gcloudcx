@@ -71,7 +71,7 @@ func TestCanResetGrantAccessToken(t *testing.T) {
 		Token:     "Very Long String",
 		ExpiresOn: time.Now().UTC().Add(2 * time.Hour),
 	}
-	client := purecloud.NewClient(purecloud.ClientOptions{}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{Token: token})
+	client := purecloud.NewClient(&purecloud.ClientOptions{}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{Token: token})
 	assert.Equal(t, "Bearer", client.AuthorizationGrant.AccessToken().Type)
 	assert.Equal(t, "Very Long String", client.AuthorizationGrant.AccessToken().Token)
 

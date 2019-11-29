@@ -4,13 +4,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gildas/go-core"
+	"github.com/gildas/go-request"
 	"github.com/gildas/go-purecloud"
 )
 
 // MessageLoop receives PureCloud Notification Topics and handles them
 func MessageLoop(config* AppConfig) {
-	log := config.Logger.Topic("topic").Scope("process")
+	log := config.Logger.Child("topic", "process")
 
 	channel := config.NotificationChannel
 
@@ -27,7 +27,7 @@ func MessageLoop(config* AppConfig) {
 			log.Debugf("Received topic: %s", receivedTopic)
 			switch topic := receivedTopic.(type) {
 			case *purecloud.UserConversationChatTopic:
-				log = log.Record("user", topic.User.ID).Record("conversation", topic.Conversation.ID)
+				log = log.Records("user", topic.User.ID, "conversation", topic.Conversation.ID)
 				log.Infof("User %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
 				for i, participant := range topic.Participants {
 					log.Infof("  Participant #%d: id=%s, name=%s, purpose=%s, state=%s", i, participant.ID, participant.Name, participant.Purpose, participant.State)
@@ -116,7 +116,7 @@ func MessageLoop(config* AppConfig) {
 						Fulfillment     string  `json:"fulfillmentmessage"`
 						EndConversation bool    `json:"end_conversation"` 
 					}{EndConversation: false}
-					if _, err = core.SendRequest(&core.RequestOptions{
+					if _, err = request.Send(&request.Options{
 							URL: config.BotURL,
 							Payload: struct {
 								Message string `json:"message"`

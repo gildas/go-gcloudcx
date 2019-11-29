@@ -74,7 +74,7 @@ func (suite *LoginSuite) SetupSuite() {
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
 		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
 	)
-	suite.Client = purecloud.NewClient(purecloud.ClientOptions{
+	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       region,
 		DeploymentID: deploymentID,
 		Logger:       suite.Logger,
