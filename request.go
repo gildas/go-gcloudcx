@@ -5,8 +5,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
-	"github.com/pkg/errors"
 )
 
 // Post sends a POST HTTP Request to PureCloud and gets the results
@@ -70,20 +70,25 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 
 	res, err := request.Send(options, results)
 	if err != nil {
-		if requestError, ok := errors.Cause(err).(request.Error); ok {
-			if requestError.StatusCode == http.StatusUnauthorized && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
-				// This means our token most probably expired, we should try again without it
-				client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
-				options.Authorization = ""
-				client.AuthorizationGrant.AccessToken().Reset()
-				return client.SendRequest(path, options, results)
-			}
-			apiError := APIError{ Status: requestError.StatusCode, Code: requestError.Status }
+		if errors.Is(err, errors.HTTPUnauthorizedError) && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
+			// This means our token most probably expired, we should try again without it
+			client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
+			options.Authorization = ""
+			client.AuthorizationGrant.AccessToken().Reset()
+			return client.SendRequest(path, options, results)
+		}
+		var details *errors.Error
+		if errors.As(err, &details) {
+			apiError := APIError{}
 			if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
 				return errors.Wrap(err, "Failed to extract an error from the response")
 			}
-			apiError.Status = requestError.StatusCode
-			apiError.Code   = requestError.Status
+			apiError.Status = details.Code
+			apiError.Code   = details.ID
+			if strings.HasPrefix(apiError.Message, "authentication failed") {
+				apiError.Status = errors.HTTPUnauthorizedError.Code
+				apiError.Code   = errors.HTTPUnauthorizedError.ID
+			}
 			return errors.WithStack(apiError)
 		}
 		return err
