@@ -1,13 +1,12 @@
 package purecloud
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gildas/go-core"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // Authorization contains the login options to connect the client to PureCloud
@@ -29,7 +28,7 @@ func (client *Client) Login() error {
 // LoginWithAuthorizationGrant logs in a Client to PureCloud with given authorization Grant
 func (client *Client) LoginWithAuthorizationGrant(authorizationGrant AuthorizationGrant) (err error) {
 	if authorizationGrant == nil {
-		return fmt.Errorf("Authorization Grant cannot be nil")
+		return errors.ArgumentMissingError.WithWhat("Authorization Grant")
 	}
 	if err = authorizationGrant.Authorize(client); err != nil {
 		return err
@@ -73,7 +72,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			grant, ok := client.AuthorizationGrant.(*AuthorizationCodeGrant)
 			if ! ok {
 				log.Errorf("Client's Grant is not an Authorization Code Grant, we cannot continue")
-				core.RespondWithError(w, http.StatusInternalServerError, errors.New("Invalid PureCloud OAUTH Grant"))
+				core.RespondWithError(w, http.StatusUnauthorized, errors.New("Invalid PureCloud OAUTH Grant"))
 				return
 			}
 

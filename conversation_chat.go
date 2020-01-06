@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/pkg/errors"
 )
 
 // ConversationChat describes a Agent-side Chat
@@ -158,7 +158,7 @@ func (conversation *ConversationChat) UnmarshalJSON(payload []byte) (err error) 
 		A *core.URL `json:"avatarImageUrl"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*conversation = ConversationChat(inner.surrogate)
 	conversation.AvatarImageURL = (*url.URL)(inner.A)

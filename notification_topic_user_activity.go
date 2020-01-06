@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // UserActivityTopic describes a Topic about User's Activity
@@ -73,7 +73,7 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 		Version   string        `json:"version"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity")
 	topic.Name          = inner.TopicName

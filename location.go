@@ -5,7 +5,7 @@ import (
 	"net/url"
 
 	"github.com/gildas/go-core"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // LocationDefinition describes a location (office, etc)
@@ -68,13 +68,17 @@ type Location struct {
 // MarshalJSON marshals this into JSON
 func (locationImage LocationImage) MarshalJSON() ([]byte, error) {
 	type surrogate LocationImage
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
 		surrogate
 		I *core.URL `json:"imageUrl"`
 	}{
 		surrogate: surrogate(locationImage),
 		I:         (*core.URL)(locationImage.ImageURL),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -85,7 +89,7 @@ func (locationImage *LocationImage) UnmarshalJSON(payload []byte) (err error) {
 		I *core.URL `json:"imageUrl"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*locationImage = LocationImage(inner.surrogate)
 	locationImage.ImageURL = (*url.URL)(inner.I)

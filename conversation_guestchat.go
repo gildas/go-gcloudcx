@@ -11,7 +11,7 @@ import (
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-request"
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // ConversationGuestChat describes a Guest Chat
@@ -48,16 +48,16 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		}
 	}
 	if guest == nil {
-		return errors.New("Missing ChatMember guest")
+		return errors.ArgumentMissingError.WithWhat("Guest")
 	}
 	if target == nil {
-		return errors.New("Missing ChatMember Target")
+		return errors.ArgumentMissingError.WithWhat("Target")
 	}
 	if client.Organization == nil {
-		return errors.New("Missing Organization in Client")
+		return errors.ArgumentMissingError.WithWhat("Organization")
 	}
 	if len(client.DeploymentID) == 0 {
-		return errors.New("Missing Deployment ID in Client")
+		return errors.ArgumentMissingError.WithWhat("DeploymentID")
 	}
 
 	if err = client.Post("/webchat/guest/conversations",
@@ -112,7 +112,9 @@ func (conversation *ConversationGuestChat) Connect() (err error) {
 	}
 	conversation.Socket, _, err = websocket.DefaultDialer.Dial(conversation.EventStream, nil)
 	if err != nil {
-		conversation.Close()
+		_ = conversation.Close()
+		// return errors.NotConnectedError.WithWhat("Conversation")
+		return errors.NotConnectedError.Wrap(err)
 	}
 	go conversation.messageLoop()
 	return
@@ -126,7 +128,7 @@ func (conversation *ConversationGuestChat) Close() (err error) {
 		log.Debugf("Disconnecting websocket")
 		if err = conversation.Socket.Close(); err != nil {
 			log.Errorf("Failed while close websocket", err)
-			return errors.WithStack(err)
+			return errors.WithMessage(err, "Failed while closing websocket")
 		}
 		log.Infof("Disconnected websocket")
 	}
@@ -134,28 +136,25 @@ func (conversation *ConversationGuestChat) Close() (err error) {
 		log.Debugf("Disconnecting Guest Member")
 		if err = conversation.Client.Delete(fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while disconnecting Guest Member", err)
-			return errors.WithStack(err)
+			return err
 		}
 		log.Infof("Disconnected Guest Member")
 	}
 	return
 }
 
-func (conversation *ConversationGuestChat) messageLoop() (err error) {
+func (conversation *ConversationGuestChat) messageLoop() {
 	log := conversation.Logger.Scope("receive")
-
-	if conversation.Socket == nil {
-		return errors.New("Conversation Not Connected")
-	}
 
 	for {
 		// get a message body and decode it. (ReadJSON is nice, but in case of unknown message, I cannot get the original string)
+		var err  error
 		var body []byte
 
 		if _, body, err = conversation.Socket.ReadMessage(); err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Websocket was closed, stopping receive handler")
-				return nil
+				return
 			}
 			log.Errorf("Failed to read incoming message", err)
 			continue
@@ -194,29 +193,29 @@ func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []b
 		Data      json.RawMessage
 	}
 	if err := json.Unmarshal(payload, &header); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.JSONUnmarshalError.Wrap(err)
 	}
 	switch {
 	case ConversationGuestChatMessageTopic{}.Match(header.TopicName):
 		var topic ConversationGuestChatMessageTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.JSONUnmarshalError.Wrap(err)
 		}
 		return &topic, nil
 	case ConversationGuestChatMemberTopic{}.Match(header.TopicName):
 		var topic ConversationGuestChatMemberTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.JSONUnmarshalError.Wrap(err)
 		}
 		return &topic, nil
 	case MetadataTopic{}.Match(header.TopicName):
 		var topic MetadataTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.JSONUnmarshalError.Wrap(err)
 		}
 		return &topic, nil
 	default:
-		return nil, errors.Errorf("Unsupported Topic: %s", header.TopicName)
+		return nil, errors.UnsupportedError.WithWhatAndValue("Topic", header.TopicName)
 	}
 }
 

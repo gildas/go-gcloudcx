@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // NotificationTopic describes a Notification Topic received on a WebSocket
@@ -55,34 +55,34 @@ func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 		Data      json.RawMessage
 	}
 	if err := json.Unmarshal(payload, &header); err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.JSONUnmarshalError.Wrap(err)
 	}
 	switch {
 	case ConversationChatMessageTopic{}.Match(header.TopicName):
 		var topic ConversationChatMessageTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err // err should already be decorated by that struct type
 		}
 		return &topic, nil
 	case MetadataTopic{}.Match(header.TopicName):
 		var topic MetadataTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err // err should already be decorated by that struct type
 		}
 		return &topic, nil
 	case UserConversationChatTopic{}.Match(header.TopicName):
 		var topic UserConversationChatTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err // err should already be decorated by that struct type
 		}
 		return &topic, nil
 	case UserPresenceTopic{}.Match(header.TopicName):
 		var topic UserPresenceTopic
 		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.WithStack(err)
+			return nil, err // err should already be decorated by that struct type
 		}
 		return &topic, nil
 	default:
-		return nil, errors.Errorf("Unsupported Topic: %s", header.TopicName)
+		return nil, errors.UnsupportedError.WithWhatAndValue("Topic", header.TopicName)
 	}
 }

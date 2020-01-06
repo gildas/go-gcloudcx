@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // UserPresence  describes the Presence of a User
@@ -68,7 +68,7 @@ func (presence *UserPresence) UnmarshalJSON(payload []byte) (err error) {
   }
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
   }
   *presence = UserPresence(inner.surrogate)
   if len(inner.PresenceMessage) > 0 {

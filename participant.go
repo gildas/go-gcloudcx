@@ -5,7 +5,7 @@ import (
 	"encoding/json"
   "time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 type Participant struct {
@@ -168,7 +168,7 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
     userURI = participant.User.SelfURI
   }
   type surrogate Participant
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
     surrogate
     UserID            string `json:"userId"`
     UserURI           string `json:"userUri"`
@@ -181,6 +181,10 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
     AlertingTimeoutMs: int64(participant.AlertingTimeout.Milliseconds()),
     WrapupTimeoutMs:   int64(participant.WrapupTimeout.Milliseconds()),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -195,7 +199,7 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
   }
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
   }
   *participant = Participant(inner.surrogate)
   if participant.User == nil && len(inner.UserID) > 0 {

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 type ChatMember struct {
@@ -39,13 +39,17 @@ func (member ChatMember) String() string {
 // MarshalJSON marshals this into JSON
 func (member ChatMember) MarshalJSON() ([]byte, error) {
 	type surrogate ChatMember
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
 		surrogate
 		A *core.URL `json:"avatarImageUrl,omitempty"`
 	}{
 		surrogate: surrogate(member),
 		A:         (*core.URL)(member.AvatarURL),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -56,7 +60,7 @@ func (member *ChatMember) UnmarshalJSON(payload []byte) (err error) {
 		A *core.URL `json:"avatarImageUrl,omitempty"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*member = ChatMember(inner.surrogate)
 	member.AvatarURL = (*url.URL)(inner.A)

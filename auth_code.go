@@ -1,10 +1,10 @@
 package purecloud
 
 import (
-	"fmt"
 	"net/url"
 	"time"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
 )
 
@@ -26,13 +26,13 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 
 	// Validates the Grant
 	if len(grant.ClientID) == 0 {
-		return fmt.Errorf("Missing Argument ClientID")
+		return errors.ArgumentMissingError.WithWhat("ClientID")
 	}
 	if len(grant.Secret) == 0 {
-		return fmt.Errorf("Missing Argument Secret")
+		return errors.ArgumentMissingError.WithWhat("Secret")
 	}
 	if len(grant.Code) == 0 {
-		return fmt.Errorf("Missing Argument Code")
+		return errors.ArgumentMissingError.WithWhat("Code")
 	}
 
 	// Resets the token before authenticating

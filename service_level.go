@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // ServiceLevel defines a Service Level
@@ -15,13 +15,17 @@ type ServiceLevel struct {
 
 // MarshalJSON marshals this into JSON
 func (serviceLevel ServiceLevel) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
 		Percentage float64 `json:"percentage"`
 		Duration   int64   `json:"durationMs"`
 	}{
 		Percentage: serviceLevel.Percentage,
 		Duration:   serviceLevel.Duration.Milliseconds(),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -32,7 +36,7 @@ func (serviceLevel *ServiceLevel) UnmarshalJSON(payload []byte) (err error) {
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	serviceLevel.Percentage = inner.Percentage
 	serviceLevel.Duration   = time.Duration(inner.Duration) * time.Millisecond

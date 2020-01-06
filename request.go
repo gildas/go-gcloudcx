@@ -40,7 +40,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
-		return errors.New("Client API is not set")
+		return errors.ArgumentMissingError.WithWhat("Client API")
 	} else if !strings.HasPrefix(path, "/api") {
 		options.URL, err = client.API.Parse("/api/v2/" + strings.TrimPrefix(path, "/"))
 	} else {
@@ -57,7 +57,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 				return errors.WithStack(err)
 			}
 			if !client.IsAuthorized() {
-				return errors.Errorf("Not Authorized Yet")
+				return errors.HTTPUnauthorizedError.WithMessage("Not Authorized Yet")
 			}
 			options.Authorization = client.AuthorizationGrant.AccessToken().String()
 		}
