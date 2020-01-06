@@ -1,7 +1,6 @@
 package purecloud
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/url"
 	"time"
@@ -48,7 +47,7 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	err = client.SendRequest(
 		"https://login."+client.Region+"/oauth/token",
 		&request.Options{
-			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(grant.ClientID+":"+grant.Secret)),
+			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
 			Payload: map[string]string{
 				"grant_type":   "authorization_code",
 				"code":         grant.Code,
