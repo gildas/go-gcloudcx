@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // ClientContextKey is the key to store Client in context.Context
@@ -19,12 +19,12 @@ func (client *Client) ToContext(parent context.Context) context.Context {
 func ClientFromContext(context context.Context) (*Client, error) {
 	value := context.Value(ClientContextKey)
 	if value == nil {
-		return nil, errors.New("Context does not contain any purecloud.Client")
+		return nil, errors.ArgumentMissingError.With("Client").WithStack()
 	}
 	if client, ok := value.(*Client); ok {
 		return client, nil
 	}
-	return nil, errors.New("Invalid purecloud.Client stored in Context")
+	return nil, errors.ArgumentInvalidError.With("Client", value).WithStack()
 }
 
 // HttpHandler wraps the client into an http Handler

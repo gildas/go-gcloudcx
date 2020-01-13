@@ -2,7 +2,7 @@ package purecloud
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // MetadataTopic describes a Topic about the channel itself
@@ -48,7 +48,7 @@ func (topic *MetadataTopic) UnmarshalJSON(payload []byte) (err error) {
 		}                `json:"eventBody"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	topic.Name    = inner.TopicName
 	topic.Message = inner.EventBody.Message

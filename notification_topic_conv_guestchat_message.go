@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // ConversationGuestChatMessageTopic describes a Topic about User's Presence
@@ -69,7 +69,7 @@ func (topic *ConversationGuestChatMessageTopic) UnmarshalJSON(payload []byte) (e
 		Version   string `json:"version"` // all
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
 	topic.Name          = inner.TopicName

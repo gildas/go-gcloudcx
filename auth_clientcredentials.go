@@ -1,10 +1,9 @@
 package purecloud
 
 import (
-	"encoding/base64"
-	"fmt"
 	"time"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
 )
 
@@ -23,8 +22,12 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
 
 	// Validates the Grant
-	if len(grant.ClientID) == 0 { return fmt.Errorf("Missing Argument ClientID") }
-	if len(grant.Secret)   == 0 { return fmt.Errorf("Missing Argument Secret") }
+	if len(grant.ClientID) == 0 {
+		return errors.ArgumentMissingError.With("ClientID").WithStack()
+	}
+	if len(grant.Secret) == 0 {
+		return errors.ArgumentMissingError.With("Secret").WithStack()
+	}
 
 	// Resets the token before authenticating
 	grant.Token.Reset()
@@ -38,7 +41,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	err = client.SendRequest(
 		"https://login." + client.Region + "/oauth/token",
 		&request.Options{
-			Authorization: "Basic " + base64.StdEncoding.EncodeToString([]byte(grant.ClientID + ":" + grant.Secret)),
+			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
 			Payload: map[string]string{
 				"grant_type": "client_credentials",
 			},

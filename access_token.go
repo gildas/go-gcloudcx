@@ -37,7 +37,7 @@ func (token *AccessToken) LoadFromCookie(r *http.Request, cookieName string) (*A
 		var jsonToken string
 
 		if err = secureCookie.Decode(cookieName, cookie.Value, &jsonToken); err == nil {
-			json.Unmarshal([]byte(jsonToken), token)
+			_ = json.Unmarshal([]byte(jsonToken), token)
 		}
 	}
 	return token

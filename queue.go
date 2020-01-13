@@ -1,12 +1,12 @@
 package purecloud
 
 import (
-	"github.com/gildas/go-logger"
 	"encoding/json"
 	"net/url"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // Quieue defines a PureCloud Queue
@@ -62,7 +62,7 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 			return queue, nil
 		}
 	}
-	return nil, errors.Errorf("Queue not found: %s", name)
+	return nil, errors.NotFoundError.With("queue", name).WithStack()
 }
 
 // GetID gets the identifier of this
@@ -87,7 +87,7 @@ func (queue *Queue) UnmarshalJSON(payload []byte) (err error) {
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*queue = Queue(inner.surrogate)
 	if len(inner.CreatedByID) > 0 {

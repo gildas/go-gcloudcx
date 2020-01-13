@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/suite"
 
 	purecloud "github.com/gildas/go-purecloud"
@@ -45,10 +45,11 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
 
-	apierr, ok := errors.Cause(err).(purecloud.APIError)
-	suite.Require().True(ok, "Error is not a purecloud.APIError")
+	var apierr purecloud.APIError
+	ok := errors.As(err, &apierr)
+	suite.Require().Truef(ok, "Error is not a purecloud.APIError, error: %+v", err)
 	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
-	suite.Assert().Equal(400, apierr.Status)
+	suite.Assert().Equal(errors.HTTPUnauthorizedError.Code, apierr.Status)
 	suite.Assert().Equal("authentication failed: invalid_client", apierr.Error())
 }
 
@@ -68,6 +69,7 @@ func (suite *LoginSuite) SetupSuite() {
 	err := os.MkdirAll(logFolder, os.ModePerm)
 	suite.Require().Nil(err, "Failed to create folder: %s", logFolder)
 	suite.Logger = logger.CreateWithDestination("test", fmt.Sprintf("file://%s/test-%s.log", logFolder, strings.ToLower(suite.Name)))
+	suite.Logger.SetFilterLevel(logger.TRACE)
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	var (

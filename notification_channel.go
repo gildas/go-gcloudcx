@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 )
 
 // NotificationChannel defines a Notification Channel
@@ -41,7 +41,8 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			// return errors.NotConnectedError.With("Channel")
+			return nil, errors.NotConnectedError.Wrap(err)
 		}
 	}
 	// Start the message loop
@@ -53,12 +54,12 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 // Close unsubscribes from all subscriptions and closes the websocket
 func (channel *NotificationChannel) Close() (err error) {
 	if channel.Client != nil && channel.Client.IsAuthorized() {
-		channel.Unsubscribe()
+		_ = channel.Unsubscribe()
 	}
 	if channel.Socket != nil {
 		close(channel.TopicReceived)
 		if err = channel.Socket.Close(); err != nil {
-			return errors.WithStack(err)
+			return errors.WithMessage(err, "Failed while closing websocket")
 		}
 		channel.Socket = nil
 	}
@@ -73,7 +74,7 @@ func (channel *NotificationChannel) GetTopics() ([]string, error) {
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
 	); err != nil {
-		return []string{}, errors.WithStack(err)
+		return []string{}, err // err should already be decorated by Client
 	}
 	ids := make([]string, len(results.Entities))
 	for i, entity := range results.Entities {
@@ -94,7 +95,7 @@ func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error
 		channelTopics,
 		&results,
 	); err != nil {
-		return []string{}, errors.WithStack(err)
+		return []string{}, err // err should already be decorated by Client
 	}
 	ids := make([]string, len(results.Entities))
 	for i, entity := range results.Entities {
@@ -129,7 +130,7 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 		channelTopics,
 		&results,
 	); err != nil {
-		return []string{}, errors.WithStack(err)
+		return []string{}, err // err should already be decorated by Client
 	}
 	ids := make([]string, len(results.Entities))
 	for i, entity := range results.Entities {
@@ -167,13 +168,17 @@ func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
 // MarshalJSON marshals this into JSON
 func (channel NotificationChannel) MarshalJSON() ([]byte, error) {
 	type surrogate NotificationChannel
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
 		surrogate
 		C *core.URL `json:"connectUri"`
 	}{
 		surrogate: surrogate(channel),
 		C:         (*core.URL)(channel.ConnectURL),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -184,22 +189,23 @@ func (channel *NotificationChannel) UnmarshalJSON(payload []byte) (err error) {
 		C *core.URL `json:"connectUri"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*channel = NotificationChannel(inner.surrogate)
 	channel.ConnectURL = (*url.URL)(inner.C)
 	return
 }
 
-func (channel *NotificationChannel) messageLoop() (err error) {
+func (channel *NotificationChannel) messageLoop() {
 	log := channel.Logger.Scope("receive")
 	for {
+		var err  error
 		var body []byte
 
 		if _, body, err = channel.Socket.ReadMessage(); err != nil {
 			if strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Websocket was closed, stopping the Channel's websocket message loop")
-				return nil
+				return
 			}
 			log.Errorf("Failed to read incoming message", err)
 			continue

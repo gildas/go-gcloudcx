@@ -4,7 +4,7 @@ import (
 	"encoding/json"
   "time"
 
-	"github.com/pkg/errors"
+	"github.com/gildas/go-errors"
 )
 
 // Wrapup describes a Wrapup
@@ -21,13 +21,17 @@ type Wrapup struct {
 // MarshalJSON marshals this into JSON
 func (wrapup Wrapup) MarshalJSON() ([]byte, error) {
   type surrogate Wrapup
-	return json.Marshal(struct {
+	data, err := json.Marshal(struct {
     surrogate
 		DurationSeconds int64   `json:"durationSeconds"`
 	}{
     surrogate:       surrogate(wrapup),
 		DurationSeconds: int64(wrapup.Duration.Seconds()),
 	})
+	if err != nil {
+		return nil, errors.JSONMarshalError.Wrap(err)
+	}
+	return data, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -39,7 +43,7 @@ func (wrapup *Wrapup) UnmarshalJSON(payload []byte) (err error) {
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.WithStack(err)
+		return errors.JSONUnmarshalError.Wrap(err)
   }
   *wrapup = Wrapup(inner.surrogate)
 	wrapup.Duration = time.Duration(inner.DurationSeconds) * time.Second

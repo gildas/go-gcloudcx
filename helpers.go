@@ -1,8 +1,8 @@
 package purecloud
 
 import (
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/pkg/errors"
 )
 
 // ExtractClientAndLogger extracts a Client and a logger.Logger from its parameters
@@ -18,11 +18,11 @@ func ExtractClientAndLogger(parameters ...interface{}) (*Client, *logger.Logger,
 		}
 	}
 	if client == nil {
-		return nil, nil, errors.New("Missing Client")
+		return nil, nil, errors.ArgumentMissingError.With("Client").WithStack()
 	}
 	if log == nil {
 		if client.Logger == nil {
-			return nil, nil, errors.New("Missing Client Logger")
+			return nil, nil, errors.ArgumentMissingError.With("Client Logger").WithStack()
 		}
 		log = client.Logger
 	}
