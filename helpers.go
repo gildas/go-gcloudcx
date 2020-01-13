@@ -18,11 +18,11 @@ func ExtractClientAndLogger(parameters ...interface{}) (*Client, *logger.Logger,
 		}
 	}
 	if client == nil {
-		return nil, nil, errors.ArgumentMissingError.WithWhat("Client")
+		return nil, nil, errors.ArgumentMissingError.With("Client").WithStack()
 	}
 	if log == nil {
 		if client.Logger == nil {
-			return nil, nil, errors.ArgumentMissingError.WithWhat("Client Logger")
+			return nil, nil, errors.ArgumentMissingError.With("Client Logger").WithStack()
 		}
 		log = client.Logger
 	}

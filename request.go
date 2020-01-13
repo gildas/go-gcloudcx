@@ -40,7 +40,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
-		return errors.ArgumentMissingError.WithWhat("Client API")
+		return errors.ArgumentMissingError.With("Client API").WithStack()
 	} else if !strings.HasPrefix(path, "/api") {
 		options.URL, err = client.API.Parse("/api/v2/" + strings.TrimPrefix(path, "/"))
 	} else {

@@ -28,7 +28,7 @@ func (client *Client) Login() error {
 // LoginWithAuthorizationGrant logs in a Client to PureCloud with given authorization Grant
 func (client *Client) LoginWithAuthorizationGrant(authorizationGrant AuthorizationGrant) (err error) {
 	if authorizationGrant == nil {
-		return errors.ArgumentMissingError.WithWhat("Authorization Grant")
+		return errors.ArgumentMissingError.With("Authorization Grant").WithStack()
 	}
 	if err = authorizationGrant.Authorize(client); err != nil {
 		return err

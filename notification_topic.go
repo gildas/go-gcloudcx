@@ -83,6 +83,6 @@ func NotificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
 		}
 		return &topic, nil
 	default:
-		return nil, errors.UnsupportedError.WithWhatAndValue("Topic", header.TopicName)
+		return nil, errors.UnsupportedError.With("Topic", header.TopicName).WithStack()
 	}
 }

@@ -47,12 +47,12 @@ func (config *AppConfig) ToContext(parent context.Context) context.Context {
 func AppConfigFromContext(context context.Context) (*AppConfig, error) {
 	value := context.Value(AppConfigKey)
 	if value == nil {
-		return nil, errors.ArgumentMissingError.WithWhat("AppConfig")
+		return nil, errors.ArgumentMissingError.With("AppConfig").WithStack()
 	}
 	if config, ok := value.(*AppConfig); ok {
 		return config, nil
 	}
-	return nil, errors.ArgumentInvalidError.WithWhatAndValue("AppConfig", value)
+	return nil, errors.ArgumentInvalidError.With("AppConfig", value).WithStack()
 }
 
 // HttpHandler wraps this AppConfig into an http.Handler
@@ -69,7 +69,7 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
-		return errors.ArgumentMissingError.WithWhat("Queue")
+		return errors.ArgumentMissingError.With("Queue").WithStack()
 	}
 	if len(config.AgentQueue.ID) == 0 {
 		queueName := config.AgentQueue.Name
