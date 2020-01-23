@@ -28,10 +28,7 @@ func (wrapup Wrapup) MarshalJSON() ([]byte, error) {
     surrogate:       surrogate(wrapup),
 		DurationSeconds: int64(wrapup.Duration.Seconds()),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

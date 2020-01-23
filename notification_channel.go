@@ -175,10 +175,7 @@ func (channel NotificationChannel) MarshalJSON() ([]byte, error) {
 		surrogate: surrogate(channel),
 		C:         (*core.URL)(channel.ConnectURL),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

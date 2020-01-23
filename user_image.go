@@ -24,10 +24,7 @@ func (userImage UserImage) MarshalJSON() ([]byte, error) {
 		surrogate: surrogate(userImage),
 		I:         (*core.URL)(userImage.ImageURL),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

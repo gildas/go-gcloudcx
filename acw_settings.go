@@ -22,10 +22,7 @@ func (settings ACWSettings) MarshalJSON() ([]byte, error) {
 		Timeout:      settings.Timeout.Milliseconds(),
 		WrapupPrompt: settings.WrapupPrompt,
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

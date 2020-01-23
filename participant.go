@@ -181,10 +181,7 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
     AlertingTimeoutMs: int64(participant.AlertingTimeout.Milliseconds()),
     WrapupTimeoutMs:   int64(participant.WrapupTimeout.Milliseconds()),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

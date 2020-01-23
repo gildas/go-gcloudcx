@@ -46,10 +46,7 @@ func (member ChatMember) MarshalJSON() ([]byte, error) {
 		surrogate: surrogate(member),
 		A:         (*core.URL)(member.AvatarURL),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

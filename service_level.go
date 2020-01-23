@@ -22,10 +22,7 @@ func (serviceLevel ServiceLevel) MarshalJSON() ([]byte, error) {
 		Percentage: serviceLevel.Percentage,
 		Duration:   serviceLevel.Duration.Milliseconds(),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this
