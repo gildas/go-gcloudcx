@@ -49,7 +49,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 	ok := errors.As(err, &apierr)
 	suite.Require().Truef(ok, "Error is not a purecloud.APIError, error: %+v", err)
 	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
-	suite.Assert().Equal(errors.HTTPUnauthorizedError.Code, apierr.Status)
+	suite.Assert().Equal(errors.HTTPUnauthorized.Code, apierr.Status)
 	suite.Assert().Equal("authentication failed: invalid_client", apierr.Error())
 }
 
