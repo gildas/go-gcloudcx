@@ -114,7 +114,7 @@ func (conversation *ConversationGuestChat) Connect() (err error) {
 	if err != nil {
 		_ = conversation.Close()
 		// return errors.NotConnectedError.With("Conversation")
-		return errors.NotConnectedError.Wrap(err)
+		return errors.NotConnected.Wrap(err)
 	}
 	go conversation.messageLoop()
 	return
@@ -215,7 +215,7 @@ func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []b
 		}
 		return &topic, nil
 	default:
-		return nil, errors.UnsupportedError.With("Topic", header.TopicName).WithStack()
+		return nil, errors.Unsupported.With("Topic", header.TopicName).WithStack()
 	}
 }
 
