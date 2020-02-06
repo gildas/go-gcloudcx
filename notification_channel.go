@@ -41,8 +41,7 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 		if err != nil {
-			// return errors.NotConnectedError.With("Channel")
-			return nil, errors.NotConnectedError.Wrap(err)
+			return nil, errors.NotConnected.With("Channel").Wrap(err)
 		}
 	}
 	// Start the message loop
@@ -175,10 +174,7 @@ func (channel NotificationChannel) MarshalJSON() ([]byte, error) {
 		surrogate: surrogate(channel),
 		C:         (*core.URL)(channel.ConnectURL),
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

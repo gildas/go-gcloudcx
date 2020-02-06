@@ -48,16 +48,16 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		}
 	}
 	if guest == nil {
-		return errors.ArgumentMissingError.With("Guest").WithStack()
+		return errors.ArgumentMissing.With("Guest").WithStack()
 	}
 	if target == nil {
-		return errors.ArgumentMissingError.With("Target").WithStack()
+		return errors.ArgumentMissing.With("Target").WithStack()
 	}
 	if client.Organization == nil {
-		return errors.ArgumentMissingError.With("Organization").WithStack()
+		return errors.ArgumentMissing.With("Organization").WithStack()
 	}
 	if len(client.DeploymentID) == 0 {
-		return errors.ArgumentMissingError.With("DeploymentID").WithStack()
+		return errors.ArgumentMissing.With("DeploymentID").WithStack()
 	}
 
 	if err = client.Post("/webchat/guest/conversations",
@@ -114,7 +114,7 @@ func (conversation *ConversationGuestChat) Connect() (err error) {
 	if err != nil {
 		_ = conversation.Close()
 		// return errors.NotConnectedError.With("Conversation")
-		return errors.NotConnectedError.Wrap(err)
+		return errors.NotConnected.Wrap(err)
 	}
 	go conversation.messageLoop()
 	return
@@ -215,7 +215,7 @@ func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []b
 		}
 		return &topic, nil
 	default:
-		return nil, errors.UnsupportedError.With("Topic", header.TopicName).WithStack()
+		return nil, errors.Unsupported.With("Topic", header.TopicName).WithStack()
 	}
 }
 

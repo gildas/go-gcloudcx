@@ -26,13 +26,13 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 
 	// Validates the Grant
 	if len(grant.ClientID) == 0 {
-		return errors.ArgumentMissingError.With("ClientID").WithStack()
+		return errors.ArgumentMissing.With("ClientID").WithStack()
 	}
 	if len(grant.Secret) == 0 {
-		return errors.ArgumentMissingError.With("Secret").WithStack()
+		return errors.ArgumentMissing.With("Secret").WithStack()
 	}
 	if len(grant.Code) == 0 {
-		return errors.ArgumentMissingError.With("Code").WithStack()
+		return errors.ArgumentMissing.With("Code").WithStack()
 	}
 
 	// Resets the token before authenticating

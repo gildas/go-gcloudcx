@@ -62,7 +62,7 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 			return queue, nil
 		}
 	}
-	return nil, errors.NotFoundError.With("queue", name).WithStack()
+	return nil, errors.NotFound.With("queue", name).WithStack()
 }
 
 // GetID gets the identifier of this

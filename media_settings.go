@@ -25,10 +25,7 @@ func (setting MediaSetting) MarshalJSON() ([]byte, error) {
 		AlertingTimeout: setting.AlertingTimeout.Milliseconds(),
 		ServiceLevel:    setting.ServiceLevel,
 	})
-	if err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-	return data, nil
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this

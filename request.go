@@ -40,7 +40,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
-		return errors.ArgumentMissingError.With("Client API").WithStack()
+		return errors.ArgumentMissing.With("Client API").WithStack()
 	} else if !strings.HasPrefix(path, "/api") {
 		options.URL, err = client.API.Parse("/api/v2/" + strings.TrimPrefix(path, "/"))
 	} else {
@@ -57,7 +57,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 				return errors.WithStack(err)
 			}
 			if !client.IsAuthorized() {
-				return errors.HTTPUnauthorizedError.WithMessage("Not Authorized Yet")
+				return errors.HTTPUnauthorized.WithMessage("Not Authorized Yet")
 			}
 			options.Authorization = client.AuthorizationGrant.AccessToken().String()
 		}
@@ -70,7 +70,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 
 	res, err := request.Send(options, results)
 	if err != nil {
-		if errors.Is(err, errors.HTTPUnauthorizedError) && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
+		if errors.Is(err, errors.HTTPUnauthorized) && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
 			// This means our token most probably expired, we should try again without it
 			client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
 			options.Authorization = ""
@@ -86,8 +86,8 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 			apiError.Status = details.Code
 			apiError.Code   = details.ID
 			if strings.HasPrefix(apiError.Message, "authentication failed") {
-				apiError.Status = errors.HTTPUnauthorizedError.Code
-				apiError.Code   = errors.HTTPUnauthorizedError.ID
+				apiError.Status = errors.HTTPUnauthorized.Code
+				apiError.Code   = errors.HTTPUnauthorized.ID
 			}
 			return errors.WithStack(apiError)
 		}
