@@ -8,26 +8,26 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-request"
 	"github.com/gorilla/websocket"
-	"github.com/gildas/go-errors"
 )
 
 // ConversationGuestChat describes a Guest Chat
 type ConversationGuestChat struct {
-	ID             string                  `json:"id"`
-	SelfURI        string                  `json:"selfUri,omitempty"`
-	Target         *RoutingTarget          `json:"-"`
-	Guest          *ChatMember             `json:"member,omitempty"`
-	Members        map[string]*ChatMember  `json:"-"`
-	JWT             string                 `json:"jwt,omitempty"`
-	EventStream     string                 `json:"eventStreamUri,omitempty"`
-	Socket          *websocket.Conn        `json:"-"`
-	TopicReceived   chan NotificationTopic `json:"-"`
-	LogHeartbeat    bool                   `json:"logHeartbeat"`
-	Client          *Client                `json:"-"`
-	Logger          *logger.Logger         `json:"-"`
+	ID            string                 `json:"id"`
+	SelfURI       string                 `json:"selfUri,omitempty"`
+	Target        *RoutingTarget         `json:"-"`
+	Guest         *ChatMember            `json:"member,omitempty"`
+	Members       map[string]*ChatMember `json:"-"`
+	JWT           string                 `json:"jwt,omitempty"`
+	EventStream   string                 `json:"eventStreamUri,omitempty"`
+	Socket        *websocket.Conn        `json:"-"`
+	TopicReceived chan NotificationTopic `json:"-"`
+	LogHeartbeat  bool                   `json:"logHeartbeat"`
+	Client        *Client                `json:"-"`
+	Logger        *logger.Logger         `json:"-"`
 }
 
 // Initialize initializes this from the given Client
@@ -37,7 +37,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	if err != nil {
 		return err
 	}
-	guest  := conversation.Guest
+	guest := conversation.Guest
 	target := conversation.Target
 	for _, parameter := range parameters {
 		if paramGuest, ok := parameter.(*ChatMember); ok {
@@ -76,18 +76,18 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	); err != nil {
 		return err
 	}
-	conversation.Client            = client
-	conversation.Logger            = logger.Child("conversation", "conversation", "media", "chat", "conversation", conversation.ID)
+	conversation.Client = client
+	conversation.Logger = logger.Child("conversation", "conversation", "media", "chat", "conversation", conversation.ID)
 	// We get the guest's ID from PureCloud, the other fields should be from Initialize
 	conversation.Guest.DisplayName = guest.DisplayName
-	conversation.Guest.AvatarURL   = guest.AvatarURL
-	conversation.Guest.Role        = guest.Role
-	conversation.Guest.State       = guest.State
-	conversation.Guest.Custom      = guest.Custom
-	conversation.Members           = map[string]*ChatMember{}
+	conversation.Guest.AvatarURL = guest.AvatarURL
+	conversation.Guest.Role = guest.Role
+	conversation.Guest.State = guest.State
+	conversation.Guest.Custom = guest.Custom
+	conversation.Members = map[string]*ChatMember{}
 	conversation.Members[conversation.Guest.ID] = conversation.Guest
-	conversation.TopicReceived     = make(chan NotificationTopic)
-	conversation.LogHeartbeat      = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
+	conversation.TopicReceived = make(chan NotificationTopic)
+	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
 	return
 }
 
@@ -124,7 +124,7 @@ func (conversation *ConversationGuestChat) Connect() (err error) {
 func (conversation *ConversationGuestChat) Close() (err error) {
 	log := conversation.Logger.Scope("close")
 
-	if conversation.Socket != nil  {
+	if conversation.Socket != nil {
 		log.Debugf("Disconnecting websocket")
 		if err = conversation.Socket.Close(); err != nil {
 			log.Errorf("Failed while close websocket", err)
@@ -148,7 +148,7 @@ func (conversation *ConversationGuestChat) messageLoop() {
 
 	for {
 		// get a message body and decode it. (ReadJSON is nice, but in case of unknown message, I cannot get the original string)
-		var err  error
+		var err error
 		var body []byte
 
 		if _, body, err = conversation.Socket.ReadMessage(); err != nil {
@@ -257,7 +257,7 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfuly. Response: %+v", response)
+		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }
@@ -288,18 +288,17 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
-			Payload:       struct {
+			Payload: struct {
 				BodyType string `json:"bodyType"`
 				Body     string `json:"body"`
 			}{
 				BodyType: bodyType,
 				Body:     body,
-
 			},
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfuly. Response: %+v", response)
+		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }

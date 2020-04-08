@@ -1,14 +1,14 @@
 package main
 
 import (
-	"net/url"
-	"github.com/gildas/go-logger"
 	"context"
 	"net/http"
+	"net/url"
 	"strings"
 
-	"github.com/gildas/go-purecloud"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
+	"github.com/gildas/go-purecloud"
 )
 
 // AppConfig describes An Application Configuration
@@ -17,13 +17,13 @@ type AppConfig struct {
 	WebRootPath string
 
 	// BotURL is the Chat Bot's url
-	BotURL      *url.URL
+	BotURL *url.URL
 
 	// BotQueue is the Queue used for sending the initial chat to
-	BotQueue    *purecloud.Queue
+	BotQueue *purecloud.Queue
 
 	// AgentQueue is the Queue used when the customer wants to talk to an agent
-	AgentQueue  *purecloud.Queue
+	AgentQueue *purecloud.Queue
 
 	// User is the currently Logged in User
 	User *purecloud.User
@@ -35,8 +35,10 @@ type AppConfig struct {
 	Logger *logger.Logger
 }
 
+type key int
+
 // AppConfigKey is the key to store AppConfig in context.Context
-const AppConfigKey = iota + 60506
+const AppConfigKey key = iota
 
 // ToContext store this AppConfig in the given context
 func (config *AppConfig) ToContext(parent context.Context) context.Context {
@@ -47,12 +49,12 @@ func (config *AppConfig) ToContext(parent context.Context) context.Context {
 func AppConfigFromContext(context context.Context) (*AppConfig, error) {
 	value := context.Value(AppConfigKey)
 	if value == nil {
-		return nil, errors.ArgumentMissingError.With("AppConfig").WithStack()
+		return nil, errors.ArgumentMissing.With("AppConfig").WithStack()
 	}
 	if config, ok := value.(*AppConfig); ok {
 		return config, nil
 	}
-	return nil, errors.ArgumentInvalidError.With("AppConfig", value).WithStack()
+	return nil, errors.ArgumentInvalid.With("AppConfig", value).WithStack()
 }
 
 // HttpHandler wraps this AppConfig into an http.Handler
@@ -69,7 +71,7 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
-		return errors.ArgumentMissingError.With("Queue").WithStack()
+		return errors.ArgumentMissing.With("Queue").WithStack()
 	}
 	if len(config.AgentQueue.ID) == 0 {
 		queueName := config.AgentQueue.Name
@@ -118,6 +120,7 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 	return nil
 }
 
+// Reset resets the config
 func (config *AppConfig) Reset() (err error) {
 	log := config.Logger.Scope("reset")
 

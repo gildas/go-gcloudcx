@@ -2,6 +2,7 @@ package purecloud
 
 import (
 	"encoding/json"
+
 	"github.com/gildas/go-errors"
 )
 
@@ -17,7 +18,7 @@ func (topic MetadataTopic) Match(topicName string) bool {
 	return topicName == "channel.metadata"
 }
 
-// Get the PureCloud Client associated with this
+// GetClient gets the PureCloud Client associated with this
 func (topic *MetadataTopic) GetClient() *Client {
 	return topic.Client
 }
@@ -33,7 +34,7 @@ func (topic *MetadataTopic) Send(channel *NotificationChannel) {
 		return
 	}
 	log := channel.Logger.Scope(topic.Name)
-	
+
 	log.Debugf("Topic Message: %s", topic.Message)
 	topic.Client = channel.Client
 	channel.TopicReceived <- topic
@@ -45,12 +46,12 @@ func (topic *MetadataTopic) UnmarshalJSON(payload []byte) (err error) {
 		TopicName string `json:"topicName"`
 		EventBody struct {
 			Message string `json:"message"`
-		}                `json:"eventBody"`
+		} `json:"eventBody"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	topic.Name    = inner.TopicName
+	topic.Name = inner.TopicName
 	topic.Message = inner.EventBody.Message
 	return
 }

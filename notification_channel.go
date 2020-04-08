@@ -34,9 +34,9 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 	if err = client.Post("/notifications/channels", struct{}{}, &channel); err != nil {
 		return nil, err
 	}
-	channel.LogHeartbeat  = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
-	channel.Client        = client
-	channel.Logger        = client.Logger.Topic("notification_channel")
+	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
+	channel.Client = client
+	channel.Logger = client.Logger.Topic("notification_channel")
 	channel.TopicReceived = make(chan NotificationTopic)
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
@@ -68,7 +68,7 @@ func (channel *NotificationChannel) Close() (err error) {
 
 // GetTopics gets all subscription topics set on this
 func (channel *NotificationChannel) GetTopics() ([]string, error) {
-	results := struct{Entities []AddressableEntityRef}{}
+	results := struct{ Entities []AddressableEntityRef }{}
 	if err := channel.Client.Get(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
@@ -88,7 +88,9 @@ func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
-	results := struct {Entities []AddressableEntityRef `json:"entities"`}{}
+	results := struct {
+		Entities []AddressableEntityRef `json:"entities"`
+	}{}
 	if err := channel.Client.Put(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
@@ -123,7 +125,9 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
-	results := struct {Entities []AddressableEntityRef `json:"entities"`}{}
+	results := struct {
+		Entities []AddressableEntityRef `json:"entities"`
+	}{}
 	if err := channel.Client.Post(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
@@ -195,7 +199,7 @@ func (channel *NotificationChannel) UnmarshalJSON(payload []byte) (err error) {
 func (channel *NotificationChannel) messageLoop() {
 	log := channel.Logger.Scope("receive")
 	for {
-		var err  error
+		var err error
 		var body []byte
 
 		if _, body, err = channel.Socket.ReadMessage(); err != nil {

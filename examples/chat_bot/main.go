@@ -64,7 +64,7 @@ func main() {
 		Log.Warnf("Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
 		fmt.Fprintf(os.Stderr, "Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue\n", *queueName)
 		agentQueueName = queueName
-		botQueueName   = queueName
+		botQueueName = queueName
 	} else if len(*agentQueueName) == 0 {
 		Log.Warnf("Bot Queue %s will be used also for the Agent Queue", *botQueueName)
 		agentQueueName = botQueueName
@@ -122,7 +122,7 @@ func main() {
 	// This route performs the login process makes sure the client is authorized,
 	//   if authorized, the LoggedInHandler is called to setup some variables
 	//   otherwise, the purecloud.AuthorizeHandler will redirect the user to the PureCloud Login page
-	//   that will end up with the grant.RedirectURL defined ealier
+	//   that will end up with the grant.RedirectURL defined earlier
 	router.Methods("POST").Path("/login").Handler(Client.AuthorizeHandler()(LoggedInHandler()))
 
 	// This route performs the logout process

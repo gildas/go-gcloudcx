@@ -36,6 +36,6 @@ func (serviceLevel *ServiceLevel) UnmarshalJSON(payload []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	serviceLevel.Percentage = inner.Percentage
-	serviceLevel.Duration   = time.Duration(inner.Duration) * time.Millisecond
+	serviceLevel.Duration = time.Duration(inner.Duration) * time.Millisecond
 	return
 }

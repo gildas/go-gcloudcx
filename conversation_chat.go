@@ -68,7 +68,7 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
 	if len(conversation.ID) > 0 {
-		if err := conversation.Client.Get("/conversations/" + conversation.ID, &conversation); err != nil {
+		if err := conversation.Client.Get("/conversations/"+conversation.ID, &conversation); err != nil {
 			return err
 		}
 	}
@@ -110,7 +110,7 @@ func (conversation ConversationChat) UpdateState(identifiable Identifiable, stat
 }
 
 // Transfer transfers a participant of this Conversation to the given Queue
-//   implement Transferer
+//   implement Transferrer
 func (conversation ConversationChat) Transfer(identifiable Identifiable, queue Identifiable) error {
 	return conversation.Client.Post(
 		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
@@ -141,7 +141,7 @@ func (conversation ConversationChat) SetTyping(member Identifiable) error {
 	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil)
 }
 
-// WrapupParticipant wraps up a Participant of this Conversation
+// Wrapup wraps up a Participant of this Conversation
 func (conversation ConversationChat) Wrapup(identifiable Identifiable, wrapup *Wrapup) error {
 	return conversation.Client.Patch(
 		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),

@@ -2,8 +2,6 @@ package purecloud_test
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -32,7 +30,9 @@ func TestOrganizationSuite(t *testing.T) {
 func (suite *OrganizationSuite) TestCanFetchOrganization() {
 	organization := &purecloud.Organization{}
 	err := suite.Client.Fetch(organization)
-	if err != nil { suite.Logger.Errorf("Failed", err) }
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
 	suite.Require().NotNil(organization, "Client's Organization is not loaded")
 	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")
@@ -57,10 +57,13 @@ func (suite *OrganizationSuite) TestOrganizationHasName() {
 
 func (suite *OrganizationSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
-	logFolder := filepath.Join(".", "log")
-	err := os.MkdirAll(logFolder, os.ModePerm)
-	suite.Require().Nil(err, "Failed to create folder: %s", logFolder)
-	suite.Logger = logger.CreateWithDestination("test", fmt.Sprintf("file://%s/test-%s.log", logFolder, strings.ToLower(suite.Name)))
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	var (
@@ -89,6 +92,7 @@ func (suite *OrganizationSuite) TearDownSuite() {
 		suite.Logger.Infof("All tests succeeded, we are cleaning")
 	}
 	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
 }
 
 func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {

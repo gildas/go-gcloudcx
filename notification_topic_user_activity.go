@@ -1,9 +1,10 @@
 package purecloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
+
 	"github.com/gildas/go-errors"
 )
 
@@ -23,7 +24,7 @@ func (topic UserActivityTopic) Match(topicName string) bool {
 	return strings.HasPrefix(topicName, "v2.users.") && strings.HasSuffix(topicName, ".activity")
 }
 
-// Get the PureCloud Client associated with this
+// GetClient gets the PureCloud Client associated with this
 func (topic *UserActivityTopic) GetClient() *Client {
 	return topic.Client
 }
@@ -40,7 +41,7 @@ func (topic UserActivityTopic) TopicFor(identifiables ...Identifiable) string {
 func (topic *UserActivityTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("user_activity", "send")
 	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
-	topic.Client      = channel.Client
+	topic.Client = channel.Client
 	topic.User.Client = channel.Client
 	channel.TopicReceived <- topic
 }
@@ -49,36 +50,35 @@ func (topic *UserActivityTopic) Send(channel *NotificationChannel) {
 func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	// TODO: Put this schema:
 	/*
-{
-  "activeQueueIds": [
-    {}
-  ],
-  "dateActiveQueuesChanged": "string"
-}
+		{
+		  "activeQueueIds": [
+		    {}
+		  ],
+		  "dateActiveQueuesChanged": "string"
+		}
 	*/
 	var inner struct {
-		TopicName string        `json:"topicName"`
+		TopicName string `json:"topicName"`
 		EventBody struct {
 			ID                      string         `json:"id"`
 			RoutingStatus           *RoutingStatus `json:"routingStatus"`
 			Presence                *UserPresence  `json:"presence"`
 			OutOfOffice             *OutOfOffice   `json:"outOfOffice"`
-			// TODO: Not sure about this (the doc says: "activeQueueIds": [{}])
-			ActiveQueueIDs          []string       `json:"activeQueueIds"`
+			ActiveQueueIDs          []string       `json:"activeQueueIds"` // TODO: Not sure about this (the doc says: "activeQueueIds": [{}])
 			DateActiveQueuesChanged string         `json:"dateActiveQueuesChanged"`
 		}
 		Metadata struct {
 			CorrelationID string `json:"correlationId"`
-		}                       `json:"metadata"`
-		Version   string        `json:"version"`
+		} `json:"metadata"`
+		Version string `json:"version"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity")
-	topic.Name          = inner.TopicName
-	topic.User          = &User{ID:userID}
-	topic.Presence      = inner.EventBody.Presence
+	topic.Name = inner.TopicName
+	topic.User = &User{ID: userID}
+	topic.Presence = inner.EventBody.Presence
 	topic.RoutingStatus = inner.EventBody.RoutingStatus
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return

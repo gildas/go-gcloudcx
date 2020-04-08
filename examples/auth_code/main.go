@@ -125,7 +125,7 @@ func main() {
 	// This route performs your actions, but makes sure the client is authorized,
 	//   if authorized, your route http.Handler is called
 	//   otherwise, the AuthorizeHandler will redirect the user to the PureCloud Login page
-	//   that will end up with the grant.RedirectURL defined ealier
+	//   that will end up with the grant.RedirectURL defined earlier
 	router.Methods("GET").Path("/").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(mainRouteHandler())))
 
 	WebServer := &http.Server{

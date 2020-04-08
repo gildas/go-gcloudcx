@@ -35,7 +35,7 @@ func (settings *ACWSettings) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	settings.Timeout      = time.Duration(inner.Timeout) * time.Millisecond
+	settings.Timeout = time.Duration(inner.Timeout) * time.Millisecond
 	settings.WrapupPrompt = inner.WrapupPrompt
 	return
 }

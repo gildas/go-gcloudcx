@@ -2,27 +2,28 @@ package purecloud
 
 import (
 	"time"
+
 	"github.com/gildas/go-logger"
 )
 
 // Group describe a Group of users
 type Group struct {
-	ID           string          `json:"id"`
-	SelfURI      string          `json:"selfUri"`
-	Name         string          `json:"name"`
-	Type         string          `json:"type"`
-	Description  string          `json:"description"`
-	State        string          `json:"state"`
-	MemberCount  int             `json:"memberCount"`
-	Owners       []*User         `json:"owners"`
-	Images       []*UserImage    `json:"images"`
-	Addresses    []*Contact      `json:"addresses"`
-	RulesVisible bool            `json:"rulesVisible"`
-	Visibility   bool            `json:"visibility"`
-	DateModified time.Time       `json:"dateModified"`
-	Version      int             `json:"version"`
-	Client       *Client         `json:"-"`
-	Logger       *logger.Logger  `json:"-"`
+	ID           string         `json:"id"`
+	SelfURI      string         `json:"selfUri"`
+	Name         string         `json:"name"`
+	Type         string         `json:"type"`
+	Description  string         `json:"description"`
+	State        string         `json:"state"`
+	MemberCount  int            `json:"memberCount"`
+	Owners       []*User        `json:"owners"`
+	Images       []*UserImage   `json:"images"`
+	Addresses    []*Contact     `json:"addresses"`
+	RulesVisible bool           `json:"rulesVisible"`
+	Visibility   bool           `json:"visibility"`
+	DateModified time.Time      `json:"dateModified"`
+	Version      int            `json:"version"`
+	Client       *Client        `json:"-"`
+	Logger       *logger.Logger `json:"-"`
 }
 
 // Initialize initializes this from the given Client
@@ -34,7 +35,7 @@ func (group *Group) Initialize(parameters ...interface{}) error {
 		return err
 	}
 	if len(group.ID) > 0 {
-		if err := client.Get("/groups/" + group.ID, &group); err != nil {
+		if err := client.Get("/groups/"+group.ID, &group); err != nil {
 			return err
 		}
 	}

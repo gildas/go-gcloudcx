@@ -58,15 +58,15 @@ func MainHandler() http.Handler {
 
 		// We can use the client only if the agent is logged in...
 		if viewData.LoggedIn {
-			viewData.Region         = client.Region
-			viewData.DeploymentID   = client.DeploymentID
+			viewData.Region = client.Region
+			viewData.DeploymentID = client.DeploymentID
 			viewData.OrganizationID = client.Organization.ID
-			viewData.AgentQueue     = appConfig.AgentQueue
-			viewData.BotQueue       = appConfig.BotQueue
-			viewData.User           = appConfig.User
+			viewData.AgentQueue = appConfig.AgentQueue
+			viewData.BotQueue = appConfig.BotQueue
+			viewData.User = appConfig.User
 
 			if appConfig.NotificationChannel != nil {
-				viewData.ChannelID    = appConfig.NotificationChannel.ID
+				viewData.ChannelID = appConfig.NotificationChannel.ID
 				viewData.WebsocketURL = appConfig.NotificationChannel.ConnectURL.String()
 			} else {
 				// We are logged in the client, but message loops are not started, better logging out!

@@ -27,7 +27,7 @@ type LocationDefinition struct {
 
 // LocationEmergencyNumber describes a Location's Emergency Number
 type LocationEmergencyNumber struct {
-	Type string   `json:"type"` // default, elin
+	Type   string `json:"type"` // default, elin
 	Number string `json:"number"`
 	E164   string `json:"e164"`
 }
@@ -43,6 +43,7 @@ type LocationAddress struct {
 	Street2     string `json:"street2"`
 }
 
+// LocationImage describes the image of a Location
 type LocationImage struct {
 	ImageURL   *url.URL `json:"-"`
 	Resolution string   `json:"resolution"`
@@ -50,10 +51,10 @@ type LocationImage struct {
 
 // GeoLocation describes a location with coordinates
 type GeoLocation struct {
-	ID         string                `json:"id"`
-	SelfURI    string                `json:"selfUri"`
-	Name       string                `json:"name"`
-	Locations  []*LocationDefinition `json:"locations"`
+	ID        string                `json:"id"`
+	SelfURI   string                `json:"selfUri"`
+	Name      string                `json:"name"`
+	Locations []*LocationDefinition `json:"locations"`
 }
 
 // Location describes a location in a building

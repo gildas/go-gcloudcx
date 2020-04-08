@@ -26,12 +26,12 @@ type Disconnecter interface {
 	Disconnect(identifiable Identifiable) error
 }
 
-// Transferer describes objects that can transfer an Identifiable somewhere else
-type Transferer interface {
+// Transferrer describes objects that can transfer an Identifiable somewhere else
+type Transferrer interface {
 	Transfer(identifiable Identifiable, target Identifiable) error
 }
 
-// Address describes an Addres (telno, etc)
+// Address describes an Address (telno, etc)
 type Address struct {
 	Name               string `json:"name"`
 	NameRaw            string `json:"nameRaw"`
