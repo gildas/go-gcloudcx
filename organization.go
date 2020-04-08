@@ -32,7 +32,7 @@ func (organization *Organization) Initialize(parameters ...interface{}) error {
 		return err
 	}
 	if len(organization.ID) > 0 {
-		if err := client.Get("/organizations/" + organization.ID, &organization); err != nil {
+		if err := client.Get("/organizations/"+organization.ID, &organization); err != nil {
 			return err
 		}
 	} else {

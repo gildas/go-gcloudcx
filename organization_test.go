@@ -32,7 +32,9 @@ func TestOrganizationSuite(t *testing.T) {
 func (suite *OrganizationSuite) TestCanFetchOrganization() {
 	organization := &purecloud.Organization{}
 	err := suite.Client.Fetch(organization)
-	if err != nil { suite.Logger.Errorf("Failed", err) }
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
 	suite.Require().NotNil(organization, "Client's Organization is not loaded")
 	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")

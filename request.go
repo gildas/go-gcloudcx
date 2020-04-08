@@ -36,7 +36,9 @@ func (client *Client) Delete(path string, results interface{}) error {
 
 // SendRequest sends a REST request to PureCloud
 func (client *Client) SendRequest(path string, options *request.Options, results interface{}) (err error) {
-	if options == nil { options = &request.Options{} }
+	if options == nil {
+		options = &request.Options{}
+	}
 	if strings.HasPrefix(path, "http") {
 		options.URL, err = url.Parse(path)
 	} else if client.API == nil {
@@ -47,7 +49,7 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 		options.URL, err = client.API.Parse(path)
 	}
 	if err != nil {
-		return errors.WithStack(APIError{ Code: "url.parse", Message: err.Error() })
+		return errors.WithStack(APIError{Code: "url.parse", Message: err.Error()})
 	}
 	if len(options.Authorization) == 0 {
 		if client.IsAuthorized() {
@@ -63,9 +65,9 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 		}
 	}
 
-	options.Proxy     = client.Proxy
+	options.Proxy = client.Proxy
 	options.UserAgent = APP + " " + VERSION
-	options.Logger    = client.Logger
+	options.Logger = client.Logger
 	options.ResponseBodyLogSize = 4096
 
 	res, err := request.Send(options, results)
@@ -84,10 +86,10 @@ func (client *Client) SendRequest(path string, options *request.Options, results
 				return errors.Wrap(err, "Failed to extract an error from the response")
 			}
 			apiError.Status = details.Code
-			apiError.Code   = details.ID
+			apiError.Code = details.ID
 			if strings.HasPrefix(apiError.Message, "authentication failed") {
 				apiError.Status = errors.HTTPUnauthorized.Code
-				apiError.Code   = errors.HTTPUnauthorized.ID
+				apiError.Code = errors.HTTPUnauthorized.ID
 			}
 			return errors.WithStack(apiError)
 		}

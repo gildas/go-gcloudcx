@@ -3,6 +3,7 @@ package purecloud
 import (
 	"net/url"
 	"strings"
+
 	"github.com/gildas/go-logger"
 )
 
@@ -55,7 +56,7 @@ func (user *User) Initialize(parameters ...interface{}) error {
 		return err
 	}
 	if len(user.ID) > 0 {
-		if err := client.Get("/users/" + user.ID, &user); err != nil {
+		if err := client.Get("/users/"+user.ID, &user); err != nil {
 			return err
 		}
 	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant

@@ -50,8 +50,8 @@ func (suite *UserSuite) SetupSuite() {
 	)
 
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
-		Region:       region,
-		Logger:       suite.Logger,
+		Region: region,
+		Logger: suite.Logger,
 	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
 		ClientID: clientID,
 		Secret:   secret,

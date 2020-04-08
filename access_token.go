@@ -15,24 +15,24 @@ import (
 type AccessToken struct {
 	Type      string    `json:"tokenType"`
 	Token     string    `json:"token"`
-	ExpiresOn time.Time `json:"tokenExpires"`  // UTC!
+	ExpiresOn time.Time `json:"tokenExpires"` // UTC!
 }
 
 var (
-	hashKey      = []byte(core.GetEnvAsString("PURECLOUD_SESSION_HASH_KEY",  "Pur3Cl0udS3ss10nH@5hK3y"))
+	hashKey      = []byte(core.GetEnvAsString("PURECLOUD_SESSION_HASH_KEY", "Pur3Cl0udS3ss10nH@5hK3y"))
 	blockKey     = []byte(core.GetEnvAsString("PURECLOUD_SESSION_BLOCK_KEY", "Pur3Cl0udS3ss10nBl0ckK3y"))
 	secureCookie = securecookie.New(hashKey, blockKey)
 )
 
 // Reset resets the Token so it is expired and empty
 func (token *AccessToken) Reset() {
-	token.Type      = ""
-	token.Token     = ""
+	token.Type = ""
+	token.Token = ""
 	token.ExpiresOn = time.Time{}
 }
 
 // LoadFromCookie loads this token from a cookie in the given HTTP Request
-func (token *AccessToken) LoadFromCookie(r *http.Request, cookieName string) (*AccessToken) {
+func (token *AccessToken) LoadFromCookie(r *http.Request, cookieName string) *AccessToken {
 	if cookie, err := r.Cookie(cookieName); err == nil {
 		var jsonToken string
 

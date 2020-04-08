@@ -8,7 +8,7 @@ import (
 // ExtractClientAndLogger extracts a Client and a logger.Logger from its parameters
 func ExtractClientAndLogger(parameters ...interface{}) (*Client, *logger.Logger, error) {
 	var client *Client
-	var log    *logger.Logger
+	var log *logger.Logger
 
 	for _, parameter := range parameters {
 		if paramClient, ok := parameter.(*Client); ok {

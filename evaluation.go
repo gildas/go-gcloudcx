@@ -6,32 +6,32 @@ import (
 
 // Evaluation describes an Evaluation (like belonging to Participant)
 type Evaluation struct {
-	ID                string     `json:"id"`
-	Name              string     `json:"name"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 
-	Status            string                `json:"status"`
-	Queue             *Queue                `json:"queue"`
-	Conversation      *Conversation         `json:"conversation"`
-	EvaluationForm    *EvaluationForm       `json:"evaluationForm"`
-	Evaluator         *User                 `json:"evaluator"`
-	Agent             *User                 `json:"agent"`
-	Calibration       *Calibration          `json:"calibration"`
-	Answers           *EvaluationScoringSet `json:"answers"`
-	AgentHasRead      bool                  `json:"agentHasRead"`
-	ReleaseDate       time.Time             `json:"releaseDate"`
-	AssignedDate      time.Time             `json:"assignedDate"`
-	ChangedDate       time.Time             `json:"changedDate"`
+	Status         string                `json:"status"`
+	Queue          *Queue                `json:"queue"`
+	Conversation   *Conversation         `json:"conversation"`
+	EvaluationForm *EvaluationForm       `json:"evaluationForm"`
+	Evaluator      *User                 `json:"evaluator"`
+	Agent          *User                 `json:"agent"`
+	Calibration    *Calibration          `json:"calibration"`
+	Answers        *EvaluationScoringSet `json:"answers"`
+	AgentHasRead   bool                  `json:"agentHasRead"`
+	ReleaseDate    time.Time             `json:"releaseDate"`
+	AssignedDate   time.Time             `json:"assignedDate"`
+	ChangedDate    time.Time             `json:"changedDate"`
 }
 
 // EvaluationForm describes an Evaluation Form
 type EvaluationForm struct {
-	ID                string     `json:"id"`
-	Name              string     `json:"name"`
-	SelfURI           string     `json:"selfUri"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	SelfURI string `json:"selfUri"`
 
-	ModifiedDate      time.Time  `json:"modifiedDate"`
-	Published         bool       `json:"published"`
-	ContextID         string     `json:"contextId"`
+	ModifiedDate time.Time `json:"modifiedDate"`
+	Published    bool      `json:"published"`
+	ContextID    string    `json:"contextId"`
 
 	QuestionGroups    []EvaluationQuestionGroup         `json:"questionGroups"`
 	PublishedVersions DomainEntityListingEvaluationForm `json:"publishedVersions"`
@@ -73,9 +73,9 @@ type VisibilityCondition struct {
 
 // AnswerOption describes an Answer Option
 type AnswerOption struct {
-	ID                  string `json:"id"`
-	Text                string `json:"text"`
-	Value               int    `json:"value"`
+	ID    string `json:"id"`
+	Text  string `json:"text"`
+	Value int    `json:"value"`
 }
 
 // DomainEntityListingEvaluationForm describes ...

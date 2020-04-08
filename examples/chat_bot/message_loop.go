@@ -4,12 +4,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gildas/go-request"
 	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-request"
 )
 
 // MessageLoop receives PureCloud Notification Topics and handles them
-func MessageLoop(config* AppConfig) {
+func MessageLoop(config *AppConfig) {
 	log := config.Logger.Child("topic", "process")
 
 	channel := config.NotificationChannel
@@ -114,17 +114,17 @@ func MessageLoop(config* AppConfig) {
 						Intent          string  `json:"intent"`
 						Confidence      float64 `json:"confidence"`
 						Fulfillment     string  `json:"fulfillmentmessage"`
-						EndConversation bool    `json:"end_conversation"` 
+						EndConversation bool    `json:"end_conversation"`
 					}{EndConversation: false}
 					if _, err = request.Send(&request.Options{
-							URL: config.BotURL,
-							Payload: struct {
-								Message string `json:"message"`
-							}{
-								Message: topic.Body,
-							},
-							Logger: log,
+						URL: config.BotURL,
+						Payload: struct {
+							Message string `json:"message"`
+						}{
+							Message: topic.Body,
 						},
+						Logger: log,
+					},
 						&response); err != nil {
 						log.Errorf("Failed to send text to Google", err)
 						continue

@@ -12,7 +12,7 @@ type UserConversationSummary struct {
 	Video            MediaSummary `json:"video"`
 }
 
-// MediaSummary describes a Media summary 
+// MediaSummary describes a Media summary
 type MediaSummary struct {
 	ContactCenter MediaSummaryDetail `json:"contactCenter"`
 	Enterprise    MediaSummaryDetail `json:"enterprise"`

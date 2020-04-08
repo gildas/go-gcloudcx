@@ -61,18 +61,18 @@ func (presence UserPresence) String() string {
 
 // UnmarshalJSON unmarshals JSON into this
 func (presence *UserPresence) UnmarshalJSON(payload []byte) (err error) {
-  type surrogate UserPresence
-  var inner struct {
-    surrogate
-	PresenceMessage string `json:"presenceMessage"` // found in the UserActivityTopic
-  }
+	type surrogate UserPresence
+	var inner struct {
+		surrogate
+		PresenceMessage string `json:"presenceMessage"` // found in the UserActivityTopic
+	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
-  }
-  *presence = UserPresence(inner.surrogate)
-  if len(inner.PresenceMessage) > 0 {
-	  presence.Message = inner.PresenceMessage
-  }
-  return
+	}
+	*presence = UserPresence(inner.surrogate)
+	if len(inner.PresenceMessage) > 0 {
+		presence.Message = inner.PresenceMessage
+	}
+	return
 }

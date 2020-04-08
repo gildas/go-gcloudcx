@@ -11,12 +11,12 @@ import (
 
 // Authorization contains the login options to connect the client to PureCloud
 type Authorization struct {
-	ClientID     string                 `json:"clientId"`
-	Secret       string                 `json:"clientSecret"`
-	RedirectURI  *url.URL               `json:"redirectUri"`
-	TokenType    string                 `json:"tokenType"`
-	Token        string                 `json:"token"`
-	TokenExpires time.Time              `json:"tokenExpires"`
+	ClientID     string    `json:"clientId"`
+	Secret       string    `json:"clientSecret"`
+	RedirectURI  *url.URL  `json:"redirectUri"`
+	TokenType    string    `json:"tokenType"`
+	Token        string    `json:"token"`
+	TokenExpires time.Time `json:"tokenExpires"`
 }
 
 // Login logs in a Client to PureCloud
@@ -50,12 +50,12 @@ func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 
 			log.Infof("Cookie Not Found, need to login with PureCloud")
 			redirectURL, _ := url.Parse("https://login." + client.Region + "/oauth/authorize")
-			
+
 			if grant, ok := client.AuthorizationGrant.(*AuthorizationCodeGrant); ok {
 				query := redirectURL.Query()
 				query.Add("response_type", "code")
-				query.Add("client_id",     grant.ClientID)
-				query.Add("redirect_uri",  grant.RedirectURL.String())
+				query.Add("client_id", grant.ClientID)
+				query.Add("redirect_uri", grant.RedirectURL.String())
 				redirectURL.RawQuery = query.Encode()
 			}
 			log.Infof("Redirecting to %s", redirectURL.String())
@@ -70,7 +70,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log := client.Logger.Scope("login")
 			grant, ok := client.AuthorizationGrant.(*AuthorizationCodeGrant)
-			if ! ok {
+			if !ok {
 				log.Errorf("Client's Grant is not an Authorization Code Grant, we cannot continue")
 				core.RespondWithError(w, http.StatusUnauthorized, errors.New("Invalid PureCloud OAUTH Grant"))
 				return

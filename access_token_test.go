@@ -61,7 +61,7 @@ func TestCanResetAccessToken(t *testing.T) {
 	token.Reset()
 	assert.Empty(t, token.Token, "The Token string should be empty")
 	assert.Empty(t, token.Type, "The Token type should be empty")
-	assert.True(t,  token.IsExpired(), "The Token should be expired")
+	assert.True(t, token.IsExpired(), "The Token should be expired")
 	assert.False(t, token.IsValid(), "The Token should not be valid")
 }
 
@@ -78,6 +78,6 @@ func TestCanResetGrantAccessToken(t *testing.T) {
 	client.AuthorizationGrant.AccessToken().Reset()
 	assert.Empty(t, client.AuthorizationGrant.AccessToken().Token, "The Token string should be empty")
 	assert.Empty(t, client.AuthorizationGrant.AccessToken().Type, "The Token type should be empty")
-	assert.True(t,  client.AuthorizationGrant.AccessToken().IsExpired(), "The Token should be expired")
+	assert.True(t, client.AuthorizationGrant.AccessToken().IsExpired(), "The Token should be expired")
 	assert.False(t, client.AuthorizationGrant.AccessToken().IsValid(), "The Token should not be valid")
 }

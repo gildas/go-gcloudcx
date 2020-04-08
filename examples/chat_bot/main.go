@@ -64,7 +64,7 @@ func main() {
 		Log.Warnf("Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue", *queueName)
 		fmt.Fprintf(os.Stderr, "Queue %s will be used for both the Agents and the Bot (legacy), you should use --agentqueue and --botqueue\n", *queueName)
 		agentQueueName = queueName
-		botQueueName   = queueName
+		botQueueName = queueName
 	} else if len(*agentQueueName) == 0 {
 		Log.Warnf("Bot Queue %s will be used also for the Agent Queue", *botQueueName)
 		agentQueueName = botQueueName

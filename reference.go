@@ -31,9 +31,9 @@ func (ref AddressableEntityRef) GetURI() string {
 
 // DomainEntityRef describes a DomainEntity Reference
 type DomainEntityRef struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	SelfURI  string `json:"self_uri"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	SelfURI string `json:"self_uri"`
 }
 
 // GetID gets the identifier of this

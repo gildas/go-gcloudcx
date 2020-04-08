@@ -1,9 +1,10 @@
 package purecloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
+
 	"github.com/gildas/go-errors"
 )
 
@@ -38,7 +39,7 @@ func (topic UserPresenceTopic) TopicFor(identifiables ...Identifiable) string {
 func (topic *UserPresenceTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("user_presence", "send")
 	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
-	topic.Client      = channel.Client
+	topic.Client = channel.Client
 	topic.User.Client = channel.Client
 	channel.TopicReceived <- topic
 }
@@ -48,18 +49,18 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	var inner struct {
 		TopicName string       `json:"topicName"`
 		Presence  UserPresence `json:"eventBody"`
-		Metadata struct {
+		Metadata  struct {
 			CorrelationID string `json:"correlationId"`
-		}                      `json:"metadata"`
-		Version   string       `json:"version"`
+		} `json:"metadata"`
+		Version string `json:"version"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	userID   := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
-	topic.Name          = inner.TopicName
-	topic.Presence      = inner.Presence
-	topic.User          = &User{ID: userID}
+	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
+	topic.Name = inner.TopicName
+	topic.Presence = inner.Presence
+	topic.User = &User{ID: userID}
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }

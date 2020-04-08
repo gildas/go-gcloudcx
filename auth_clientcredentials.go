@@ -39,7 +39,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	}{}
 
 	err = client.SendRequest(
-		"https://login." + client.Region + "/oauth/token",
+		"https://login."+client.Region+"/oauth/token",
 		&request.Options{
 			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
 			Payload: map[string]string{
@@ -48,11 +48,13 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 		},
 		&response,
 	)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	// Saves the token
-	grant.Token.Type      = response.TokenType
-	grant.Token.Token     = response.AccessToken
+	grant.Token.Type = response.TokenType
+	grant.Token.Token = response.AccessToken
 	grant.Token.ExpiresOn = time.Now().Add(time.Duration(int64(response.ExpiresIn)))
 
 	client.Organization, _ = client.GetMyOrganization()

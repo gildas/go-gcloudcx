@@ -68,7 +68,7 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
 	if len(conversation.ID) > 0 {
-		if err := conversation.Client.Get("/conversations/" + conversation.ID, &conversation); err != nil {
+		if err := conversation.Client.Get("/conversations/"+conversation.ID, &conversation); err != nil {
 			return err
 		}
 	}

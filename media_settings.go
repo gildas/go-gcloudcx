@@ -39,6 +39,6 @@ func (setting *MediaSetting) UnmarshalJSON(payload []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	setting.AlertingTimeout = time.Duration(inner.AlertingTimeout) * time.Millisecond
-	setting.ServiceLevel    = inner.ServiceLevel
+	setting.ServiceLevel = inner.ServiceLevel
 	return
 }

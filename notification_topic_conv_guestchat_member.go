@@ -11,14 +11,14 @@ import (
 
 // ConversationGuestChatMemberTopic describes a Topic about User's Presence
 type ConversationGuestChatMemberTopic struct {
-	ID             string
-	Name           string
-	Conversation   *ConversationGuestChat
-	Member         *ChatMember
-	Type           string     // member-change
-	TimeStamp      time.Time
-	CorrelationID  string
-	Client         *Client
+	ID            string
+	Name          string
+	Conversation  *ConversationGuestChat
+	Member        *ChatMember
+	Type          string // member-change
+	TimeStamp     time.Time
+	CorrelationID string
+	Client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -43,7 +43,7 @@ func (topic ConversationGuestChatMemberTopic) TopicFor(identifiables ...Identifi
 func (topic *ConversationGuestChatMemberTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("conversation_chat_member", "send", "member", topic.Member)
 	log.Debugf("Conversation: %s, Type: %s, Member: %s, State: %s", topic.Conversation, topic.Type, topic.Member, topic.Member.State)
-	topic.Client              = channel.Client
+	topic.Client = channel.Client
 	topic.Conversation.Client = channel.Client
 	channel.TopicReceived <- topic
 }
@@ -51,7 +51,7 @@ func (topic *ConversationGuestChatMemberTopic) Send(channel *NotificationChannel
 // UnmarshalJSON unmarshals JSON into this
 func (topic *ConversationGuestChatMemberTopic) UnmarshalJSON(payload []byte) (err error) {
 	var inner struct {
-		TopicName string       `json:"topicName"`
+		TopicName string `json:"topicName"`
 		EventBody struct {
 			ID           string                 `json:"id,omitempty"`
 			Conversation *ConversationGuestChat `json:"conversation,omitempty"`
@@ -62,17 +62,17 @@ func (topic *ConversationGuestChatMemberTopic) UnmarshalJSON(payload []byte) (er
 			CorrelationID string `json:"correlationId,omitempty"`
 			Type          string `json:"type,omitempty"`
 		} `json:"metadata,omitempty"`
-		Version   string `json:"version"` // all
+		Version string `json:"version"` // all
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
-	topic.Name          = inner.TopicName
-	topic.Type          = inner.Metadata.Type
-	topic.Conversation  = &ConversationGuestChat{ID:conversationID}
-	topic.Member        = inner.EventBody.Member
-	topic.TimeStamp     = inner.EventBody.Timestamp
+	topic.Name = inner.TopicName
+	topic.Type = inner.Metadata.Type
+	topic.Conversation = &ConversationGuestChat{ID: conversationID}
+	topic.Member = inner.EventBody.Member
+	topic.TimeStamp = inner.EventBody.Timestamp
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }

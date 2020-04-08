@@ -7,10 +7,10 @@ import (
 
 // CobrowseSession describes a Cobrowse Session (like belonging to Participant)
 type CobrowseSession struct {
-	ID        string  `json:"id"`
-	State     string  `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Self      Address `json:"self"`
-	Held      bool    `json:"held"`
+	ID    string  `json:"id"`
+	State string  `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Self  Address `json:"self"`
+	Held  bool    `json:"held"`
 
 	ProviderEventTime time.Time `json:"providerEventTime"`
 	ConnectedTime     time.Time `json:"connectedTime"`

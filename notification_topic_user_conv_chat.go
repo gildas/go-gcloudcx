@@ -1,20 +1,21 @@
 package purecloud
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
-	"encoding/json"
+
 	"github.com/gildas/go-errors"
 )
 
 // UserConversationChatTopic describes a Topic about User's Presence
 type UserConversationChatTopic struct {
-	Name           string
-	User           *User
-	Conversation   *ConversationChat
-	Participants   []*Participant
-	CorrelationID  string
-	Client         *Client
+	Name          string
+	User          *User
+	Conversation  *ConversationChat
+	Participants  []*Participant
+	CorrelationID string
+	Client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -39,8 +40,8 @@ func (topic UserConversationChatTopic) TopicFor(identifiables ...Identifiable) s
 func (topic *UserConversationChatTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("user_conversation_chat", "send")
 	log.Debugf("User: %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
-	topic.Client              = channel.Client
-	topic.User.Client         = channel.Client
+	topic.Client = channel.Client
+	topic.User.Client = channel.Client
 	topic.Conversation.Client = channel.Client
 
 	channel.TopicReceived <- topic
@@ -49,7 +50,7 @@ func (topic *UserConversationChatTopic) Send(channel *NotificationChannel) {
 // UnmarshalJSON unmarshals JSON into this
 func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error) {
 	var inner struct {
-		TopicName string       `json:"topicName"`
+		TopicName string `json:"topicName"`
 		EventBody struct {
 			ConversationID string         `json:"id"`
 			Name           string         `json:"name"`
@@ -63,10 +64,10 @@ func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".conversations.chats")
-	topic.Name          = inner.TopicName
-	topic.User          = &User{ID:userID}
-	topic.Conversation  = &ConversationChat{ID:inner.EventBody.ConversationID}
-	topic.Participants  = inner.EventBody.Participants
+	topic.Name = inner.TopicName
+	topic.User = &User{ID: userID}
+	topic.Conversation = &ConversationChat{ID: inner.EventBody.ConversationID}
+	topic.Participants = inner.EventBody.Participants
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
 }
