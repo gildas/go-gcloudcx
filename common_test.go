@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 func Load(filename string, object interface{}) (err error) {
@@ -19,10 +16,4 @@ func Load(filename string, object interface{}) (err error) {
 		return err
 	}
 	return nil
-}
-
-func RequireEqualJSON(t *testing.T, filename string, payload []byte) {
-	expected, err := ioutil.ReadFile(filepath.Join(".", "testdata", filename))
-	require.Nil(t, err, "Failed to load %s", filename)
-	require.JSONEq(t, string(expected), string(payload))
 }
