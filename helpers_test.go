@@ -1,55 +1,52 @@
 package purecloud_test
 
 import (
-	"testing"
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
 
 	"github.com/gildas/go-logger"
-	"github.com/stretchr/testify/require"
-
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-purecloud"
+	"github.com/stretchr/testify/suite"
 )
 
-func TestCanExtractClientAndLogger(t *testing.T) {
-	logger := CreateLogger("test-helpers")
-	client := purecloud.NewClient(&purecloud.ClientOptions{
-		DeploymentID: "12345676890",
-		Logger:       logger,
-	})
-	_, _, err := purecloud.ExtractClientAndLogger(client)
-	if err != nil {
-		logger.Errorf("Failed", err)
-	}
-	require.Nil(t, err, "Failed to fetch stuff")
+type HelpersSuite struct {
+	suite.Suite
+	Name   string
+	Logger *logger.Logger
+	Start  time.Time
 }
 
-func TestCanRunInitializable(t *testing.T) {
-	logger := CreateLogger("test-helpers")
+func (suite *HelpersSuite) TestCanExtractClientAndLogger() {
 	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
-		Logger:       logger,
+		Logger:       suite.Logger,
+	})
+	_, _, err := purecloud.ExtractClientAndLogger(client)
+	suite.Assert().Nil(err, "Failed to fetch stuff")
+}
+
+func (suite *HelpersSuite) TestCanRunInitializable() {
+	client := purecloud.NewClient(&purecloud.ClientOptions{
+		DeploymentID: "12345676890",
+		Logger:       suite.Logger,
 	})
 
 	stuff := &Stuff{}
 	err := stuff.Initialize(client)
-	if err != nil {
-		logger.Errorf("Failed", err)
-	}
-	require.Nil(t, err, "Failed to fetch stuff")
+	suite.Assert().Nil(err, "Failed to fetch stuff")
 }
 
-func TestCanInitializeWithFetch(t *testing.T) {
-	logger := CreateLogger("test-helpers")
+func (suite *HelpersSuite) TestCanInitializeWithFetch() {
 	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
-		Logger:       logger,
+		Logger:       suite.Logger,
 	})
 
 	stuff := &Stuff{}
 	err := client.Fetch(stuff)
-	if err != nil {
-		logger.Errorf("Failed", err)
-	}
-	require.Nil(t, err, "Failed to fetch stuff")
+	suite.Assert().Nil(err, "Failed to fetch stuff")
 }
 
 type Stuff struct {
@@ -66,4 +63,39 @@ func (stuff *Stuff) Initialize(parameters ...interface{}) error {
 	stuff.Client = client
 	stuff.Logger = logger
 	return nil
+}
+
+// Suite Tools
+
+func (suite *HelpersSuite) SetupSuite() {
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
+	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
+}
+
+func (suite *HelpersSuite) TearDownSuite() {
+	if suite.T().Failed() {
+		suite.Logger.Warnf("At least one test failed, we are not cleaning")
+		suite.T().Log("At least one test failed, we are not cleaning")
+	} else {
+		suite.Logger.Infof("All tests succeeded, we are cleaning")
+	}
+	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
+}
+
+func (suite *HelpersSuite) BeforeTest(suiteName, testName string) {
+	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
+	suite.Start = time.Now()
+}
+
+func (suite *HelpersSuite) AfterTest(suiteName, testName string) {
+	duration := time.Since(suite.Start)
+	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }

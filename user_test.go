@@ -40,7 +40,13 @@ func (suite *UserSuite) TestCanUnmarshal() {
 
 func (suite *UserSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
-	suite.Logger = CreateLogger(fmt.Sprintf("test-%s.log", strings.ToLower(suite.Name)))
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	var (
@@ -67,6 +73,7 @@ func (suite *UserSuite) TearDownSuite() {
 		suite.Logger.Infof("All tests succeeded, we are cleaning")
 	}
 	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
 }
 
 func (suite *UserSuite) BeforeTest(suiteName, testName string) {

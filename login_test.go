@@ -2,8 +2,6 @@ package purecloud_test
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -65,11 +63,13 @@ func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 
 func (suite *LoginSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
-	logFolder := filepath.Join(".", "log")
-	err := os.MkdirAll(logFolder, os.ModePerm)
-	suite.Require().Nil(err, "Failed to create folder: %s", logFolder)
-	suite.Logger = logger.CreateWithDestination("test", fmt.Sprintf("file://%s/test-%s.log", logFolder, strings.ToLower(suite.Name)))
-	suite.Logger.SetFilterLevel(logger.TRACE)
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	var (
@@ -92,6 +92,7 @@ func (suite *LoginSuite) TearDownSuite() {
 		suite.Logger.Infof("All tests succeeded, we are cleaning")
 	}
 	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
 }
 
 func (suite *LoginSuite) BeforeTest(suiteName, testName string) {
