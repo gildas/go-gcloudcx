@@ -1,5 +1,12 @@
 # go-purecloud
 
+![GoVersion](https://img.shields.io/github/go-mod/go-version/gildas/go-purecloud)
+[![GoDoc](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/gildas/go-purecloud) 
+[![License](https://img.shields.io/github/license/gildas/go-purecloud)](https://github.com/gildas/go-purecloud/blob/master/LICENSE) 
+[![Report](https://goreportcard.com/badge/github.com/gildas/go-purecloud)](https://goreportcard.com/report/github.com/gildas/go-purecloud)  
+
+A Package to send requests to HTTP/REST services.
+
 PureCloud Client Library in GO
 
 Have a look at the examples/ folder for complete examples on how to use this library.
