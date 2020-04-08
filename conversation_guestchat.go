@@ -257,7 +257,7 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfuly. Response: %+v", response)
+		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }
@@ -299,7 +299,7 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfuly. Response: %+v", response)
+		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }

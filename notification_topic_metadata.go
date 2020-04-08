@@ -17,7 +17,7 @@ func (topic MetadataTopic) Match(topicName string) bool {
 	return topicName == "channel.metadata"
 }
 
-// Get the PureCloud Client associated with this
+// GetClient gets the PureCloud Client associated with this
 func (topic *MetadataTopic) GetClient() *Client {
 	return topic.Client
 }

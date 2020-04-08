@@ -9,6 +9,7 @@ import (
 	"github.com/gildas/go-errors"
 )
 
+// ChatMember describes a Chat Member
 type ChatMember struct {
 	ID            string            `json:"id,omitempty"`
 	DisplayName   string            `json:"displayName,omitempty"`

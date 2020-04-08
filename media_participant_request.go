@@ -1,5 +1,6 @@
 package purecloud
 
+// MediaParticipantRequest describes a request Media Participant
 type MediaParticipantRequest struct {
 	Wrapup        *Wrapup `json:"wrapup,omitempty"`
 	State         string  `json:"state,omitempty"`     // alerting, dialing, contacting, offering, connected, disconnected, terminated, converting, uploading, transmitting, none

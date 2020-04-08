@@ -8,6 +8,7 @@ import (
 	"github.com/gildas/go-errors"
 )
 
+// Participant describes a Chat Participant
 type Participant struct {
   ID                     string                  `json:"id"`
 	SelfURI                string                  `json:"selfUri"`
@@ -71,6 +72,7 @@ type Participant struct {
   ErrorInfo              *ErrorBody              `json:"errorInfo"`
 }
 
+// IsMember tells if the Participant is a memmber of the Conversation (Identifiable)
 func (participant Participant) IsMember(mediaType string, identifiable Identifiable) bool {
   switch strings.ToLower(mediaType) {
   case "call":

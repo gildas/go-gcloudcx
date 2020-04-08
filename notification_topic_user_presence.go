@@ -21,7 +21,7 @@ func (topic UserPresenceTopic) Match(topicName string) bool {
 	return strings.HasPrefix(topicName, "v2.users.") && strings.HasSuffix(topicName, ".presence")
 }
 
-// Get the PureCloud Client associated with this
+// GetClient gets the PureCloud Client associated with this
 func (topic *UserPresenceTopic) GetClient() *Client {
 	return topic.Client
 }

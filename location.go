@@ -43,6 +43,7 @@ type LocationAddress struct {
 	Street2     string `json:"street2"`
 }
 
+// LocationImage describes the image of a Location
 type LocationImage struct {
 	ImageURL   *url.URL `json:"-"`
 	Resolution string   `json:"resolution"`

@@ -9,7 +9,7 @@ import (
 	"github.com/gildas/go-logger"
 )
 
-// Quieue defines a PureCloud Queue
+// Queue defines a PureCloud Queue
 type Queue struct {
 	ID                    string         `json:"id"`
 	Name                  string         `json:"name"`
@@ -34,6 +34,7 @@ type RoutingTarget struct {
 	Address string `json:"targetAddress,omitempty"`
 }
 
+// FindQueueByName finds a Queue by its name
 func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	response := struct {
 		Entities   []*Queue `json:"entities"`

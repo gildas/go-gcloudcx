@@ -33,7 +33,7 @@ type ConversationEmail struct {
 	ErrorInfo         ErrorBody     `json:"errorInfo"`
 }
 
-// Attachemnt descibes an Email Attachment
+// Attachment describes an Email Attachment
 type Attachment struct {
 	AttachmentID  string `json:"attachmentId"`
 	Name          string `json:"name"`

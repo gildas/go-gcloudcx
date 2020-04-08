@@ -27,7 +27,7 @@ type ClientOptions struct {
 	Logger         *logger.Logger
 }
 
-// New creates a new PureCloud Client
+// NewClient creates a new PureCloud Client
 func NewClient(options *ClientOptions) *Client {
 	if options == nil {
 		options = &ClientOptions{}

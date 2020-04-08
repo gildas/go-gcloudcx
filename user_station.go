@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// UserStations describes a User Station
+// UserStation describes a User Station
 type UserStation struct {
 	// TODO: Find out what should be here!
 	ID             string            `json:"id"`

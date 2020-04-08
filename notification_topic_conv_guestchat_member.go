@@ -26,7 +26,7 @@ func (topic ConversationGuestChatMemberTopic) Match(topicName string) bool {
 	return strings.HasPrefix(topicName, "v2.conversations.chats.") && strings.HasSuffix(topicName, ".members")
 }
 
-// Get the PureCloud Client associated with this
+// GetClient gets the PureCloud Client associated with this
 func (topic *ConversationGuestChatMemberTopic) GetClient() *Client {
 	return topic.Client
 }

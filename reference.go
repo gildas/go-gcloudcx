@@ -1,6 +1,6 @@
 package purecloud
 
-// AddressableEntityRef describes an Entity that has an ID
+// EntityRef describes an Entity that has an ID
 type EntityRef struct {
 	ID string `json:"id"`
 }
