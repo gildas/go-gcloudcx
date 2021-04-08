@@ -39,9 +39,24 @@ func (suite *LoginSuite) TestCanLogin() {
 	suite.Assert().Nil(err, "Failed to login")
 }
 
-func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
+func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: "DEADID",
+		ClientID: "INVALID_ID",
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+	})
+	suite.Assert().NotNil(err, "Should have failed login in")
+
+	var apierr purecloud.APIError
+	ok := errors.As(err, &apierr)
+	suite.Require().Truef(ok, "Error is not a purecloud.APIError, error: %+v", err)
+	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
+	suite.Assert().Equal(errors.HTTPBadRequest.Code, apierr.Status)
+	suite.Assert().Equal("client not found: invalid_client", apierr.Error())
+}
+
+func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
+	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
 		Secret:   "WRONGSECRET",
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
