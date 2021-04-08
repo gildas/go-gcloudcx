@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/gildas/go-logger"
@@ -18,6 +19,9 @@ type HelpersSuite struct {
 	Start  time.Time
 }
 
+func TestHelpersSuite(t *testing.T) {
+	suite.Run(t, new(HelpersSuite))
+}
 func (suite *HelpersSuite) TestCanExtractClientAndLogger() {
 	client := purecloud.NewClient(&purecloud.ClientOptions{
 		DeploymentID: "12345676890",
