@@ -25,26 +25,6 @@
     {
       "resolution": "x96",
       "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/7fac0a12/4643/4d0e/86f3/2467894311b5.jpg"
-    },
-    {
-      "resolution": "x128",
-      "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/12e66044/828b/40e7/93d0/bd1432345d5d.jpg"
-    },
-    {
-      "resolution": "x200",
-      "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/2b169f90/4bc2/4712/a866/b35234523452.jpg"
-    },
-    {
-      "resolution": "x48",
-      "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/c9199e42/9161/4dc4/a6ef/2c87845672c2.jpg"
-    },
-    {
-      "resolution": "x300",
-      "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/eef83617/e7b9/4d51/b54a/e57753457e73.jpg"
-    },
-    {
-      "resolution": "x400",
-      "imageUri": "https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazon aws.com/dce99686/d9f2/4fed/8990/f27734562c63.jpg"
     }
   ],
   "version": 29,

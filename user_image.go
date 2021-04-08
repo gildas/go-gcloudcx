@@ -19,7 +19,7 @@ func (userImage UserImage) MarshalJSON() ([]byte, error) {
 	type surrogate UserImage
 	data, err := json.Marshal(struct {
 		surrogate
-		I *core.URL `json:"imageUrl"`
+		I *core.URL `json:"imageUri"`
 	}{
 		surrogate: surrogate(userImage),
 		I:         (*core.URL)(userImage.ImageURL),
@@ -32,7 +32,7 @@ func (userImage *UserImage) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate UserImage
 	var inner struct {
 		surrogate
-		I *core.URL `json:"imageUrl"`
+		I *core.URL `json:"imageUri"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)

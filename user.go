@@ -14,40 +14,43 @@ type User struct {
 	SelfURI             string                   `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
-	Department          string                   `json:"department"`
+	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title"`
 	Division            *Division                `json:"division"`
 	Mail                string                   `json:"email"`
-	Images              []UserImage              `json:"images"`
+	Images              []*UserImage              `json:"images"`
 	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
 	Addresses           []*Contact               `json:"addresses"`
 	State               string                   `json:"state"`
 	Presence            *UserPresence            `json:"presence,omitempty"`
-	OutOfOffice         *OutOfOffice             `json:"outOfOffice"`
+	OutOfOffice         *OutOfOffice             `json:"outOfOffice,omitempty"`
 	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`
 	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
-	ProfileSkills       []string                 `json:"profileSkills"`
-	Skills              []*UserRoutingSkill      `json:"skills"`
-	Languages           []*UserRoutingLanguage   `json:"languages"`
-	LanguagePreference  string                   `json:"languagePreference"`
-	Groups              []*Group                 `json:"groups"`
-	Station             *UserStations            `json:"station"`
-	Authorization       *UserAuthorization       `json:"authorization"`
+	ProfileSkills       []string                 `json:"profileSkills,omitempty"`
+	Skills              []*UserRoutingSkill      `json:"skills,omitempty"`
+	Languages           []*UserRoutingLanguage   `json:"languages,omitempty"`
+	LanguagePreference  string                   `json:"languagePreference,omitempty"`
+	Groups              []*Group                 `json:"groups,omitempty"`
+	Station             *UserStations            `json:"station,omitempty"`
+	Authorization       *UserAuthorization       `json:"authorization,omitempty"`
 	Employer            *EmployerInfo            `json:"employerInfo,omitempty"`
 	Manager             *User                    `json:"manager,omitempty"`
-	Certifications      []string                 `json:"certifications"`
-	Biography           *Biography               `json:"biography"`
+	Certifications      []string                 `json:"certifications,omitempty"`
+	Biography           *Biography               `json:"biography,omitempty"`
 	ConversationSummary *UserConversationSummary `json:"conversationSummary,omitempty"`
-	Locations           []*Location              `json:"locations"`
-	GeoLocation         *GeoLocation             `json:"geolocation"`
-	Chat                struct {
-		JabberID string `json:"jabberId"`
-	} `json:"chat"`
-	Version int            `json:"version"`
+	Locations           []*Location              `json:"locations,omitempty"`
+	GeoLocation         *GeoLocation             `json:"geolocation,omitempty"`
+	Chat                *Jabber                  `json:"chat,omitempty"`
+	Version             int                      `json:"version"`
+
 	Client  *Client        `json:"-"`
 	Logger  *logger.Logger `json:"-"`
 }
 
+// Jabber describe a Jabber ID for chats
+type Jabber struct {
+	ID string `json:"jabberId"`
+}
 // Initialize initializes this from the given Client
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
