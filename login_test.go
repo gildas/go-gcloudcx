@@ -1,3 +1,5 @@
+// +build integration
+
 package purecloud_test
 
 import (
