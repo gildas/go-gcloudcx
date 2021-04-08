@@ -28,7 +28,7 @@ type Group struct {
 
 // Initialize initializes this from the given Client
 //   implements Initializable
-//   if the user ID is not given, /users/me is fetched (if grant allows)
+//   if the group ID is given in group, the group is fetched
 func (group *Group) Initialize(parameters ...interface{}) error {
 	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
