@@ -11,6 +11,6 @@ require (
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/joho/godotenv v1.3.0 // indirect
-	github.com/stretchr/testify v1.5.1
+	github.com/stretchr/testify v1.7.0
 	google.golang.org/genproto v0.0.0-20200408120641-fbb3ad325eb7 // indirect
 )
