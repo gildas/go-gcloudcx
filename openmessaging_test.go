@@ -33,7 +33,7 @@ func TestOpenMessagingSuite(t *testing.T) {
 
 func (suite *OpenMessagingSuite) TestCanUnmarshal() {
 	integration := purecloud.OpenMessagingIntegration{}
-	err := Load("openmessagingintegration.json", &integration)
+	err := LoadObject("openmessagingintegration.json", &integration)
 	if err != nil {
 		suite.Logger.Errorf("Failed to Unmarshal", err)
 	}

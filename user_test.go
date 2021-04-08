@@ -31,7 +31,7 @@ func TestUserSuite(t *testing.T) {
 
 func (suite *UserSuite) TestCanUnmarshal() {
 	user := purecloud.User{}
-	err := Load("user.json", &user)
+	err := LoadObject("user.json", &user)
 	suite.Require().Nil(err, "Failed to unmarshal user. %s", err)
 	suite.Logger.Record("User", user).Infof("Got a user")
 	suite.Assert().NotEmpty(user.ID)
