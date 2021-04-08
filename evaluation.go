@@ -2,13 +2,14 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Evaluation describes an Evaluation (like belonging to Participant)
 type Evaluation struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-
+	ID             uuid.UUID             `json:"id"`
+	Name           string                `json:"name"`
 	Status         string                `json:"status"`
 	Queue          *Queue                `json:"queue"`
 	Conversation   *Conversation         `json:"conversation"`
@@ -25,9 +26,9 @@ type Evaluation struct {
 
 // EvaluationForm describes an Evaluation Form
 type EvaluationForm struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	SelfURI string `json:"selfUri"`
+	ID      uuid.UUID `json:"id"`
+	Name    string    `json:"name"`
+	SelfURI string    `json:"selfUri"`
 
 	ModifiedDate time.Time `json:"modifiedDate"`
 	Published    bool      `json:"published"`
@@ -39,7 +40,7 @@ type EvaluationForm struct {
 
 // EvaluationQuestionGroup describes a Group of Evaluation Questions
 type EvaluationQuestionGroup struct {
-	ID                      string                `json:"id"`
+	ID                      uuid.UUID             `json:"id"`
 	Name                    string                `json:"name"`
 	Type                    string                `json:"type"`
 	DefaultAnswersToHighest bool                  `json:"defaultAnswersToHighest"`
@@ -53,7 +54,7 @@ type EvaluationQuestionGroup struct {
 
 // EvaluationQuestion describe an Evaluation Question
 type EvaluationQuestion struct {
-	ID                  string               `json:"id"`
+	ID                  uuid.UUID            `json:"id"`
 	Type                string               `json:"type"`
 	Text                string               `json:"text"`
 	HelpText            string               `json:"helpText"`
@@ -73,7 +74,7 @@ type VisibilityCondition struct {
 
 // AnswerOption describes an Answer Option
 type AnswerOption struct {
-	ID    string `json:"id"`
+	ID    uuid.UUID `json:"id"`
 	Text  string `json:"text"`
 	Value int    `json:"value"`
 }
@@ -94,7 +95,7 @@ type DomainEntityListingEvaluationForm struct {
 
 // Calibration  describe a Calibration
 type Calibration struct {
-	ID              string          `json:"id"`
+	ID              uuid.UUID       `json:"id"`
 	Name            string          `json:"name"`
 	SelfUri         string          `json:"selfUri"`
 	Calibrator      *User           `json:"calibrator"`
@@ -121,7 +122,7 @@ type EvaluationScoringSet struct {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (evaluation Evaluation) GetID() string {
+func (evaluation Evaluation) GetID() uuid.UUID {
 	return evaluation.ID
 }
 
@@ -131,5 +132,5 @@ func (evaluation Evaluation) String() string {
 	if len(evaluation.Name) != 0 {
 		return evaluation.Name
 	}
-	return evaluation.ID
+	return evaluation.ID.String()
 }

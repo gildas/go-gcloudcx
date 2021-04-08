@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	purecloud "github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
 )
 
 
@@ -37,8 +38,8 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 }
 
 func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
-	integration := &purecloud.OpenMessagingIntegration{ ID: "34071108-1569-4cb0-9137-a326b8a9e815"}
-	err := integration.Initialize(suite.Client)
+	integration := &purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(suite.Client, uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"))
 	suite.Require().Nil(err, "Failed to fetch integration")
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	err = integration.Delete()

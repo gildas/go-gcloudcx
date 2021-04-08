@@ -14,6 +14,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
@@ -108,7 +109,7 @@ func main() {
 
 	Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       *region,
-		DeploymentID: *deploymentID,
+		DeploymentID: uuid.MustParse(*deploymentID),
 		Logger:       Log,
 	}).SetAuthorizationGrant(&purecloud.AuthorizationCodeGrant{
 		ClientID:    *clientID,

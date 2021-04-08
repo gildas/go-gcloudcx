@@ -5,11 +5,12 @@ import (
 	"strings"
 
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // User describes a PureCloud User
 type User struct {
-	ID                  string                   `json:"id"`
+	ID                  uuid.UUID                `json:"id"`
 	SelfURI             string                   `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
@@ -87,7 +88,7 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (user User) GetID() string {
+func (user User) GetID() uuid.UUID {
 	return user.ID
 }
 
@@ -103,5 +104,5 @@ func (user User) String() string {
 	if len(user.Mail) > 0 {
 		return user.Mail
 	}
-	return user.ID
+	return user.ID.String()
 }

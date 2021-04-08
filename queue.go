@@ -7,11 +7,12 @@ import (
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // Queue defines a PureCloud Queue
 type Queue struct {
-	ID                    string         `json:"id"`
+	ID                    uuid.UUID      `json:"id"`
 	Name                  string         `json:"name"`
 	CreatedBy             *User          `json:"-"`
 	ModifiedBy            string         `json:"modifiedBy"`
@@ -68,7 +69,7 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (queue Queue) GetID() string {
+func (queue Queue) GetID() uuid.UUID {
 	return queue.ID
 }
 
@@ -76,7 +77,7 @@ func (queue Queue) String() string {
 	if len(queue.Name) > 0 {
 		return queue.Name
 	}
-	return queue.ID
+	return queue.ID.String()
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -84,7 +85,7 @@ func (queue *Queue) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate Queue
 	var inner struct {
 		surrogate
-		CreatedByID string `json:"createdBy"`
+		CreatedByID uuid.UUID `json:"createdBy"`
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {

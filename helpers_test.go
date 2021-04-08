@@ -7,8 +7,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -22,18 +24,9 @@ type HelpersSuite struct {
 func TestHelpersSuite(t *testing.T) {
 	suite.Run(t, new(HelpersSuite))
 }
-func (suite *HelpersSuite) TestCanExtractClientAndLogger() {
-	client := purecloud.NewClient(&purecloud.ClientOptions{
-		DeploymentID: "12345676890",
-		Logger:       suite.Logger,
-	})
-	_, _, err := purecloud.ExtractClientAndLogger(client)
-	suite.Assert().Nil(err, "Failed to fetch stuff")
-}
-
 func (suite *HelpersSuite) TestCanRunInitializable() {
 	client := purecloud.NewClient(&purecloud.ClientOptions{
-		DeploymentID: "12345676890",
+		DeploymentID: uuid.New(),
 		Logger:       suite.Logger,
 	})
 
@@ -44,7 +37,7 @@ func (suite *HelpersSuite) TestCanRunInitializable() {
 
 func (suite *HelpersSuite) TestCanInitializeWithFetch() {
 	client := purecloud.NewClient(&purecloud.ClientOptions{
-		DeploymentID: "12345676890",
+		DeploymentID: uuid.New(),
 		Logger:       suite.Logger,
 	})
 
@@ -60,12 +53,28 @@ type Stuff struct {
 }
 
 func (stuff *Stuff) Initialize(parameters ...interface{}) error {
-	client, logger, err := purecloud.ExtractClientAndLogger(parameters...)
-	if err != nil {
-		return err
+	var (
+		client *purecloud.Client
+		log    *logger.Logger
+	)
+
+	for _, parameter := range parameters {
+		switch object := parameter.(type) {
+		case *purecloud.Client:
+			client = object
+		case *logger.Logger:
+			log = object
+		}
 	}
 	stuff.Client = client
-	stuff.Logger = logger
+	if log != nil {
+		stuff.Logger = log
+	} else {
+		stuff.Logger = client.Logger.Child("stuff", "stuff")
+	}
+	if stuff.Client == nil {
+		return errors.ArgumentMissing.WithStack()
+	}
 	return nil
 }
 

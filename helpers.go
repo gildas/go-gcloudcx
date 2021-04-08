@@ -3,6 +3,7 @@ package purecloud
 import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // ExtractClientAndLogger extracts a Client and a logger.Logger from its parameters

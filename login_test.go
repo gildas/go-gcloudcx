@@ -12,6 +12,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
@@ -33,7 +34,7 @@ func TestLoginSuite(t *testing.T) {
 
 func (suite *LoginSuite) TestCanLogin() {
 	err := suite.Client.SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	}).Login()
 	suite.Assert().Nil(err, "Failed to login")
@@ -41,7 +42,7 @@ func (suite *LoginSuite) TestCanLogin() {
 
 func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: "INVALID_ID",
+		ClientID: uuid.New(), // that UUID should not be anywhere in GCloud
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
@@ -56,7 +57,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
 
 func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   "WRONGSECRET",
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
@@ -71,7 +72,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
 
 func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})
 	suite.Assert().Nil(err, "Failed to login")
@@ -93,7 +94,7 @@ func (suite *LoginSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       region,

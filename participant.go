@@ -6,24 +6,24 @@ import (
 	"time"
 
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // Participant describes a Chat Participant
 type Participant struct {
-	ID              string `json:"id"`
-	SelfURI         string `json:"selfUri"`
-	Name            string `json:"name"`
-	ParticipantType string `json:"participantType"`
-	State           string `json:"state"`
-	Held            bool   `json:"held"`
-	Direction       string `json:"direction"`
-
-	StartTime      time.Time `json:"startTime"`
-	ConnectedTime  time.Time `json:"connectedTime"`
-	EndTime        time.Time `json:"endTime"`
-	StartHoldTime  time.Time `json:"startHoldTime"`
-	Purpose        string    `json:"purpose"`
-	DisconnectType string    `json:"disconnectType"`
+	ID              uuid.UUID `json:"id"`
+	SelfURI         string    `json:"selfUri"`
+	Name            string    `json:"name"`
+	ParticipantType string    `json:"participantType"`
+	State           string    `json:"state"`
+	Held            bool      `json:"held"`
+	Direction       string    `json:"direction"`
+	StartTime      time.Time  `json:"startTime"`
+	ConnectedTime  time.Time  `json:"connectedTime"`
+	EndTime        time.Time  `json:"endTime"`
+	StartHoldTime  time.Time  `json:"startHoldTime"`
+	Purpose        string     `json:"purpose"`
+	DisconnectType string     `json:"disconnectType"`
 
 	User                   *User            `json:"user"`
 	ExternalContact        *DomainEntityRef `json:"externalContact"`
@@ -143,7 +143,7 @@ func (participant Participant) IsMember(mediaType string, identifiable Identifia
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (participant Participant) GetID() string {
+func (participant Participant) GetID() uuid.UUID {
 	return participant.ID
 }
 
@@ -153,7 +153,7 @@ func (participant Participant) String() string {
 	if len(participant.Name) != 0 {
 		return participant.Name
 	}
-	return participant.ID
+	return participant.ID.String()
 }
 
 // UpdateState updates the state of the Participant in target
@@ -163,7 +163,7 @@ func (participant *Participant) UpdateState(target StateUpdater, state string) e
 
 // MarshalJSON marshals this into JSON
 func (participant Participant) MarshalJSON() ([]byte, error) {
-	userID := ""
+	userID := uuid.Nil
 	userURI := ""
 	if participant.User != nil {
 		userID = participant.User.ID
@@ -172,10 +172,10 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
 	type surrogate Participant
 	data, err := json.Marshal(struct {
 		surrogate
-		UserID            string `json:"userId"`
-		UserURI           string `json:"userUri"`
-		AlertingTimeoutMs int64  `json:"alertingTimeoutMs"`
-		WrapupTimeoutMs   int64  `json:"wrapupTimeoutMs"`
+		UserID            uuid.UUID `json:"userId"`
+		UserURI           string    `json:"userUri"`
+		AlertingTimeoutMs int64     `json:"alertingTimeoutMs"`
+		WrapupTimeoutMs   int64     `json:"wrapupTimeoutMs"`
 	}{
 		surrogate:         surrogate(participant),
 		UserID:            userID,
@@ -191,10 +191,10 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate Participant
 	var inner struct {
 		surrogate
-		UserID            string `json:"userId"`
-		UserURI           string `json:"userUri"`
-		AlertingTimeoutMs int64  `json:"alertingTimeoutMs"`
-		WrapupTimeoutMs   int64  `json:"wrapupTimeoutMs"`
+		UserID            uuid.UUID `json:"userId"`
+		UserURI           string    `json:"userUri"`
+		AlertingTimeoutMs int64     `json:"alertingTimeoutMs"`
+		WrapupTimeoutMs   int64     `json:"wrapupTimeoutMs"`
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {

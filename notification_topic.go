@@ -23,6 +23,14 @@ type NotificationTopic interface {
 	TopicFor(identifiables ...Identifiable) string
 }
 
+// ChannelTopic describes a Topic subscription channel
+//
+// See https://developer.genesys.cloud/api/rest/v2/notifications/notification_service#topic-subscriptions
+type ChannelTopic struct {
+	ID string `json:"id"` // ID is a string of the form v2.xxx.uuuid.yyy
+	SelfURI string `json:"selfUri,omitempty"`
+}
+
 // NotificationTopicDefinition defines a Notification Topic that can subscribed to
 type NotificationTopicDefinition struct {
 	ID          string                 `json:"id"`

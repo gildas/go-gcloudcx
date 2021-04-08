@@ -1,25 +1,27 @@
 package purecloud
 
+import "github.com/google/uuid"
+
 // EntityRef describes an Entity that has an ID
 type EntityRef struct {
-	ID string `json:"id"`
+	ID uuid.UUID `json:"id"`
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (ref EntityRef) GetID() string {
+func (ref EntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
 
 // AddressableEntityRef describes an Entity that can be addressed
 type AddressableEntityRef struct {
-	ID      string `json:"id"`
-	SelfURI string `json:"selfUri"`
+	ID      uuid.UUID `json:"id"`
+	SelfURI string    `json:"selfUri,omitempty"`
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (ref AddressableEntityRef) GetID() string {
+func (ref AddressableEntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
 
@@ -31,14 +33,14 @@ func (ref AddressableEntityRef) GetURI() string {
 
 // DomainEntityRef describes a DomainEntity Reference
 type DomainEntityRef struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	SelfURI string `json:"selfUri"`
+	ID      uuid.UUID `json:"id"`
+	Name    string `json:"name,omitempty"`
+	SelfURI string `json:"selfUri,omitempty"`
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (ref DomainEntityRef) GetID() string {
+func (ref DomainEntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
 

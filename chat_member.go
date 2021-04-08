@@ -7,11 +7,12 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // ChatMember describes a Chat Member
 type ChatMember struct {
-	ID            string            `json:"id,omitempty"`
+	ID            uuid.UUID         `json:"id,omitempty"`
 	DisplayName   string            `json:"displayName,omitempty"`
 	AvatarURL     *url.URL          `json:"-"`
 	Role          string            `json:"role,omitempty"`
@@ -24,7 +25,7 @@ type ChatMember struct {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (member ChatMember) GetID() string {
+func (member ChatMember) GetID() uuid.UUID {
 	return member.ID
 }
 
@@ -34,7 +35,7 @@ func (member ChatMember) String() string {
 	if len(member.DisplayName) != 0 {
 		return member.DisplayName
 	}
-	return member.ID
+	return member.ID.String()
 }
 
 // MarshalJSON marshals this into JSON

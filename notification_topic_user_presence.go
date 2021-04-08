@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // UserPresenceTopic describes a Topic about User's Presence
@@ -57,7 +58,10 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence")
+	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence"))
+	if err != nil {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id",inner.TopicName))
+	}
 	topic.Name = inner.TopicName
 	topic.Presence = inner.Presence
 	topic.User = &User{ID: userID}

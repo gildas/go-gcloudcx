@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // ConversationGuestChatMessageTopic describes a Topic about User's Presence
 type ConversationGuestChatMessageTopic struct {
-	ID            string
+	ID            uuid.UUID
 	Name          string
 	Conversation  *ConversationGuestChat
 	Sender        *ChatMember
@@ -55,7 +56,7 @@ func (topic *ConversationGuestChatMessageTopic) UnmarshalJSON(payload []byte) (e
 	var inner struct {
 		TopicName string `json:"topicName"`
 		EventBody struct {
-			ID           string                 `json:"id,omitempty"`
+			ID           uuid.UUID              `json:"id,omitempty"`
 			Conversation *ConversationGuestChat `json:"conversation,omitempty"`
 			Sender       *ChatMember            `json:"sender,omitempty"`
 			Body         string                 `json:"body,omitempty"`
@@ -71,7 +72,10 @@ func (topic *ConversationGuestChatMessageTopic) UnmarshalJSON(payload []byte) (e
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	conversationID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages")
+	conversationID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.conversations.chats."), ".messages"))
+	if err != nil {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
+	}
 	topic.Name = inner.TopicName
 	topic.Type = inner.Metadata.Type
 	topic.Conversation = &ConversationGuestChat{ID: conversationID}

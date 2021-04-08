@@ -2,11 +2,12 @@ package purecloud
 
 import (
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // Organization describes a PureCloud Organization
 type Organization struct {
-	ID                         string          `json:"id"`
+	ID                         uuid.UUID       `json:"id"`
 	Name                       string          `json:"name"`
 	DefaultLanguage            string          `json:"defaultLanguage"`
 	ThirdPartyOrganizationName string          `json:"thirdPartyOrgName"`
@@ -58,7 +59,7 @@ func (client *Client) GetMyOrganization() (*Organization, error) {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (organization Organization) GetID() string {
+func (organization Organization) GetID() uuid.UUID {
 	return organization.ID
 }
 
@@ -68,5 +69,5 @@ func (organization Organization) String() string {
 	if len(organization.Name) > 0 {
 		return organization.Name
 	}
-	return organization.ID
+	return organization.ID.String()
 }

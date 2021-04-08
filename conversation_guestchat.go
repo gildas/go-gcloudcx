@@ -11,23 +11,24 @@ import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-request"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 // ConversationGuestChat describes a Guest Chat
 type ConversationGuestChat struct {
-	ID            string                 `json:"id"`
-	SelfURI       string                 `json:"selfUri,omitempty"`
-	Target        *RoutingTarget         `json:"-"`
-	Guest         *ChatMember            `json:"member,omitempty"`
-	Members       map[string]*ChatMember `json:"-"`
-	JWT           string                 `json:"jwt,omitempty"`
-	EventStream   string                 `json:"eventStreamUri,omitempty"`
-	Socket        *websocket.Conn        `json:"-"`
-	TopicReceived chan NotificationTopic `json:"-"`
-	LogHeartbeat  bool                   `json:"logHeartbeat"`
-	Client        *Client                `json:"-"`
-	Logger        *logger.Logger         `json:"-"`
+	ID            uuid.UUID                 `json:"id"`
+	SelfURI       string                    `json:"selfUri,omitempty"`
+	Target        *RoutingTarget            `json:"-"`
+	Guest         *ChatMember               `json:"member,omitempty"`
+	Members       map[uuid.UUID]*ChatMember `json:"-"`
+	JWT           string                    `json:"jwt,omitempty"`
+	EventStream   string                    `json:"eventStreamUri,omitempty"`
+	Socket        *websocket.Conn           `json:"-"`
+	TopicReceived chan NotificationTopic    `json:"-"`
+	LogHeartbeat  bool                      `json:"logHeartbeat"`
+	Client        *Client                   `json:"-"`
+	Logger        *logger.Logger            `json:"-"`
 }
 
 // Initialize initializes this from the given Client
@@ -67,8 +68,8 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 			RoutingTarget  *RoutingTarget `json:"routingTarget"`
 			Guest          *ChatMember    `json:"memberInfo"`
 		}{
-			OrganizationID: client.Organization.ID,
-			DeploymentID:   client.DeploymentID,
+			OrganizationID: client.Organization.ID.String(),
+			DeploymentID:   client.DeploymentID.String(),
 			RoutingTarget:  target,
 			Guest:          guest,
 		},
@@ -84,7 +85,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	conversation.Guest.Role = guest.Role
 	conversation.Guest.State = guest.State
 	conversation.Guest.Custom = guest.Custom
-	conversation.Members = map[string]*ChatMember{}
+	conversation.Members = map[uuid.UUID]*ChatMember{}
 	conversation.Members[conversation.Guest.ID] = conversation.Guest
 	conversation.TopicReceived = make(chan NotificationTopic)
 	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
@@ -93,14 +94,14 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (conversation ConversationGuestChat) GetID() string {
+func (conversation ConversationGuestChat) GetID() uuid.UUID {
 	return conversation.ID
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (conversation ConversationGuestChat) String() string {
-	return conversation.ID
+	return conversation.ID.String()
 }
 
 // Connect connects a Guest Chat to its websocket and starts its message loop

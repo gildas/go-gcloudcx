@@ -9,51 +9,49 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // ConversationChat describes a Agent-side Chat
 type ConversationChat struct {
-	ID             string `json:"id"`
-	SelfURI        string `json:"selfUri,omitempty"`
-	State          string `json:"state"`          // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction      string `json:"direction"`      // inbound,outbound
-	DisconnectType string `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
-	Held           bool   `json:"held"`
-
-	ConnectedTime     time.Time `json:"connectedTime"`
-	DisconnectedTime  time.Time `json:"disconnectedTime"`
-	StartAlertingTime time.Time `json:"startAlertingTime"`
-	StartHoldTime     time.Time `json:"startHoldTime"`
-
-	Participants   []*Participant  `json:"participants"`
-	Segments       []Segment       `json:"segments"`
-	Provider       string          `json:"provider"`
-	PeerID         string          `json:"peerId"`
-	RoomID         string          `json:"roomId"`
-	ScriptID       string          `json:"scriptId"`
-	RecordingID    string          `json:"recordingId"`
-	AvatarImageURL *url.URL        `json:"-"`
-	JourneyContext *JourneyContext `json:"journeyContext"`
-
-	Client *Client        `json:"-"`
-	Logger *logger.Logger `json:"-"`
+	ID                uuid.UUID       `json:"id"`
+	SelfURI           string          `json:"selfUri,omitempty"`
+	State             string          `json:"state"`          // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Direction         string          `json:"direction"`      // inbound,outbound
+	DisconnectType    string          `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
+	Held              bool            `json:"held"`
+	ConnectedTime     time.Time       `json:"connectedTime"`
+	DisconnectedTime  time.Time       `json:"disconnectedTime"`
+	StartAlertingTime time.Time       `json:"startAlertingTime"`
+	StartHoldTime     time.Time       `json:"startHoldTime"`
+	Participants      []*Participant  `json:"participants"`
+	Segments          []Segment       `json:"segments"`
+	Provider          string          `json:"provider"`
+	PeerID            string          `json:"peerId"`
+	RoomID            string          `json:"roomId"`
+	ScriptID          string          `json:"scriptId"`
+	RecordingID       string          `json:"recordingId"`
+	AvatarImageURL    *url.URL        `json:"-"`
+	JourneyContext    *JourneyContext `json:"journeyContext"`
+	Client            *Client         `json:"-"`
+	Logger            *logger.Logger  `json:"-"`
 }
 
 // JourneyContext  describes a Journey Context
 type JourneyContext struct {
 	Customer struct {
-		ID     string `json:"id"`
-		IDType string `json:"idType"`
+		ID     uuid.UUID `json:"id"`
+		IDType string    `json:"idType"`
 	} `json:"customer"`
 	CustomerSession struct {
-		ID   string `json:"id"`
-		Type string `json:"type"`
+		ID   uuid.UUID `json:"id"`
+		Type string    `json:"type"`
 	} `json:"customerSession"`
 	TriggeringAction struct {
-		ID        string `json:"id"`
+		ID        uuid.UUID `json:"id"`
 		ActionMap struct {
-			ID      string `json:"id"`
-			Version int    `json:"version"`
+			ID      uuid.UUID `json:"id"`
+			Version int       `json:"version"`
 		} `json:"actionMap"`
 	} `json:"triggeringAction"`
 }
@@ -79,14 +77,14 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (conversation ConversationChat) GetID() string {
+func (conversation ConversationChat) GetID() uuid.UUID {
 	return conversation.ID
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (conversation ConversationChat) String() string {
-	return conversation.ID
+	return conversation.ID.String()
 }
 
 // Disconnect disconnect an Identifiable from this
@@ -113,10 +111,10 @@ func (conversation ConversationChat) UpdateState(identifiable Identifiable, stat
 //   implement Transferrer
 func (conversation ConversationChat) Transfer(identifiable Identifiable, queue Identifiable) error {
 	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
+		NewURI("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
 		struct {
 			ID string `json:"queueId"`
-		}{ID: queue.GetID()},
+		}{ID: queue.GetID().String()},
 		nil,
 	)
 }

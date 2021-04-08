@@ -8,28 +8,30 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 type OpenMessagingIntegration struct {
-	ID           string           `json:"id"`
-	Name         string           `json:"name"`
-	WebhookURL   *url.URL         `json:"-"`
-	WebhookToken string           `json:"outboundNotificationWebhookSignatureSecretToken"`
-	Recipient    *DomainEntityRef `json:"recipient,omitempty"`
-	DateCreated  time.Time        `json:"dateCreated,omitempty"`
-	DateModified time.Time        `json:"dateModified,omitempty"`
-	CreatedBy    *DomainEntityRef `json:"createdBy,omitempty"`
-	ModifiedBy   *DomainEntityRef `json:"modifiedBy,omitempty"`
-	CreateStatus string           `json:"createStatus,omitempty"`
-	CreateError  *ErrorBody       `json:"createError,omitempty"`
-	SelfURI      string           `json:"selfUri,omitempty"`
-	Client       *Client          `json:"-"`
-	Logger       *logger.Logger   `json:"-"`
+	ID               uuid.UUID             `json:"id"`
+	Name             string                `json:"name"`
+	WebhookURL       *url.URL              `json:"-"`
+	WebhookToken     string                `json:"outboundNotificationWebhookSignatureSecretToken"`
+	Recipient        *DomainEntityRef      `json:"recipient,omitempty"`
+	SupportedContent *AddressableEntityRef `json:"supportedContent,omitempty"`
+	DateCreated      time.Time             `json:"dateCreated,omitempty"`
+	CreatedBy        *DomainEntityRef      `json:"createdBy,omitempty"`
+	DateModified     time.Time             `json:"dateModified,omitempty"`
+	ModifiedBy       *DomainEntityRef      `json:"modifiedBy,omitempty"`
+	CreateStatus     string                `json:"createStatus,omitempty"`
+	CreateError      *ErrorBody            `json:"createError,omitempty"`
+	SelfURI          URI                   `json:"selfUri,omitempty"`
+	Client           *Client               `json:"-"`
+	Logger           *logger.Logger        `json:"-"`
 }
 
 // Initialize initializes this from the given Client
 //   implements Initializable
-//   if the integration ID is given in integration, the integration is fetched
+//   if the parameters contain a uuid.UUID, the corresponding integration is fetched
 func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) error {
 	client, logger, err := ExtractClientAndLogger(parameters...)
 	if err != nil {
@@ -47,7 +49,7 @@ func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (integration OpenMessagingIntegration) GetID() string {
+func (integration OpenMessagingIntegration) GetID() uuid.UUID {
 	return integration.ID
 }
 
@@ -57,7 +59,7 @@ func (integration OpenMessagingIntegration) String() string {
 	if len(integration.Name) > 0 {
 		return integration.Name
 	}
-	return integration.ID
+	return integration.ID.String()
 }
 
 // FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object

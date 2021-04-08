@@ -9,6 +9,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
@@ -53,7 +54,7 @@ func (suite *UserSuite) SetupSuite() {
 
 	var (
 		region   = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+		clientID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
 

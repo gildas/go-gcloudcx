@@ -5,12 +5,13 @@ import (
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
+	"github.com/google/uuid"
 )
 
 // ClientCredentialsGrant implements PureCloud's Client Credentials Grants
 //   See: https://developer.mypurecloud.com/api/rest/authorization/use-client-credentials.html
 type ClientCredentialsGrant struct {
-	ClientID string
+	ClientID uuid.UUID
 	Secret   string
 	Token    AccessToken
 }
@@ -41,7 +42,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	err = client.SendRequest(
 		"https://login."+client.Region+"/oauth/token",
 		&request.Options{
-			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
+			Authorization: request.BasicAuthorization(grant.ClientID.String(), grant.Secret),
 			Payload: map[string]string{
 				"grant_type": "client_credentials",
 			},

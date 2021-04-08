@@ -10,13 +10,15 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 // NotificationChannel defines a Notification Channel
+//
 //   See: https://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html
 type NotificationChannel struct {
-	ID            string                 `json:"id"`
+	ID            uuid.UUID              `json:"id"`
 	ConnectURL    *url.URL               `json:"-"`
 	ExpiresOn     time.Time              `json:"expires"`
 	LogHeartbeat  bool                   `json:"logHeartbeat"`
@@ -27,6 +29,7 @@ type NotificationChannel struct {
 }
 
 // CreateNotificationChannel creates a new channel for notifications
+//
 //   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
 func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) {
 	var err error
@@ -62,13 +65,13 @@ func (channel *NotificationChannel) Close() (err error) {
 		}
 		channel.Socket = nil
 	}
-	channel.ID = ""
+	channel.ID = uuid.Nil
 	return
 }
 
 // GetTopics gets all subscription topics set on this
 func (channel *NotificationChannel) GetTopics() ([]string, error) {
-	results := struct{ Entities []AddressableEntityRef }{}
+	results := struct{ Entities []ChannelTopic }{}
 	if err := channel.Client.Get(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
@@ -84,12 +87,12 @@ func (channel *NotificationChannel) GetTopics() ([]string, error) {
 
 // SetTopics sets the subscriptions. It overrides any previous subscriptions
 func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error) {
-	channelTopics := make([]AddressableEntityRef, len(topics))
+	channelTopics := make([]ChannelTopic, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
 	results := struct {
-		Entities []AddressableEntityRef `json:"entities"`
+		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Put(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
@@ -121,12 +124,12 @@ func (channel *NotificationChannel) IsSubscribed(topic string) bool {
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
 func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error) {
-	channelTopics := make([]AddressableEntityRef, len(topics))
+	channelTopics := make([]ChannelTopic, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
 	}
 	results := struct {
-		Entities []AddressableEntityRef `json:"entities"`
+		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Post(
 		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
@@ -142,7 +145,9 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 	return ids, nil
 }
 
-// Unsubscribe unsubscribes from some topics, if there is no argument, unsubscribe from all topics
+// Unsubscribe unsubscribes from some topics,
+//
+// If there is no argument, unsubscribe from all topics
 func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
 	if len(topics) == 0 {
 		return channel.Client.Delete(fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID), nil)
@@ -229,13 +234,15 @@ func (channel *NotificationChannel) messageLoop() {
 }
 
 // GetID gets the identifier of this
+//
 //   implements Identifiable
-func (channel NotificationChannel) GetID() string {
+func (channel NotificationChannel) GetID() uuid.UUID {
 	return channel.ID
 }
 
 // String gets a string version
+//
 //   implements the fmt.Stringer interface
 func (channel NotificationChannel) String() string {
-	return channel.ID
+	return channel.ID.String()
 }

@@ -3,17 +3,17 @@ package main
 import (
 	"html/template"
 	"net/http"
-	"strings"
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
 )
 
 // findParticipant finds a participant after its user id and purpose
 func findParticipant(participants []*purecloud.Participant, user *purecloud.User, purpose string) *purecloud.Participant {
 	for _, participant := range participants {
-		if participant.Purpose == purpose && participant.User != nil && strings.Compare(user.ID, participant.User.ID) == 0 {
+		if participant.Purpose == purpose && participant.User != nil && user.ID == participant.User.ID {
 			return participant
 		}
 	}
@@ -41,13 +41,13 @@ func MainHandler() http.Handler {
 		// Initialize data for the Main Page Template
 		viewData := struct {
 			Region         string
-			DeploymentID   string
-			OrganizationID string
+			DeploymentID   uuid.UUID
+			OrganizationID uuid.UUID
 			AgentQueue     *purecloud.Queue
 			BotQueue       *purecloud.Queue
-			BotQueueID     string
+			BotQueueID     uuid.UUID
 			User           *purecloud.User
-			ChannelID      string
+			ChannelID      uuid.UUID
 			WebsocketURL   string
 			WebRootPath    string
 			LoggedIn       bool

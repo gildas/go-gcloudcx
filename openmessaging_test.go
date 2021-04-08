@@ -1,7 +1,9 @@
 package purecloud_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,6 +11,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
@@ -36,7 +39,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshal() {
 	}
 	suite.Require().Nil(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
-	suite.Assert().NotEmpty(integration.ID)
+	suite.Assert().Equal("34071108-1569-4cb0-9137-a326b8a9e815", integration.ID.String())
 	suite.Assert().NotEmpty(integration.CreatedBy.ID)
 	suite.Assert().NotEmpty(integration.CreatedBy.SelfURI, "CreatedBy SelfURI should not be empty")
 	suite.Assert().Equal(2021, integration.DateCreated.Year())
@@ -51,6 +54,37 @@ func (suite *OpenMessagingSuite) TestCanUnmarshal() {
 	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
 	suite.Require().NotNil(integration.WebhookURL)
 	suite.Assert().Equal("https://www.acme.com/purecloud", integration.WebhookURL.String())
+}
+
+func (suite *OpenMessagingSuite) TestCanMarshal() {
+	integration := purecloud.OpenMessagingIntegration{
+		ID:               uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"),
+		Name:             "TEST-GO-PURECLOUD",
+		WebhookURL:       core.Must(url.Parse("https://www.acme.com/purecloud")).(*url.URL),
+		WebhookToken:     "DEADBEEF",
+		SupportedContent: &purecloud.AddressableEntityRef{
+			ID:      uuid.MustParse("832066dd-6030-46b1-baeb-b89b681c6636"),
+			SelfURI: "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636",
+		},
+		DateCreated:      time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
+		CreatedBy:        &purecloud.DomainEntityRef{
+			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
+			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+		},
+		DateModified:     time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
+		ModifiedBy:       &purecloud.DomainEntityRef{
+			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
+			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+		},
+		CreateStatus:     "Initiated",
+		SelfURI:          "/api/v2/conversations/messaging/integrations/open/34071108-1569-4cb0-9137-a326b8a9e815",
+	}
+
+	data, err := json.Marshal(integration)
+	suite.Require().Nil(err, "Failed to marshal OpenMessagingIntegration. %s", err)
+	expected, err := LoadFile("openmessagingintegration.json")
+	suite.Require().Nil(err, "Failed to Load Data. %s", err)
+	suite.Assert().JSONEq(string(expected), string(data))
 }
 
 // Suite Tools
@@ -69,10 +103,10 @@ func (suite *OpenMessagingSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 		token        = core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", "")
-		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       region,

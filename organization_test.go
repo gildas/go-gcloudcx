@@ -11,6 +11,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
@@ -72,9 +73,9 @@ func (suite *OrganizationSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
-		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
