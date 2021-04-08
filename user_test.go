@@ -9,6 +9,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
 	purecloud "github.com/gildas/go-purecloud"
@@ -39,6 +40,7 @@ func (suite *UserSuite) TestCanUnmarshal() {
 // Suite Tools
 
 func (suite *UserSuite) SetupSuite() {
+	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
