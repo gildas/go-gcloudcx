@@ -2,7 +2,6 @@ package purecloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"strings"
 	"time"
@@ -73,7 +72,7 @@ func (channel *NotificationChannel) Close() (err error) {
 func (channel *NotificationChannel) GetTopics() ([]string, error) {
 	results := struct{ Entities []ChannelTopic }{}
 	if err := channel.Client.Get(
-		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
+		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
 	); err != nil {
 		return []string{}, err // err should already be decorated by Client
@@ -95,7 +94,7 @@ func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error
 		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Put(
-		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
+		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
 	); err != nil {
@@ -132,7 +131,7 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Post(
-		fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID),
+		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
 	); err != nil {
@@ -150,7 +149,7 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 // If there is no argument, unsubscribe from all topics
 func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
 	if len(topics) == 0 {
-		return channel.Client.Delete(fmt.Sprintf("/notifications/channels/%s/subscriptions", channel.ID), nil)
+		return channel.Client.Delete(NewURI("/notifications/channels/%s/subscriptions", channel.ID), nil)
 	}
 	currentTopics, err := channel.GetTopics()
 	if err != nil {

@@ -33,12 +33,12 @@ type OpenMessagingIntegration struct {
 //   implements Initializable
 //   if the parameters contain a uuid.UUID, the corresponding integration is fetched
 func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(parameters...)
 	if err != nil {
 		return err
 	}
-	if len(integration.ID) > 0 {
-		if err := client.Get("/conversations/messaging/integrations/open/"+integration.ID, &integration); err != nil {
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
 			return err
 		}
 	}
@@ -64,7 +64,7 @@ func (integration OpenMessagingIntegration) String() string {
 
 // FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
 func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessagingIntegration, error) {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, _, err := parseParameters(parameters...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 }
 
 func (integration *OpenMessagingIntegration) Delete() error {
-	return integration.Client.Delete("/conversations/messaging/integrations/open/"+integration.ID, nil)
+	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
 }
 
 // MarshalJSON marshals this into JSON

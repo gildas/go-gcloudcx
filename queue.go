@@ -49,7 +49,7 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	}{}
 	query := url.Values{}
 	query.Add("name", name)
-	err := client.Get("/routing/queues?"+query.Encode(), &response)
+	err := client.Get(NewURI("/routing/queues?%s", query.Encode()), &response)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

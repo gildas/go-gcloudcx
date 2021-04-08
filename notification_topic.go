@@ -50,7 +50,7 @@ func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]No
 	results := &struct {
 		Entities []NotificationTopicDefinition `json:"entities"`
 	}{}
-	if err := client.Get("/notifications/availabletopics?"+query.Encode(), &results); err != nil {
+	if err := client.Get(NewURI("/notifications/availabletopics?%s", query.Encode()), &results); err != nil {
 		return []NotificationTopicDefinition{}, err
 	}
 	return results.Entities, nil

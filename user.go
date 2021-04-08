@@ -52,12 +52,12 @@ type User struct {
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
 func (user *User) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(parameters...)
 	if err != nil {
 		return err
 	}
-	if len(user.ID) > 0 {
-		if err := client.Get("/users/"+user.ID, &user); err != nil {
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/users/%s", user.ID), &user); err != nil {
 			return err
 		}
 	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
@@ -79,7 +79,7 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 		query.Add("expand", strings.Join(properties, ","))
 	}
 	user := &User{}
-	if err := client.Get("/users/me?"+query.Encode(), &user); err != nil {
+	if err := client.Get(NewURI("/users/me?%s", query.Encode()), &user); err != nil {
 		return nil, err
 	}
 	user.Client = client

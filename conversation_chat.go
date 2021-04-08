@@ -2,7 +2,6 @@ package purecloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -59,14 +58,14 @@ type JourneyContext struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(parameters...)
 	if err != nil {
 		return err
 	}
 	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
-	if len(conversation.ID) > 0 {
-		if err := conversation.Client.Get("/conversations/"+conversation.ID, &conversation); err != nil {
+	if id != uuid.Nil {
+		if err := conversation.Client.Get(NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
 	}
@@ -91,7 +90,7 @@ func (conversation ConversationChat) String() string {
 //   implements Disconnecter
 func (conversation ConversationChat) Disconnect(identifiable Identifiable) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: "disconnected"},
 		nil,
 	)
@@ -101,7 +100,7 @@ func (conversation ConversationChat) Disconnect(identifiable Identifiable) error
 //   implements StateUpdater
 func (conversation ConversationChat) UpdateState(identifiable Identifiable, state string) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
 		nil,
 	)
@@ -122,7 +121,7 @@ func (conversation ConversationChat) Transfer(identifiable Identifiable, queue I
 // Post sends a text message to a chat member
 func (conversation ConversationChat) Post(member Identifiable, text string) error {
 	return conversation.Client.Post(
-		fmt.Sprintf("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
+		NewURI("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
 		struct {
 			BodyType string `json:"bodyType"`
 			Body     string `json:"body"`
@@ -136,13 +135,17 @@ func (conversation ConversationChat) Post(member Identifiable, text string) erro
 
 // SetTyping send a typing indicator to the chat member
 func (conversation ConversationChat) SetTyping(member Identifiable) error {
-	return conversation.Client.Post(fmt.Sprintf("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()), nil, nil)
+	return conversation.Client.Post(
+		NewURI("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()),
+		nil,
+		nil,
+	)
 }
 
 // Wrapup wraps up a Participant of this Conversation
 func (conversation ConversationChat) Wrapup(identifiable Identifiable, wrapup *Wrapup) error {
 	return conversation.Client.Patch(
-		fmt.Sprintf("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{Wrapup: wrapup},
 		nil,
 	)

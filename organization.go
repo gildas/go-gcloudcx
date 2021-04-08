@@ -28,16 +28,16 @@ type Organization struct {
 //   implements Initializable
 //   If the organzation ID is not given, /organizations/me is fetched
 func (organization *Organization) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(parameters...)
 	if err != nil {
 		return err
 	}
-	if len(organization.ID) > 0 {
-		if err := client.Get("/organizations/"+organization.ID, &organization); err != nil {
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/organizations/%s", id), &organization); err != nil {
 			return err
 		}
 	} else {
-		if err := client.Get("/organizations/me", &organization); err != nil {
+		if err := client.Get(NewURI("/organizations/me"), &organization); err != nil {
 			return err
 		}
 	}

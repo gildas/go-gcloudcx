@@ -2,7 +2,6 @@ package purecloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -34,7 +33,7 @@ type ConversationGuestChat struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, _, err := parseParameters(parameters...)
 	if err != nil {
 		return err
 	}
@@ -135,7 +134,7 @@ func (conversation *ConversationGuestChat) Close() (err error) {
 	}
 	if conversation.Guest != nil {
 		log.Debugf("Disconnecting Guest Member")
-		if err = conversation.Client.Delete(fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
+		if err = conversation.Client.Delete(NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while disconnecting Guest Member", err)
 			return err
 		}
@@ -227,7 +226,7 @@ func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) 
 	}
 	member := &ChatMember{}
 	err := conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
+		NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 		},
@@ -251,7 +250,7 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
+		NewURI("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Method:        http.MethodPost, // since payload is empty
 			Authorization: "bearer " + conversation.JWT,
@@ -286,7 +285,7 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 		SelfURI      string       `json:"selfUri,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
+		NewURI("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 			Payload: struct {
