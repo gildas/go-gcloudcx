@@ -34,7 +34,7 @@ func (suite *UserSuite) TestCanUnmarshal() {
 	suite.Require().Nil(err, "Failed to unmarshal user. %s", err)
 	suite.Logger.Record("User", user).Infof("Got a user")
 	suite.Assert().NotEmpty(user.ID)
-	suite.Assert().Equal("Matt McPhee", user.Name)
+	suite.Assert().Equal("John Doe", user.Name)
 }
 
 // Suite Tools
