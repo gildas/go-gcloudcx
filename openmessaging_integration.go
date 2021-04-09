@@ -68,7 +68,7 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 	if err != nil {
 		return nil, err
 	}
-	response := struct{
+	response := struct {
 		Integrations []*OpenMessagingIntegration `json:"entities"`
 		PageSize     int                         `json:"pageSize"`
 		PageNumber   int                         `json:"pageNumber"`
@@ -84,7 +84,7 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 	logger.Record("response", response).Infof("Got a response")
 	for _, integration := range response.Integrations {
 		integration.Client = client
-		integration.Logger = logger.Child("openmessagingintegration", "openmessagingintegration", "openmessgingintegration", integration.ID)
+		integration.Logger = logger.Child("openmessagingintegration", "openmessagingintegration", "openmesssagingintegration", integration.ID)
 	}
 	return response.Integrations, nil
 }
@@ -115,17 +115,59 @@ func (integration *OpenMessagingIntegration) Delete() error {
 	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
 }
 
-// MarshalJSON marshals this into JSON
-func (integration OpenMessagingIntegration) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessagingIntegration
-	data, err := json.Marshal(struct {
-		surrogate
-		W *core.URL `json:"outboundNotificationWebhookUrl"`
-	}{
-		surrogate: surrogate(integration),
-		W:         (*core.URL)(integration.WebhookURL),
-	})
-	return data, errors.JSONMarshalError.Wrap(err)
+// SendInboundMessage sends a message from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+func (integration *OpenMessagingIntegration) SendInboundMessage(message *OpenMessage) (*OpenMessageResult, error) {
+	if message.Channel == nil {
+		return nil, errors.ArgumentMissing.With("channel").WithStack()
+	}
+	if message.Channel.To == nil {
+		message.Channel.To = &OpenMessageTo{}
+	}
+	message.Channel.Platform = "Open"
+	if len(message.Channel.Type) == 0 {
+		message.Channel.Type = "Private"
+	}
+	if message.Channel.Time.IsZero() {
+		message.Channel.Time = time.Now().UTC()
+	}
+	if len(message.Type) == 0 {
+		message.Type = "Text"
+	}
+	message.Direction = "Inbound"
+	message.Channel.To.ID = integration.ID.String()
+	result := &OpenMessageResult{}
+	err := integration.Client.Post(
+		"/conversations/messages/inbound/open",
+		message,
+		&result,
+	)
+	return result, err
+}
+
+// SendOutboundMessage sends a message from GENESYS Cloud to the middleware
+//
+// The message can be only text as it is sent bia the AgentLess Message API.
+// This is mainly for debugging purposes
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
+func (integration *OpenMessagingIntegration) SendOutboundMessage(destination, text string) (*AgentlessMessageResult, error) {
+	result := &AgentlessMessageResult{}
+	err := integration.Client.Post(
+		"/conversations/messages/agentless",
+		AgentlessMessage{
+			From:          integration.ID.String(),
+			To:            destination,
+			MessengerType: "Open",
+			Text:          text,
+		},
+		&result,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 // UnmarshalJSON unmarshals JSON into this
