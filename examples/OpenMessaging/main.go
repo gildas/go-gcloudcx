@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
 	"github.com/google/uuid"
@@ -50,8 +51,6 @@ func main() {
 		integrationHook  = flag.String("webhook", core.GetEnvAsString("INTEGRATION_WEBHOOK", ""), "the Integration Webhook URL")
 		integrationToken = flag.String("webhook-token", core.GetEnvAsString("INTEGRATION_TOKEN", ""), "the Integration Webhook Token")
 
-		wantReset   = flag.Bool("reset", false, "reset the integration")
-
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 		wait         = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
 	)
@@ -82,11 +81,44 @@ func main() {
 	}
 	defer UpdateEnvFile(config)
 
+	// Initializing the OpenMessaging Integration
+	config.Client.Logger.Infof("Fetching OpenMessaging Integration %s", *integrationName)
+	integration, err := purecloud.FetchOpenMessagingIntegration(config.Client, *integrationName)
+
+	if errors.Is(err, errors.NotFound) {
+		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
+		integration = &purecloud.OpenMessagingIntegration{}
+		err = integration.Initialize(config.Client)
+		if err != nil {
+			Log.Fatalf("Failed initialize integration", err)
+			os.Exit(1)
+		}
+		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
+		if err != nil {
+			Log.Fatalf("Failed creating integration", err)
+			os.Exit(1)
+		}
+		Log.Record("integration", integration).Infof("Created new integration")
+	} else if err != nil {
+		Log.Fatalf("Failed to retrieve OpenMessaging Integration", err)
+		os.Exit(1)
+	}
+
+	if strings.Compare(integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
+		Log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
+		if err := integration.Update(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
+			Log.Fatalf("Failed to update the OpenMessaging Integration")
+			os.Exit(1)
+		}
+		Log.Record("integration", integration).Infof("Updated integration")
+	}
+	config.Integration = integration
+
 	// Setting up web routes
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(Log.HttpHandler())
 	router.Use(config.HttpHandler())
-	router.Methods("POST").Path("/").HandlerFunc(mainRouteHandler)
+	router.Methods("POST").Path("/hook").HandlerFunc(mainRouteHandler)
 
 	// Initializing the web server
 	webServer := &http.Server{
@@ -124,54 +156,12 @@ func main() {
 			log.Infof(message.String(), args...)
 			return nil
 		})
-		if err = webServer.ListenAndServe(); err != nil {
+		if err := webServer.ListenAndServe(); err != nil {
 			if err.Error() != "http: Server closed" {
 				log.Fatalf("Failed to start the WEB server on port: %d", *port, err)
 			}
 		}
 	}()
-
-	// Initializing the OpenMessaging Integration
-	config.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
-	integrations, err := purecloud.FetchOpenMessagingIntegrations(config.Client)
-	if err != nil {
-		Log.Fatalf("Failed to retrieve integrations", err)
-		os.Exit(1)
-	}
-
-	var integration *purecloud.OpenMessagingIntegration
-	for _, elem := range integrations {
-		if strings.Compare(elem.Name, config.IntegrationName) == 0 {
-			Log.Record("integration", elem).Infof("Found my integration")
-			integration = elem
-			break
-		}
-	}
-	if *wantReset && integration != nil {
-		Log.Infof("Deleting Integration %s (%s)", integration.Name, integration.GetID())
-		err = integration.Delete()
-		if err != nil {
-			Log.Fatalf("Failed deleting integration", err)
-			os.Exit(1)
-		}
-		integration = nil
-	}
-	if integration == nil {
-		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		integration = &purecloud.OpenMessagingIntegration{}
-		err = integration.Initialize(config.Client)
-		if err != nil {
-			Log.Fatalf("Failed initialize integration", err)
-			os.Exit(1)
-		}
-		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
-		if err != nil {
-			Log.Fatalf("Failed creating integration", err)
-			os.Exit(1)
-		}
-		Log.Record("integration", integration).Infof("Created new integration")
-	}
-	config.Integration = integration
 
 	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
 	interruptChannel := make(chan os.Signal, 1)
