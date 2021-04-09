@@ -3,6 +3,7 @@ package purecloud
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
@@ -68,6 +69,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 	options.UserAgent = APP + " " + VERSION
 	options.Logger = client.Logger
 	options.ResponseBodyLogSize = 4096
+	options.Timeout = 10 * time.Second
 
 	res, err := request.Send(options, results)
 	if err != nil {
