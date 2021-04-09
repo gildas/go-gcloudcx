@@ -3,6 +3,7 @@ package purecloud
 import (
 	"encoding/json"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/gildas/go-core"
@@ -43,23 +44,8 @@ func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{
 		}
 	}
 	integration.Client = client
-	integration.Logger = logger
+	integration.Logger = logger.Child("openmessagingintegration", "openmessagingintegration", "openmesssagingintegration", integration.ID)
 	return nil
-}
-
-// GetID gets the identifier of this
-//   implements Identifiable
-func (integration OpenMessagingIntegration) GetID() uuid.UUID {
-	return integration.ID
-}
-
-// String gets a string version
-//   implements the fmt.Stringer interface
-func (integration OpenMessagingIntegration) String() string {
-	if len(integration.Name) > 0 {
-		return integration.Name
-	}
-	return integration.ID.String()
 }
 
 // FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
@@ -89,6 +75,61 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 	return response.Integrations, nil
 }
 
+// FetchOpenMessagingIntegration Fetches an OpenMessagingIntegration object
+//
+// If a UUID is given, fetches by UUID
+// If a string is given, fetches by name
+func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingIntegration, error) {
+	client, logger, id, err := parseParameters(nil, parameters...)
+	if err != nil {
+		return nil, err
+	}
+
+	integration := &OpenMessagingIntegration{}
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
+			return nil, err
+		}
+	} else {
+		var name string
+		for _, parameter := range parameters {
+			switch object := parameter.(type) {
+			case string:
+				name = object
+			}
+		}
+		if len(name) == 0 {
+			return nil, errors.ArgumentMissing.With("name").WithStack()
+		}
+		response := struct {
+			Integrations []*OpenMessagingIntegration `json:"entities"`
+			PageSize     int                         `json:"pageSize"`
+			PageNumber   int                         `json:"pageNumber"`
+			PageCount    int                         `json:"pageCount"`
+			PageTotal    int                         `json:"total"`
+			FirstURI     string                      `json:"firstUri"`
+			SelfURI      string                      `json:"selfUri"`
+			LastURI      string                      `json:"lastUri"`
+		}{}
+		if err = client.Get("/conversations/messaging/integrations/open", &response); err != nil {
+			return nil, err
+		}
+		nameLowercase := strings.ToLower(name)
+		for _, item := range response.Integrations {
+			if strings.Compare(strings.ToLower(item.Name), nameLowercase) == 0 {
+				integration = item
+				break
+			}
+		}
+		if integration == nil {
+			return nil, errors.NotFound.With("name", name).WithStack()
+		}
+	}
+	integration.Client = client
+	integration.Logger = logger.Child("openmessagingintegration", "openmessagingintegration", "openmessagingintegration", integration.ID)
+	return integration, nil
+}
+
 func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url.URL, token string) error {
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Post(
@@ -113,6 +154,28 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 
 func (integration *OpenMessagingIntegration) Delete() error {
 	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
+}
+
+func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url.URL, token string) error {
+	response := &OpenMessagingIntegration{}
+	err := integration.Client.Patch(
+		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
+		struct {
+			Name    string `json:"name"`
+			Webhook string `json:"outboundNotificationWebhookUrl"`
+			Token   string `json:"outboundNotificationWebhookSignatureSecretToken"`
+		}{
+			Name:    name,
+			Webhook: webhookURL.String(),
+			Token:   token,
+		},
+		&response,
+	)
+	if err != nil {
+		return err
+	}
+	integration.Logger.Record("response", response).Debugf("Updated integration %#v", response)
+	return nil
 }
 
 // SendInboundMessage sends a message from the middleware to GENESYS Cloud
@@ -168,6 +231,34 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(destination, te
 		return nil, err
 	}
 	return result, nil
+}
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (integration OpenMessagingIntegration) GetID() uuid.UUID {
+	return integration.ID
+}
+
+// String gets a string version
+//   implements the fmt.Stringer interface
+func (integration OpenMessagingIntegration) String() string {
+	if len(integration.Name) > 0 {
+		return integration.Name
+	}
+	return integration.ID.String()
+}
+
+// MarshalJSON marshals this into JSON
+func (integration OpenMessagingIntegration) MarshalJSON() ([]byte, error) {
+	type surrogate OpenMessagingIntegration
+	data, err := json.Marshal(struct {
+		surrogate
+		W *core.URL `json:"outboundNotificationWebhookUrl"`
+	}{
+		surrogate: surrogate(integration),
+		W:         (*core.URL)(integration.WebhookURL),
+	})
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this
