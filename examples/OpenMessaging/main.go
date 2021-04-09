@@ -1,0 +1,227 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+	"time"
+
+	"github.com/gildas/go-core"
+	"github.com/gildas/go-logger"
+	"github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
+)
+
+// Log is the application Logger
+var Log *logger.Logger
+
+// AppConfig contains this application configuration
+var AppConfig *Config
+
+func UpdateTokenInEnvFile() {
+	AppConfig.Client.Logger.Infof("Updating the .env file")
+	_ = godotenv.Write(map[string]string{
+		"PURECLOUD_REGION":       AppConfig.Client.Region,
+		"PURECLOUD_CLIENTID":     AppConfig.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
+		"PURECLOUD_CLIENTSECRET": AppConfig.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).Secret,
+		"PURECLOUD_CLIENTTOKEN":  AppConfig.Client.AuthorizationGrant.AccessToken().Token,
+		"PURECLOUD_DEPLOYMENTID": AppConfig.Client.DeploymentID.String(),
+		"INTEGRATION_NAME":       AppConfig.IntegrationName,
+		"INTEGRATION_WEBHOOK":    AppConfig.IntegrationWebhookURL.String(),
+		"INTEGRATION_TOKEN":      AppConfig.IntegrationWebhookToken,
+	}, ".env")
+}
+
+func main() {
+	_ = godotenv.Load()
+	var (
+		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the GENESYS Cloud Region. \nDefault: mypurecloud.com")
+		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the GENESYS Cloud Client ID for authentication")
+		clientSecret = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the GENESYS Cloud Client Secret for authentication")
+		clientToken  = flag.String("token", core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", ""), "the GENESYS Cloud Client Token if any. If expired, it will be replaced")
+		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
+
+		integrationName  = flag.String("integration", core.GetEnvAsString("INTEGRATION_NAME", ""), "the Integration Name")
+		integrationHook  = flag.String("webhook", core.GetEnvAsString("INTEGRATION_WEBHOOK", ""), "the Integration Webhook URL")
+		integrationToken = flag.String("webhook-token", core.GetEnvAsString("INTEGRATION_TOKEN", ""), "the Integration Webhook Token")
+
+		wantReset   = flag.Bool("reset", false, "reset the integration")
+
+		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
+		wait         = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
+	)
+	flag.Parse()
+
+	Log = logger.Create("OpenMessaging_Example", logger.TRACE)
+	defer Log.Flush()
+	Log.Infof(strings.Repeat("-", 80))
+
+	AppConfig = &Config{
+		IntegrationName:         *integrationName,
+		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)).(*url.URL),
+		IntegrationWebhookToken: *integrationToken,
+		Client: purecloud.NewClient(&purecloud.ClientOptions{
+			Region:       *region,
+			DeploymentID: uuid.MustParse(*deploymentID),
+			Logger:       Log,
+		}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+			ClientID: uuid.MustParse(*clientID),
+			Secret:   *clientSecret,
+			Token:    purecloud.AccessToken{
+				Type:  "bearer",
+				Token: *clientToken,
+			},
+		}),
+	}
+	defer UpdateTokenInEnvFile()
+
+	AppConfig.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
+	integrations, err := purecloud.FetchOpenMessagingIntegrations(AppConfig.Client)
+	if err != nil {
+		Log.Fatalf("Failed to retrieve integrations", err)
+		os.Exit(1)
+	}
+
+	var integration *purecloud.OpenMessagingIntegration
+	for _, elem := range integrations {
+		if strings.Compare(elem.Name, AppConfig.IntegrationName) == 0 {
+			Log.Record("integration", elem).Infof("Found my integration")
+			integration = elem
+			break
+		}
+	}
+	if *wantReset && integration != nil {
+		Log.Infof("Deleting Integration %s (%s)", integration.Name, integration.GetID())
+		err = integration.Delete()
+		if err != nil {
+			Log.Fatalf("Failed deleting integration", err)
+			os.Exit(1)
+		}
+		integration = nil
+	}
+	if integration == nil {
+		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
+		integration = &purecloud.OpenMessagingIntegration{}
+		err = integration.Initialize(AppConfig.Client)
+		if err != nil {
+			Log.Fatalf("Failed initialize integration", err)
+			os.Exit(1)
+		}
+		err = integration.Create(AppConfig.IntegrationName, AppConfig.IntegrationWebhookURL, AppConfig.IntegrationWebhookToken)
+		if err != nil {
+			Log.Fatalf("Failed creating integration", err)
+			os.Exit(1)
+		}
+		Log.Record("integration", integration).Infof("Created new integration")
+	}
+	AppConfig.Integration = integration
+
+	// Setting up web routes
+	router := mux.NewRouter().StrictSlash(true)
+	router.Use(Log.HttpHandler())
+	router.Use(AppConfig.HttpHandler())
+	router.Methods("POST").Path("/").HandlerFunc(mainRouteHandler)
+
+	// Setting up the server
+	webServer := &http.Server{
+		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      router,
+	}
+
+	// Starting the server
+	go func() {
+		log := Log.Child("webserver", "run")
+
+		log.Infof("Starting WEB server on port %d", *port)
+		log.Infof("Serving routes:")
+		_ = router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			message := strings.Builder{}
+			args := []interface{}{}
+
+			if methods, err := route.GetMethods(); err == nil {
+				message.WriteString("%s ")
+				args = append(args, strings.Join(methods, ","))
+			} else {
+				return nil
+			}
+			if path, err := route.GetPathTemplate(); err == nil {
+				message.WriteString("%s ")
+				args = append(args, path)
+			}
+			if path, err := route.GetPathRegexp(); err == nil {
+				message.WriteString("%s ")
+				args = append(args, path)
+			}
+			log.Infof(message.String(), args...)
+			return nil
+		})
+		if err = webServer.ListenAndServe(); err != nil {
+			if err.Error() != "http: Server closed" {
+				log.Fatalf("Failed to start the WEB server on port: %d", *port, err)
+			}
+		}
+	}()
+
+	Log.Infof("Sending a messge to GENESYS Cloud")
+	message := &purecloud.OpenMessage{
+		Channel:   &purecloud.OpenMessageChannel{
+			MessageID: "kkt2443214423",
+			From:      &purecloud.OpenMessageFrom{
+				ID:        "gildas@kkt",
+				Type:      "email",
+				Firstname: "Gildas",
+				Lastname:  "Cherruel",
+				Nickname:  "wizard",
+				ImageURL:  "https://secure.gravatar.com/avatar/30dbb120d3b75aaa0cec44e826c85cd7",
+			},
+		},
+		Type:      "Text",
+		Text:      "Hello, World from Open Messaging Middleware!",
+	}
+	inboundResult, err := integration.SendInboundMessage(message)
+	if err != nil {
+		Log.Errorf("Failed to send inbound", err)
+	} else {
+		Log.Record("message", inboundResult.ID).Record("result", inboundResult).Infof("Message sent successfully")
+	}
+
+	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
+	interruptChannel := make(chan os.Signal, 1)
+	exitChannel      := make(chan struct{})
+	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
+
+	// The go routine that wait for cleaning stuff when exiting
+	go func() {
+		sig := <-interruptChannel // Block until we have to stop
+
+		context, cancel := context.WithTimeout(context.Background(), *wait)
+		defer cancel()
+
+		Log.Infof("Application is stopping (%+v)", sig)
+
+		// Stopping the WEB server
+		Log.Debugf("WEB server is shutting down")
+		webServer.SetKeepAlivesEnabled(false)
+		if err = webServer.Shutdown(context); err != nil {
+			Log.Errorf("Failed to stop WEB server", err)
+		} else {
+			Log.Infof("WEB server is stopped")
+		}
+
+		close(exitChannel)
+	}()
+
+	<- exitChannel
+	os.Exit(0)
+}
