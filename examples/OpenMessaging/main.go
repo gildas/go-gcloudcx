@@ -60,6 +60,7 @@ func main() {
 	Log = logger.Create("OpenMessaging_Example", logger.TRACE)
 	defer Log.Flush()
 	Log.Infof(strings.Repeat("-", 80))
+	Log.Infof("Log Destination: %s", Log)
 
 	// Initializing the Config
 	config := &Config{
@@ -129,7 +130,7 @@ func main() {
 	router.Use(config.HttpHandler())
 	router.Methods("POST").Path("/").HandlerFunc(mainRouteHandler)
 
-	// Setting up the server
+	// Initializing the web server
 	webServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
 		WriteTimeout: time.Second * 15,
@@ -200,7 +201,7 @@ func main() {
 	exitChannel      := make(chan struct{})
 	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
 
-	// The go routine that wait for cleaning stuff when exiting
+	// Waiting to clean stuff up when exiting
 	go func() {
 		sig := <-interruptChannel // Block until we have to stop
 		context, cancel := context.WithTimeout(context.Background(), *wait)
