@@ -173,29 +173,6 @@ func main() {
 	}
 	config.Integration = integration
 
-	Log.Infof("Sending a messge to GENESYS Cloud")
-	message := &purecloud.OpenMessage{
-		Channel:   &purecloud.OpenMessageChannel{
-			MessageID: "kkt2443214423",
-			From:      &purecloud.OpenMessageFrom{
-				ID:        "gildas@kkt",
-				Type:      "email",
-				Firstname: "Gildas",
-				Lastname:  "Cherruel",
-				Nickname:  "wizard",
-				ImageURL:  "https://secure.gravatar.com/avatar/30dbb120d3b75aaa0cec44e826c85cd7",
-			},
-		},
-		Type:      "Text",
-		Text:      "Hello, World from Open Messaging Middleware!",
-	}
-	inboundResult, err := integration.SendInboundMessage(message)
-	if err != nil {
-		Log.Errorf("Failed to send inbound", err)
-	} else {
-		Log.Record("message", inboundResult.ID).Record("result", inboundResult).Infof("Message sent successfully")
-	}
-
 	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
 	interruptChannel := make(chan os.Signal, 1)
 	exitChannel      := make(chan struct{})
