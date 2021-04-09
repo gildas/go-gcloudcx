@@ -23,20 +23,17 @@ import (
 // Log is the application Logger
 var Log *logger.Logger
 
-// AppConfig contains this application configuration
-var AppConfig *Config
-
-func UpdateTokenInEnvFile() {
-	AppConfig.Client.Logger.Infof("Updating the .env file")
+func UpdateEnvFile(config *Config) {
+	config.Client.Logger.Infof("Updating the .env file")
 	_ = godotenv.Write(map[string]string{
-		"PURECLOUD_REGION":       AppConfig.Client.Region,
-		"PURECLOUD_CLIENTID":     AppConfig.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
-		"PURECLOUD_CLIENTSECRET": AppConfig.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).Secret,
-		"PURECLOUD_CLIENTTOKEN":  AppConfig.Client.AuthorizationGrant.AccessToken().Token,
-		"PURECLOUD_DEPLOYMENTID": AppConfig.Client.DeploymentID.String(),
-		"INTEGRATION_NAME":       AppConfig.IntegrationName,
-		"INTEGRATION_WEBHOOK":    AppConfig.IntegrationWebhookURL.String(),
-		"INTEGRATION_TOKEN":      AppConfig.IntegrationWebhookToken,
+		"PURECLOUD_REGION":       config.Client.Region,
+		"PURECLOUD_CLIENTID":     config.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
+		"PURECLOUD_CLIENTSECRET": config.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).Secret,
+		"PURECLOUD_CLIENTTOKEN":  config.Client.AuthorizationGrant.AccessToken().Token,
+		"PURECLOUD_DEPLOYMENTID": config.Client.DeploymentID.String(),
+		"INTEGRATION_NAME":       config.IntegrationName,
+		"INTEGRATION_WEBHOOK":    config.IntegrationWebhookURL.String(),
+		"INTEGRATION_TOKEN":      config.IntegrationWebhookToken,
 	}, ".env")
 }
 
@@ -64,7 +61,8 @@ func main() {
 	defer Log.Flush()
 	Log.Infof(strings.Repeat("-", 80))
 
-	AppConfig = &Config{
+	// Initializing the Config
+	config := &Config{
 		IntegrationName:         *integrationName,
 		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)).(*url.URL),
 		IntegrationWebhookToken: *integrationToken,
@@ -81,10 +79,11 @@ func main() {
 			},
 		}),
 	}
-	defer UpdateTokenInEnvFile()
+	defer UpdateEnvFile(config)
 
-	AppConfig.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
-	integrations, err := purecloud.FetchOpenMessagingIntegrations(AppConfig.Client)
+	// Initializing the OpenMessaging Integration
+	config.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
+	integrations, err := purecloud.FetchOpenMessagingIntegrations(config.Client)
 	if err != nil {
 		Log.Fatalf("Failed to retrieve integrations", err)
 		os.Exit(1)
@@ -92,7 +91,7 @@ func main() {
 
 	var integration *purecloud.OpenMessagingIntegration
 	for _, elem := range integrations {
-		if strings.Compare(elem.Name, AppConfig.IntegrationName) == 0 {
+		if strings.Compare(elem.Name, config.IntegrationName) == 0 {
 			Log.Record("integration", elem).Infof("Found my integration")
 			integration = elem
 			break
@@ -110,24 +109,24 @@ func main() {
 	if integration == nil {
 		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
 		integration = &purecloud.OpenMessagingIntegration{}
-		err = integration.Initialize(AppConfig.Client)
+		err = integration.Initialize(config.Client)
 		if err != nil {
 			Log.Fatalf("Failed initialize integration", err)
 			os.Exit(1)
 		}
-		err = integration.Create(AppConfig.IntegrationName, AppConfig.IntegrationWebhookURL, AppConfig.IntegrationWebhookToken)
+		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
 		if err != nil {
 			Log.Fatalf("Failed creating integration", err)
 			os.Exit(1)
 		}
 		Log.Record("integration", integration).Infof("Created new integration")
 	}
-	AppConfig.Integration = integration
+	config.Integration = integration
 
 	// Setting up web routes
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(Log.HttpHandler())
-	router.Use(AppConfig.HttpHandler())
+	router.Use(config.HttpHandler())
 	router.Methods("POST").Path("/").HandlerFunc(mainRouteHandler)
 
 	// Setting up the server
@@ -204,7 +203,6 @@ func main() {
 	// The go routine that wait for cleaning stuff when exiting
 	go func() {
 		sig := <-interruptChannel // Block until we have to stop
-
 		context, cancel := context.WithTimeout(context.Background(), *wait)
 		defer cancel()
 
@@ -219,6 +217,7 @@ func main() {
 			Log.Infof("WEB server is stopped")
 		}
 
+		// Stopping the application
 		close(exitChannel)
 	}()
 
