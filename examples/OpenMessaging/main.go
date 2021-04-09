@@ -82,48 +82,6 @@ func main() {
 	}
 	defer UpdateEnvFile(config)
 
-	// Initializing the OpenMessaging Integration
-	config.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
-	integrations, err := purecloud.FetchOpenMessagingIntegrations(config.Client)
-	if err != nil {
-		Log.Fatalf("Failed to retrieve integrations", err)
-		os.Exit(1)
-	}
-
-	var integration *purecloud.OpenMessagingIntegration
-	for _, elem := range integrations {
-		if strings.Compare(elem.Name, config.IntegrationName) == 0 {
-			Log.Record("integration", elem).Infof("Found my integration")
-			integration = elem
-			break
-		}
-	}
-	if *wantReset && integration != nil {
-		Log.Infof("Deleting Integration %s (%s)", integration.Name, integration.GetID())
-		err = integration.Delete()
-		if err != nil {
-			Log.Fatalf("Failed deleting integration", err)
-			os.Exit(1)
-		}
-		integration = nil
-	}
-	if integration == nil {
-		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		integration = &purecloud.OpenMessagingIntegration{}
-		err = integration.Initialize(config.Client)
-		if err != nil {
-			Log.Fatalf("Failed initialize integration", err)
-			os.Exit(1)
-		}
-		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
-		if err != nil {
-			Log.Fatalf("Failed creating integration", err)
-			os.Exit(1)
-		}
-		Log.Record("integration", integration).Infof("Created new integration")
-	}
-	config.Integration = integration
-
 	// Setting up web routes
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(Log.HttpHandler())
@@ -172,6 +130,48 @@ func main() {
 			}
 		}
 	}()
+
+	// Initializing the OpenMessaging Integration
+	config.Client.Logger.Infof("Fetching all OpenMessaging Integrations")
+	integrations, err := purecloud.FetchOpenMessagingIntegrations(config.Client)
+	if err != nil {
+		Log.Fatalf("Failed to retrieve integrations", err)
+		os.Exit(1)
+	}
+
+	var integration *purecloud.OpenMessagingIntegration
+	for _, elem := range integrations {
+		if strings.Compare(elem.Name, config.IntegrationName) == 0 {
+			Log.Record("integration", elem).Infof("Found my integration")
+			integration = elem
+			break
+		}
+	}
+	if *wantReset && integration != nil {
+		Log.Infof("Deleting Integration %s (%s)", integration.Name, integration.GetID())
+		err = integration.Delete()
+		if err != nil {
+			Log.Fatalf("Failed deleting integration", err)
+			os.Exit(1)
+		}
+		integration = nil
+	}
+	if integration == nil {
+		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
+		integration = &purecloud.OpenMessagingIntegration{}
+		err = integration.Initialize(config.Client)
+		if err != nil {
+			Log.Fatalf("Failed initialize integration", err)
+			os.Exit(1)
+		}
+		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
+		if err != nil {
+			Log.Fatalf("Failed creating integration", err)
+			os.Exit(1)
+		}
+		Log.Record("integration", integration).Infof("Created new integration")
+	}
+	config.Integration = integration
 
 	Log.Infof("Sending a messge to GENESYS Cloud")
 	message := &purecloud.OpenMessage{
