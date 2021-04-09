@@ -82,6 +82,21 @@ func (suite *UserSuite) TestCanMarshal() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
+func (suite *UserSuite) TestCanInitializeWithIDParameter() {
+	id := uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db")
+	user := purecloud.User{}
+	err := user.Initialize(suite.Client, id)
+	suite.Require().Nil(err, "Failed to initialize User. %s", err)
+	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
+}
+
+func (suite *UserSuite) TestCanInitializeWithIDFromObject() {
+	user := purecloud.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
+	err := user.Initialize(suite.Client)
+	suite.Require().Nil(err, "Failed to initialize User. %s", err)
+	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
+}
+
 // Suite Tools
 
 func (suite *UserSuite) SetupSuite() {

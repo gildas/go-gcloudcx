@@ -33,7 +33,7 @@ type ConversationGuestChat struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client, logger, _, err := parseParameters(parameters...)
+	client, logger, _, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}

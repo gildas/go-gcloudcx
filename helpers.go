@@ -9,12 +9,16 @@ import (
 // parseParameters extracts Client, Logger, ID, from the given parameters
 //
 // Note, *uuid.UUID is optional and no error will be generated when it is not present
-func parseParameters(parameters ...interface{}) (*Client, *logger.Logger, uuid.UUID, error) {
+func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *logger.Logger, uuid.UUID, error) {
 	var (
 		client *Client
 		log    *logger.Logger
-		id     uuid.UUID = uuid.UUID{}
+		id     uuid.UUID = uuid.Nil
 	)
+
+	if seed != nil {
+		id = seed.GetID()
+	}
 
 	for _, parameter := range parameters {
 		switch object := parameter.(type) {
@@ -22,6 +26,10 @@ func parseParameters(parameters ...interface{}) (*Client, *logger.Logger, uuid.U
 			client = object
 		case *logger.Logger:
 			log = object
+		case Identifiable:
+			if object.GetID() != uuid.Nil {
+				id = object.GetID()
+			}
 		case uuid.UUID:
 			id = object
 		}

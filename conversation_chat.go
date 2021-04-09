@@ -58,7 +58,7 @@ type JourneyContext struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(parameters...)
+	client, logger, id, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}

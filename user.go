@@ -55,12 +55,12 @@ type Jabber struct {
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
 func (user *User) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(parameters...)
+	client, logger, id, err := parseParameters(user, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/users/%s", user.ID), &user); err != nil {
+		if err := client.Get(NewURI("/users/%s", id), &user); err != nil {
 			return err
 		}
 	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant

@@ -33,7 +33,7 @@ type OpenMessagingIntegration struct {
 //   implements Initializable
 //   if the parameters contain a uuid.UUID, the corresponding integration is fetched
 func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(parameters...)
+	client, logger, id, err := parseParameters(integration, parameters...)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (integration OpenMessagingIntegration) String() string {
 
 // FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
 func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessagingIntegration, error) {
-	client, logger, _, err := parseParameters(parameters...)
+	client, logger, _, err := parseParameters(nil, parameters...)
 	if err != nil {
 		return nil, err
 	}
