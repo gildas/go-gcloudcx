@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // UserConversationChatTopic describes a Topic about User's Presence
@@ -52,7 +53,7 @@ func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error
 	var inner struct {
 		TopicName string `json:"topicName"`
 		EventBody struct {
-			ConversationID string         `json:"id"`
+			ConversationID uuid.UUID      `json:"id"`
 			Name           string         `json:"name"`
 			Participants   []*Participant `json:"participants"`
 		} `json:"eventBody"`
@@ -63,7 +64,10 @@ func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	userID := strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".conversations.chats")
+	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".conversations.chats"))
+	if err != nil {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
+	}
 	topic.Name = inner.TopicName
 	topic.User = &User{ID: userID}
 	topic.Conversation = &ConversationChat{ID: inner.EventBody.ConversationID}

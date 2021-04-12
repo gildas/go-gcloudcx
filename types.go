@@ -1,14 +1,12 @@
 package purecloud
 
-// Identifiable describes things that carry an identifier
-type Identifiable interface {
-	// GetID gets the identifier of this
-	GetID() string
-}
+import (
+	"github.com/gildas/go-core"
+)
 
-// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
-type Addressable interface {
-	GetURI() string
+// Identifiable describes that can get their Identifier as a UUID
+type Identifiable interface {
+	core.Identifiable
 }
 
 // Initializable describes things that can be initialized

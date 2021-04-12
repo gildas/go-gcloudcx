@@ -2,14 +2,16 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ConversationMessage describes a Message (like belonging to Participant)
 type ConversationMessage struct {
-	ID        string `json:"id"`
-	Direction string `json:"direction"` // inbound,outbound
-	State     string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Held      bool   `json:"held"`
+	ID        uuid.UUID `json:"id"`
+	Direction string    `json:"direction"` // inbound,outbound
+	State     string    `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Held      bool      `json:"held"`
 
 	RecordingID string `json:"recordingId"`
 

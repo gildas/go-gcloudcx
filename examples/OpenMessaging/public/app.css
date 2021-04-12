@@ -1,0 +1,59 @@
+/* From https://leaverou.github.io/bubbly/ */
+
+.speech-bubble {
+    position: relative;
+	border-radius: .4em;
+}
+
+.speech-bubble:after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	width: 0;
+	height: 0;
+	border: 10px solid transparent;
+	border-bottom: 0;
+	margin-top: -5px;
+}
+
+.speech-bubble-guest {
+	background: #007abb;
+    color: white;
+}
+
+.speech-bubble-guest:after {
+	left: 0;
+	border-right-color: #007abb;
+	border-left: 0;
+	margin-left: -10px;
+}
+
+.speech-bubble-agent {
+	background: #d5d7d9;
+    color: black;
+}
+
+.speech-bubble-agent:after {
+	right: 0;
+	border-left-color: #d5d7d9;
+	border-right: 0;
+	margin-right: -10px;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition-property: opacity;
+  transition-duration: .25s;
+}
+
+.fade-enter-active {
+  transition-delay: .25s;
+}
+
+.fade-enter, .fade-leave-active {
+  opacity: 0
+}
+
+a.location {
+	background: #007abb !important;
+    color: white !important;
+}

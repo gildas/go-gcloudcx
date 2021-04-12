@@ -3,14 +3,16 @@ package purecloud
 import (
 	"net/url"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // CobrowseSession describes a Cobrowse Session (like belonging to Participant)
 type CobrowseSession struct {
-	ID    string  `json:"id"`
-	State string  `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Self  Address `json:"self"`
-	Held  bool    `json:"held"`
+	ID    uuid.UUID `json:"id"`
+	State string    `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Self  Address   `json:"self"`
+	Held  bool      `json:"held"`
 
 	ProviderEventTime time.Time `json:"providerEventTime"`
 	ConnectedTime     time.Time `json:"connectedTime"`
@@ -30,12 +32,12 @@ type CobrowseSession struct {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (session CobrowseSession) GetID() string {
+func (session CobrowseSession) GetID() uuid.UUID {
 	return session.ID
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (session CobrowseSession) String() string {
-	return session.ID
+	return session.ID.String()
 }

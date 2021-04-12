@@ -3,27 +3,31 @@ package purecloud
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // Client is the primary object to use PureCloud
 type Client struct {
 	Region             string             `json:"region"`
-	DeploymentID       string             `json:"deploymentId"`
+	DeploymentID       uuid.UUID          `json:"deploymentId"`
 	Organization       *Organization      `json:"-"`
 	API                *url.URL           `json:"apiUrl,omitempty"`
 	Proxy              *url.URL           `json:"proxyUrl,omitempty"`
 	AuthorizationGrant AuthorizationGrant `json:"auth"`
+	RequestTimeout     time.Duration      `json:"requestTimout"`
 	Logger             *logger.Logger     `json:"-"`
 }
 
 // ClientOptions contains the options to create a new Client
 type ClientOptions struct {
 	Region         string
-	OrganizationID string
-	DeploymentID   string
+	OrganizationID uuid.UUID
+	DeploymentID   uuid.UUID
 	Proxy          *url.URL
+	RequestTimeout time.Duration
 	Logger         *logger.Logger
 }
 
@@ -35,10 +39,14 @@ func NewClient(options *ClientOptions) *Client {
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
+	if options.RequestTimeout < 2 * time.Second {
+		options.RequestTimeout = 10 * time.Second
+	}
 	client := Client{
-		Proxy:        options.Proxy,
-		DeploymentID: options.DeploymentID,
-		Organization: &Organization{ID: options.OrganizationID},
+		Proxy:          options.Proxy,
+		DeploymentID:   options.DeploymentID,
+		Organization:   &Organization{ID: options.OrganizationID},
+		RequestTimeout: options.RequestTimeout,
 	}
 	return client.SetLogger(options.Logger).SetRegion(options.Region)
 }

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, shrink-to-fit=no">
+  <title>LINE Mock Server</title>
+
+  <link href="/favicon.png" rel="icon" type="image/png">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+  <link href="/app.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app"></div>
+
+  <script type="text/x-template" id="layout">
+    <v-app>
+      <v-app-bar app dense>
+        <v-toolbar-title>Mock Server for GCloud OpenMessaging API</v-toolbar-title>
+      </v-app-bar>
+      <v-main>
+        <chat></chat>
+      </v-main>
+      <v-footer app>
+        <div>v. {{ version }}</div>
+        <v-spacer></v-spacer>
+        <div>&copy; 2018-{{ new Date().getFullYear() }} GENESYS</div>
+      </v-footer>
+    </v-app>
+  </script>
+
+  <script type="text/x-template" id="chat">
+    <v-card class="mx-auto my-5 elevation-10" width="600">
+      <v-card-title class="headline">
+        <span class="title font-weight-bold">Chat</span>
+      </v-card-title>
+      <v-card-text>
+        <v-col class="text-right">
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn class="mr-n5" v-on="on" tile :color="active ? 'error' : 'success'" :disabled="!user.userId" @click.prevent="startStopChat">
+                <v-icon v-if="!active && !dialing">mdi-phone-outgoing</v-icon>
+                <v-progress-circular v-if="!active && dialing" indeterminate color="primary"></v-progress-circular>
+                <v-icon v-if="active">mdi-phone-hangup</v-icon>
+              </v-btn>
+            </template>
+            <span v-if="!active">Connect to LINE</span>
+            <span v-else>Disconnect from LINE</span>
+          </v-tooltip>
+        </v-col>
+
+        <v-alert v-if="chatId" dense :text="active" type="info" :outlined="!active">Chat: {{this.chatId}}</v-alert>
+        <v-divider></v-divider>
+
+        <v-container id="chats" refs="chats">
+          <chat-message
+            v-for="(message, index) in messages"
+            :key="index"
+            :id="'chat-message-' + message.id"
+            :message="message"
+            v-on:location="sendLocation"
+            v-on:video-played="sendVideoPlayed"
+          ></chat-message>
+        </v-container>
+      </v-card-text>
+      <v-divider></v-divider>
+      <v-card-actions>
+        <v-text-field
+          label="Text"
+          id="content"
+          clearable
+          counter
+          prepend-icon="mdi-message-text"
+          @keyup.enter="sendMessage"
+          v-model="content"
+          :disabled="!active"
+        ></v-text-field>
+        <v-spacer></v-spacer>
+        <v-btn class="mx-2" color="info" fab small :disabled="!active" @click.prevent="sendLocation"><v-icon>mdi-map-marker</v-icon></v-btn>
+        <v-btn class="mx-2" color="info" :disabled="!active" @click.prevent="sendMessage"><v-icon>mdi-send</v-icon></v-btn>
+      </v-card-actions>
+    </v-card>
+  </script>
+
+  <script type="text/x-template" id="chat-message">
+    <div>
+    <v-row class="mb-6" no-gutters>
+      <v-col cols="1" v-if="message.from === 'guest'">
+        <v-avatar><v-icon>mdi-account</v-icon></v-avatar>
+      </v-col>
+      <v-col cols="10">
+        <div id="message" :class="classes">
+          <p :id="id" color="error" v-if="message.type === 'error'">{{ message.content }}</p>
+          <p :id="id" v-else-if="message.type === 'text'">{{ message.content }}</p>
+          <audio :id="id" controls v-else-if="message.type === 'audio'">
+            <source :src="message.content.originalContentUrl">
+          </audio>
+          <a :id="id" :href="message.content.originalContentUrl" v-else-if="message.type === 'image'">
+            <img :src="message.content.previewImageUrl || message.content.originalContentUrl" width="100"></img>
+          </a>
+          <video :id="id" controls width="320" height="240" preload="auto" v-else-if="message.type === 'video'">
+            <!-- poster="image.png" -->
+            <source :src="message.content.originalContentUrl" :type="message.contentType">
+          </video>
+          <div v-else-if="message.type === 'location'">
+            <v-icon>mdi-map-marker</v-icon>
+            <a :id="id" class="location" :href="'https://maps.google.com/maps/place/' + message.content.coords.latitude + ',' + message.content.coords.longitude " target="_blank">Here I am!</a>
+          </div>
+          <div v-else-if="message.type === 'template' && (message.content.template.type === 'buttons' || message.content.template.type === 'confirm')" style="width: 100%;">
+            <v-card :id="id" shaped rounded hover>
+              <v-img :src="column.thumbnailImageUrl" v-if="message.content.template.thumbnailImageUrl">
+                <v-card-title>{{ message.content.template.title }}</v-card-title>
+              </v-img>
+              <v-card-title v-else>
+                {{ message.content.template.title }}
+              </v-card-title>
+              <v-card-text>
+                {{ message.content.template.text }}
+              </v-card-text>
+              <v-card-actions id="actions">
+                <v-btn 
+                  v-for="(action, j) in message.content.template.actions"
+                  :key="j"
+                  :href="action.uri"
+                  target="_blank"
+                  @click="onActionClicked(action)"
+                >
+                  {{ action.label }}
+                  <v-snackbar v-model="calendar" color="info" bottom timeout="2000" v-if="action.type === 'datetime'">
+                    Creating a Calendar event for {{ action.label }}...
+                  </v-snackbar>
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </div>
+          <div v-else-if="message.type === 'template' && (message.content.template.type === 'carousel' || message.content.template.type === 'image_carousel')" style="width: 100%;">
+            <v-carousel :id="id" hide-delimiters>
+              <v-carousel-item v-for="(column, index) in message.content.template.columns" :key="index">
+                <v-card>
+                  <v-img :src="column.thumbnailImageUrl">
+                    <v-card-title>{{ column.title }}</v-card-title>
+                  </v-img>
+                  <v-card-text>{{ column.text }}</v-card-text>
+                  <v-card-actions>
+                    <v-btn 
+                      v-for="(action, j) in column.actions"
+                      :key="j"
+                      :href="action.uri"
+                      target="_blank"
+                      @click.prevent="onActionClicked(action)"
+                    >
+                      {{ action.label }}
+                      <v-snackbar v-model="calendar" color="info" bottom timeout="2000" v-if="action.type === 'datetime'">
+                        Creating a Calendar event for {{ action.label }}...
+                      </v-snackbar>
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-carousel-item>
+            </v-carousel>
+          </div>
+          <div v-else-if="message.type === 'temp'">
+          </div>
+          <a :id="id" :href="message.content.originalContentUrl" target="_blank" rel="noopener noreferrer" v-else>
+            <v-icon x-large v-if="message.contentType === 'application/excel'">mdi-file-excel</v-icon>
+            <v-icon x-large v-else-if="message.contentType === 'application/pdf'">mdi-file-pdf</v-icon>
+            <v-icon x-large v-else-if="message.contentType === 'application/word'">mdi-file-word</v-icon>
+            <v-icon x-large v-else>mdi-file-document</v-icon>
+          </a>
+        </div>
+      </v-col>
+      <v-col cols="1" v-if="message.from === 'guest'">
+        <v-progress-circular indeterminate color="gray-lighten" v-if="message.status === 'sending'"></v-progress-circular>
+        <v-icon color="gray-lighten" v-else-if="message.status === 'sent'"     >mdi-check</v-icon>
+        <v-icon color="primary"      v-else-if="message.status === 'displayed'">mdi-check-all</v-icon>
+      </v-col>
+      <v-col cols="2" v-if="message.from === 'agent'">
+        <v-avatar color="gray-lighten"><v-icon>mdi-headset</v-icon></v-avatar>
+      </v-col>
+    </v-row>
+    </div>
+  </script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-router@2.x/dist/vue-router.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+  <script src="/chat-message.js"></script>
+  <script src="/chat.js"></script>
+  <script src="/app.js"></script>
+</body>
+

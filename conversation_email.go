@@ -2,11 +2,13 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ConversationEmail describes an Email (like belonging to Participant)
 type ConversationEmail struct {
-	ID                string        `json:"id"`
+	ID                uuid.UUID     `json:"id"`
 	State             string        `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
 	Direction         string        `json:"direction"` // inbound,outbound
 	Held              bool          `json:"held"`

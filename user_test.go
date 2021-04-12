@@ -1,7 +1,9 @@
 package purecloud_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -9,6 +11,8 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
 	purecloud "github.com/gildas/go-purecloud"
@@ -29,16 +33,74 @@ func TestUserSuite(t *testing.T) {
 
 func (suite *UserSuite) TestCanUnmarshal() {
 	user := purecloud.User{}
-	err := Load("user.json", &user)
+	err := LoadObject("user.json", &user)
 	suite.Require().Nil(err, "Failed to unmarshal user. %s", err)
 	suite.Logger.Record("User", user).Infof("Got a user")
 	suite.Assert().NotEmpty(user.ID)
-	suite.Assert().Equal("Matt McPhee", user.Name)
+	suite.Assert().Equal("John Doe", user.Name)
+}
+
+func (suite *UserSuite) TestCanMarshal() {
+	user := purecloud.User{
+		ID:       uuid.MustParse("06ffcd2e-1ada-412e-a5f5-30d7853246dd"),
+		Name:     "John Doe",
+		UserName: "john.doe@acme.com",
+		Mail:     "john.doe@acme.com",
+		Title:    "Junior",
+		Division: &purecloud.Division{
+			ID:      uuid.MustParse("06ffcd2e-1ada-412e-a5f5-30d7853246dd"),
+			Name:    "",
+			SelfURI: "/api/v2/authorization/divisions/06ffcd2e-1ada-412e-a5f5-30d7853246dd",
+		},
+		Chat: &purecloud.Jabber{
+			ID: "98765432d220541234567654@genesysapacanz.orgspan.com",
+		},
+		Addresses: []*purecloud.Contact{},
+		PrimaryContact: []*purecloud.Contact{
+			{
+				Type:      "PRIMARY",
+				MediaType: "EMAIL",
+				Address:   "john.doe@acme.com",
+			},
+		},
+		Images: []*purecloud.UserImage{
+			{
+				Resolution: "x96",
+				ImageURL:   core.Must(url.Parse("https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/7fac0a12/4643/4d0e/86f3/2467894311b5.jpg")).(*url.URL),
+			},
+		},
+		AcdAutoAnswer: false,
+		State:         "active",
+		SelfURI:       "/api/v2/users/06ffcd2e-1ada-412e-a5f5-30d7853246dd",
+		Version:       29,
+	}
+
+	data, err := json.Marshal(user)
+	suite.Require().Nil(err, "Failed to marshal User. %s", err)
+	expected, err := LoadFile("user.json")
+	suite.Require().Nil(err, "Failed to Load Data. %s", err)
+	suite.Assert().JSONEq(string(expected), string(data))
+}
+
+func (suite *UserSuite) TestCanInitializeWithIDParameter() {
+	id := uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db")
+	user := purecloud.User{}
+	err := user.Initialize(suite.Client, id)
+	suite.Require().Nil(err, "Failed to initialize User. %s", err)
+	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
+}
+
+func (suite *UserSuite) TestCanInitializeWithIDFromObject() {
+	user := purecloud.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
+	err := user.Initialize(suite.Client)
+	suite.Require().Nil(err, "Failed to initialize User. %s", err)
+	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
 }
 
 // Suite Tools
 
 func (suite *UserSuite) SetupSuite() {
+	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
@@ -51,7 +113,7 @@ func (suite *UserSuite) SetupSuite() {
 
 	var (
 		region   = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+		clientID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
 

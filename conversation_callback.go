@@ -2,14 +2,16 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ConversationCallback describes a Callback (like belonging to Participant)
 type ConversationCallback struct {
-	ID        string `json:"id"`
-	State     string `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
-	Direction string `json:"direction"` // inbound,outbound
-	Held      bool   `json:"held"`
+	ID        uuid.UUID `json:"id"`
+	State     string    `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	Direction string    `json:"direction"` // inbound,outbound
+	Held      bool      `json:"held"`
 
 	ConnectedTime     time.Time `json:"connectedTime"`
 	DisconnectedTime  time.Time `json:"disconnectedTime"`

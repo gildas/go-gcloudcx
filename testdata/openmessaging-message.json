@@ -1,0 +1,21 @@
+{
+  "id": "8745f89b040b2468aa491eea6df6949d",
+  "channel": {
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "platform": "Open",
+    "type": "Private",
+    "to": {
+      "id": "gildas@kkt"
+    },
+    "from": {
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da"
+    },
+    "time": "2021-04-09T04:43:33.100Z"
+  },
+  "type": "Text",
+  "text": "Hello From GCloud via the middleware",
+  "content": [],
+  "reasons": [],
+  "direction": "Outbound",
+  "relatedMessages": []
+}

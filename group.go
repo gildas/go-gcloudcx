@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // Group describe a Group of users
 type Group struct {
-	ID           string         `json:"id"`
+	ID           uuid.UUID      `json:"id"`
 	SelfURI      string         `json:"selfUri"`
 	Name         string         `json:"name"`
 	Type         string         `json:"type"`
@@ -28,14 +29,14 @@ type Group struct {
 
 // Initialize initializes this from the given Client
 //   implements Initializable
-//   if the user ID is not given, /users/me is fetched (if grant allows)
+//   if the group ID is given in group, the group is fetched
 func (group *Group) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(group, parameters...)
 	if err != nil {
 		return err
 	}
-	if len(group.ID) > 0 {
-		if err := client.Get("/groups/"+group.ID, &group); err != nil {
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/groups/%s", id), &group); err != nil {
 			return err
 		}
 	}
@@ -46,7 +47,7 @@ func (group *Group) Initialize(parameters ...interface{}) error {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (group Group) GetID() string {
+func (group Group) GetID() uuid.UUID {
 	return group.ID
 }
 
@@ -56,5 +57,5 @@ func (group Group) String() string {
 	if len(group.Name) > 0 {
 		return group.Name
 	}
-	return group.ID
+	return group.ID.String()
 }

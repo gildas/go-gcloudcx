@@ -2,13 +2,15 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ConversationVideo describes a Video (like belonging to Participant)
 type ConversationVideo struct {
-	ID    string  `json:"id"`
-	Self  Address `json:"self"`
-	State string  `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
+	ID    uuid.UUID  `json:"id"`
+	Self  Address    `json:"self"`
+	State string     `json:"state"` // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
 
 	Segments      []Segment `json:"segments"`
 	Provider      string    `json:"provider"`

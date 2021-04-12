@@ -1,15 +1,17 @@
 package purecloud
 
+import "github.com/google/uuid"
+
 // Division describes an Authorization Division
 type Division struct {
-	ID      string `json:"id"`
+	ID      uuid.UUID `json:"id"`
 	Name    string `json:"name"`
 	SelfURI string `json:"selfUri"`
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (division Division) GetID() string {
+func (division Division) GetID() uuid.UUID {
 	return division.ID
 }
 
@@ -19,5 +21,5 @@ func (division Division) String() string {
 	if len(division.Name) != 0 {
 		return division.Name
 	}
-	return division.ID
+	return division.ID.String()
 }

@@ -4,19 +4,20 @@ import (
 	"time"
 
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // Conversation contains the details of a live conversation
 //   See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
-	ID              string         `json:"id"`
+	ID              uuid.UUID      `json:"id"`
 	SelfURI         string         `json:"selfUri,omitempty"`
 	Name            string         `json:"name"`
 	StartTime       time.Time      `json:"startTime"`
 	EndTime         time.Time      `json:"endTime"`
 	Address         string         `json:"address"`
 	Participants    []*Participant `json:"participants"`
-	ConversationIDs []string       `json:"conversationIds"`
+	ConversationIDs []uuid.UUID    `json:"conversationIds"`
 	MaxParticipants int            `json:"maxParticipants"`
 	RecordingState  string         `json:"recordingState"`
 	State           string         `json:"state"`
@@ -59,10 +60,10 @@ type DisconnectReason struct {
 
 // DialerPreview describes a Diapler Preview
 type DialerPreview struct {
-	ID                 string `json:"id"`
-	ContactID          string `json:"contactId"`
-	ContactListID      string `json:"contactListId"`
-	CaompaignID        string `json:"campaignId"`
+	ID                 uuid.UUID `json:"id"`
+	ContactID          uuid.UUID `json:"contactId"`
+	ContactListID      uuid.UUID `json:"contactListId"`
+	CampaignID         uuid.UUID `json:"campaignId"`
 	PhoneNumberColumns []struct {
 		Type       string `json:"type"`
 		ColumnName string `json:"columnName"`
@@ -78,12 +79,12 @@ type Voicemail struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *Conversation) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}
-	if len(conversation.ID) > 0 {
-		if err := conversation.Client.Get("/conversations/"+conversation.ID, &conversation); err != nil {
+	if id != uuid.Nil {
+		if err := conversation.Client.Get(NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
 	}
@@ -94,7 +95,7 @@ func (conversation *Conversation) Initialize(parameters ...interface{}) error {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (conversation Conversation) GetID() string {
+func (conversation Conversation) GetID() uuid.UUID {
 	return conversation.ID
 }
 
@@ -104,5 +105,5 @@ func (conversation Conversation) String() string {
 	if len(conversation.Name) != 0 {
 		return conversation.Name
 	}
-	return conversation.ID
+	return conversation.ID.String()
 }

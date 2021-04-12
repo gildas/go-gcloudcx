@@ -3,28 +3,45 @@ package purecloud
 import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
-// ExtractClientAndLogger extracts a Client and a logger.Logger from its parameters
-func ExtractClientAndLogger(parameters ...interface{}) (*Client, *logger.Logger, error) {
-	var client *Client
-	var log *logger.Logger
+// parseParameters extracts Client, Logger, ID, from the given parameters
+//
+// Note, *uuid.UUID is optional and no error will be generated when it is not present
+func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *logger.Logger, uuid.UUID, error) {
+	var (
+		client *Client
+		log    *logger.Logger
+		id     uuid.UUID = uuid.Nil
+	)
+
+	if seed != nil {
+		id = seed.GetID()
+	}
 
 	for _, parameter := range parameters {
-		if paramClient, ok := parameter.(*Client); ok {
-			client = paramClient
-		} else if paramLogger, ok := parameter.(*logger.Logger); ok {
-			log = paramLogger
+		switch object := parameter.(type) {
+		case *Client:
+			client = object
+		case *logger.Logger:
+			log = object
+		case Identifiable:
+			if object.GetID() != uuid.Nil {
+				id = object.GetID()
+			}
+		case uuid.UUID:
+			id = object
 		}
 	}
 	if client == nil {
-		return nil, nil, errors.ArgumentMissing.With("Client").WithStack()
+		return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client").WithStack()
 	}
 	if log == nil {
 		if client.Logger == nil {
-			return nil, nil, errors.ArgumentMissing.With("Client Logger").WithStack()
+			return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client Logger").WithStack()
 		}
 		log = client.Logger
 	}
-	return client, log, nil
+	return client, log, id, nil
 }

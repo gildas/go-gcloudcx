@@ -2,7 +2,6 @@ package purecloud
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -11,29 +10,30 @@ import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-request"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
 // ConversationGuestChat describes a Guest Chat
 type ConversationGuestChat struct {
-	ID            string                 `json:"id"`
-	SelfURI       string                 `json:"selfUri,omitempty"`
-	Target        *RoutingTarget         `json:"-"`
-	Guest         *ChatMember            `json:"member,omitempty"`
-	Members       map[string]*ChatMember `json:"-"`
-	JWT           string                 `json:"jwt,omitempty"`
-	EventStream   string                 `json:"eventStreamUri,omitempty"`
-	Socket        *websocket.Conn        `json:"-"`
-	TopicReceived chan NotificationTopic `json:"-"`
-	LogHeartbeat  bool                   `json:"logHeartbeat"`
-	Client        *Client                `json:"-"`
-	Logger        *logger.Logger         `json:"-"`
+	ID            uuid.UUID                 `json:"id"`
+	SelfURI       string                    `json:"selfUri,omitempty"`
+	Target        *RoutingTarget            `json:"-"`
+	Guest         *ChatMember               `json:"member,omitempty"`
+	Members       map[uuid.UUID]*ChatMember `json:"-"`
+	JWT           string                    `json:"jwt,omitempty"`
+	EventStream   string                    `json:"eventStreamUri,omitempty"`
+	Socket        *websocket.Conn           `json:"-"`
+	TopicReceived chan NotificationTopic    `json:"-"`
+	LogHeartbeat  bool                      `json:"logHeartbeat"`
+	Client        *Client                   `json:"-"`
+	Logger        *logger.Logger            `json:"-"`
 }
 
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, _, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}
@@ -67,8 +67,8 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 			RoutingTarget  *RoutingTarget `json:"routingTarget"`
 			Guest          *ChatMember    `json:"memberInfo"`
 		}{
-			OrganizationID: client.Organization.ID,
-			DeploymentID:   client.DeploymentID,
+			OrganizationID: client.Organization.ID.String(),
+			DeploymentID:   client.DeploymentID.String(),
 			RoutingTarget:  target,
 			Guest:          guest,
 		},
@@ -84,7 +84,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	conversation.Guest.Role = guest.Role
 	conversation.Guest.State = guest.State
 	conversation.Guest.Custom = guest.Custom
-	conversation.Members = map[string]*ChatMember{}
+	conversation.Members = map[uuid.UUID]*ChatMember{}
 	conversation.Members[conversation.Guest.ID] = conversation.Guest
 	conversation.TopicReceived = make(chan NotificationTopic)
 	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
@@ -93,14 +93,14 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (conversation ConversationGuestChat) GetID() string {
+func (conversation ConversationGuestChat) GetID() uuid.UUID {
 	return conversation.ID
 }
 
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (conversation ConversationGuestChat) String() string {
-	return conversation.ID
+	return conversation.ID.String()
 }
 
 // Connect connects a Guest Chat to its websocket and starts its message loop
@@ -134,7 +134,7 @@ func (conversation *ConversationGuestChat) Close() (err error) {
 	}
 	if conversation.Guest != nil {
 		log.Debugf("Disconnecting Guest Member")
-		if err = conversation.Client.Delete(fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
+		if err = conversation.Client.Delete(NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while disconnecting Guest Member", err)
 			return err
 		}
@@ -226,7 +226,7 @@ func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) 
 	}
 	member := &ChatMember{}
 	err := conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
+		NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 		},
@@ -250,7 +250,7 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
+		NewURI("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Method:        http.MethodPost, // since payload is empty
 			Authorization: "bearer " + conversation.JWT,
@@ -285,7 +285,7 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 		SelfURI      string       `json:"selfUri,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
-		fmt.Sprintf("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
+		NewURI("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
 			Payload: struct {

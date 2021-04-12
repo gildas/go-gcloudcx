@@ -7,6 +7,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
+	"github.com/google/uuid"
 )
 
 const widgetJS = `
@@ -70,14 +71,14 @@ func WidgetHandler() http.Handler {
 		log.Infof("Providing PureCloud Config")
 		viewData := struct {
 			Region         string
-			DeploymentID   string
-			OrganizationID string
+			DeploymentID   uuid.UUID
+			OrganizationID uuid.UUID
 			QueueName      string
 		}{
 			Region:         client.Region,
 			DeploymentID:   client.DeploymentID,
 			OrganizationID: client.Organization.ID,
-			QueueName:      appConfig.AgentQueue.ID,
+			QueueName:      appConfig.AgentQueue.ID.String(),
 		}
 		scriptTemplate := template.Must(template.New("script").Parse(widgetJS))
 		w.Header().Set("Content-Type", "text/javascript")

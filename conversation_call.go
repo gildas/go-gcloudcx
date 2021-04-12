@@ -2,6 +2,8 @@ package purecloud
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // FaxStatus describes a FAX status
@@ -18,7 +20,7 @@ type FaxStatus struct {
 
 // ConversationCall describes a Call (like belonging to Participant)
 type ConversationCall struct {
-	ID                string              `json:"id"`
+	ID                uuid.UUID           `json:"id"`
 	Self              *Address            `json:"self"`
 	Direction         string              `json:"direction"` // inbound,outbound
 	State             string              `json:"state"`     // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none

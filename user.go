@@ -5,58 +5,62 @@ import (
 	"strings"
 
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // User describes a PureCloud User
 type User struct {
-	ID                  string                   `json:"id"`
+	ID                  uuid.UUID                `json:"id"`
 	SelfURI             string                   `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
-	Department          string                   `json:"department"`
+	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title"`
 	Division            *Division                `json:"division"`
 	Mail                string                   `json:"email"`
-	Images              []UserImage              `json:"images"`
+	Images              []*UserImage              `json:"images"`
 	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
 	Addresses           []*Contact               `json:"addresses"`
 	State               string                   `json:"state"`
 	Presence            *UserPresence            `json:"presence,omitempty"`
-	OutOfOffice         *OutOfOffice             `json:"outOfOffice"`
+	OutOfOffice         *OutOfOffice             `json:"outOfOffice,omitempty"`
 	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`
 	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
-	ProfileSkills       []string                 `json:"profileSkills"`
-	Skills              []*UserRoutingSkill      `json:"skills"`
-	Languages           []*UserRoutingLanguage   `json:"languages"`
-	LanguagePreference  string                   `json:"languagePreference"`
-	Groups              []*Group                 `json:"groups"`
-	Station             *UserStations            `json:"station"`
-	Authorization       *UserAuthorization       `json:"authorization"`
+	ProfileSkills       []string                 `json:"profileSkills,omitempty"`
+	Skills              []*UserRoutingSkill      `json:"skills,omitempty"`
+	Languages           []*UserRoutingLanguage   `json:"languages,omitempty"`
+	LanguagePreference  string                   `json:"languagePreference,omitempty"`
+	Groups              []*Group                 `json:"groups,omitempty"`
+	Station             *UserStations            `json:"station,omitempty"`
+	Authorization       *UserAuthorization       `json:"authorization,omitempty"`
 	Employer            *EmployerInfo            `json:"employerInfo,omitempty"`
 	Manager             *User                    `json:"manager,omitempty"`
-	Certifications      []string                 `json:"certifications"`
-	Biography           *Biography               `json:"biography"`
+	Certifications      []string                 `json:"certifications,omitempty"`
+	Biography           *Biography               `json:"biography,omitempty"`
 	ConversationSummary *UserConversationSummary `json:"conversationSummary,omitempty"`
-	Locations           []*Location              `json:"locations"`
-	GeoLocation         *GeoLocation             `json:"geolocation"`
-	Chat                struct {
-		JabberID string `json:"jabberId"`
-	} `json:"chat"`
-	Version int            `json:"version"`
+	Locations           []*Location              `json:"locations,omitempty"`
+	GeoLocation         *GeoLocation             `json:"geolocation,omitempty"`
+	Chat                *Jabber                  `json:"chat,omitempty"`
+	Version             int                      `json:"version"`
+
 	Client  *Client        `json:"-"`
 	Logger  *logger.Logger `json:"-"`
 }
 
+// Jabber describe a Jabber ID for chats
+type Jabber struct {
+	ID string `json:"jabberId"`
+}
 // Initialize initializes this from the given Client
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
 func (user *User) Initialize(parameters ...interface{}) error {
-	client, logger, err := ExtractClientAndLogger(parameters...)
+	client, logger, id, err := parseParameters(user, parameters...)
 	if err != nil {
 		return err
 	}
-	if len(user.ID) > 0 {
-		if err := client.Get("/users/"+user.ID, &user); err != nil {
+	if id != uuid.Nil {
+		if err := client.Get(NewURI("/users/%s", id), &user); err != nil {
 			return err
 		}
 	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
@@ -78,7 +82,7 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 		query.Add("expand", strings.Join(properties, ","))
 	}
 	user := &User{}
-	if err := client.Get("/users/me?"+query.Encode(), &user); err != nil {
+	if err := client.Get(NewURI("/users/me?%s", query.Encode()), &user); err != nil {
 		return nil, err
 	}
 	user.Client = client
@@ -87,7 +91,7 @@ func (client *Client) GetMyUser(properties ...string) (*User, error) {
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (user User) GetID() string {
+func (user User) GetID() uuid.UUID {
 	return user.ID
 }
 
@@ -103,5 +107,5 @@ func (user User) String() string {
 	if len(user.Mail) > 0 {
 		return user.Mail
 	}
-	return user.ID
+	return user.ID.String()
 }

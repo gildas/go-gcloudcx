@@ -1,3 +1,5 @@
+// +build integration
+
 package purecloud_test
 
 import (
@@ -9,6 +11,8 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
 	purecloud "github.com/gildas/go-purecloud"
@@ -56,6 +60,7 @@ func (suite *OrganizationSuite) TestOrganizationHasName() {
 // Suite Tools
 
 func (suite *OrganizationSuite) SetupSuite() {
+	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
@@ -68,9 +73,9 @@ func (suite *OrganizationSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
-		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{

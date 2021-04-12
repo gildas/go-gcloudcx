@@ -1,3 +1,5 @@
+// +build integration
+
 package purecloud_test
 
 import (
@@ -10,6 +12,8 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
 	purecloud "github.com/gildas/go-purecloud"
@@ -30,15 +34,30 @@ func TestLoginSuite(t *testing.T) {
 
 func (suite *LoginSuite) TestCanLogin() {
 	err := suite.Client.SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	}).Login()
 	suite.Assert().Nil(err, "Failed to login")
 }
 
-func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
+func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: "DEADID",
+		ClientID: uuid.New(), // that UUID should not be anywhere in GCloud
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+	})
+	suite.Assert().NotNil(err, "Should have failed login in")
+
+	var apierr purecloud.APIError
+	ok := errors.As(err, &apierr)
+	suite.Require().Truef(ok, "Error is not a purecloud.APIError, error: %+v", err)
+	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
+	suite.Assert().Equal(errors.HTTPBadRequest.Code, apierr.Status)
+	suite.Assert().Equal("client not found: invalid_client", apierr.Error())
+}
+
+func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
+	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   "WRONGSECRET",
 	})
 	suite.Assert().NotNil(err, "Should have failed login in")
@@ -53,7 +72,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidGrant() {
 
 func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 	err := suite.Client.LoginWithAuthorizationGrant(&purecloud.ClientCredentialsGrant{
-		ClientID: core.GetEnvAsString("PURECLOUD_CLIENTID", ""),
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})
 	suite.Assert().Nil(err, "Failed to login")
@@ -62,6 +81,7 @@ func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
 // Suite Tools
 
 func (suite *LoginSuite) SetupSuite() {
+	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
@@ -74,7 +94,7 @@ func (suite *LoginSuite) SetupSuite() {
 
 	var (
 		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		deploymentID = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
 		Region:       region,
