@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -29,6 +30,35 @@ type OpenMessagingSuite struct {
 
 func TestOpenMessagingSuite(t *testing.T) {
 	suite.Run(t, new(OpenMessagingSuite))
+}
+
+func (suite *OpenMessagingSuite) TestCanInitialize() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(suite.Client)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	err = integration.Initialize(purecloud.Client{ Logger: suite.Logger })
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize()
+	suite.Require().NotNil(err, "Should not initialize without a client")
+	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	var details *errors.Error
+	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
+	suite.Assert().Equal("Client", details.What)
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
+	client := &purecloud.Client{}
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(client)
+	suite.Require().NotNil(err, "Should not initialize without a client Logger")
+	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	var details *errors.Error
+	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
+	suite.Assert().Equal("Client Logger", details.What)
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
@@ -159,6 +189,17 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() 
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
 
+func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(suite.Client)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	id := uuid.New()
+	integration.Name = "Hello"
+	integration.ID = id
+	suite.Assert().Equal("Hello", integration.String())
+	integration.Name = ""
+	suite.Assert().Equal(id.String(), integration.String())
+}
 // Suite Tools
 
 func (suite *OpenMessagingSuite) SetupSuite() {

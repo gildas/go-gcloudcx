@@ -22,6 +22,8 @@ func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *lo
 
 	for _, parameter := range parameters {
 		switch object := parameter.(type) {
+		case Client:
+			client = &object
 		case *Client:
 			client = object
 		case *logger.Logger:
