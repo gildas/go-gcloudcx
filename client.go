@@ -3,6 +3,7 @@ package purecloud
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
@@ -16,6 +17,7 @@ type Client struct {
 	API                *url.URL           `json:"apiUrl,omitempty"`
 	Proxy              *url.URL           `json:"proxyUrl,omitempty"`
 	AuthorizationGrant AuthorizationGrant `json:"auth"`
+	RequestTimeout     time.Duration      `json:"requestTimout"`
 	Logger             *logger.Logger     `json:"-"`
 }
 
@@ -25,6 +27,7 @@ type ClientOptions struct {
 	OrganizationID uuid.UUID
 	DeploymentID   uuid.UUID
 	Proxy          *url.URL
+	RequestTimeout time.Duration
 	Logger         *logger.Logger
 }
 
@@ -36,10 +39,14 @@ func NewClient(options *ClientOptions) *Client {
 	if len(options.Region) == 0 {
 		options.Region = "mypurecloud.com"
 	}
+	if options.RequestTimeout < 2 * time.Second {
+		options.RequestTimeout = 10 * time.Second
+	}
 	client := Client{
-		Proxy:        options.Proxy,
-		DeploymentID: options.DeploymentID,
-		Organization: &Organization{ID: options.OrganizationID},
+		Proxy:          options.Proxy,
+		DeploymentID:   options.DeploymentID,
+		Organization:   &Organization{ID: options.OrganizationID},
+		RequestTimeout: options.RequestTimeout,
 	}
 	return client.SetLogger(options.Logger).SetRegion(options.Region)
 }
