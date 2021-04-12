@@ -45,7 +45,6 @@ func main() {
 		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the GENESYS Cloud Client ID for authentication")
 		clientSecret = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the GENESYS Cloud Client Secret for authentication")
 		clientToken  = flag.String("token", core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", ""), "the GENESYS Cloud Client Token if any. If expired, it will be replaced")
-		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
 
 		integrationName  = flag.String("integration", core.GetEnvAsString("INTEGRATION_NAME", ""), "the Integration Name")
 		integrationHook  = flag.String("webhook", core.GetEnvAsString("INTEGRATION_WEBHOOK", ""), "the Integration Webhook URL")
@@ -74,7 +73,6 @@ func main() {
 		IntegrationWebhookToken: *integrationToken,
 		Client: purecloud.NewClient(&purecloud.ClientOptions{
 			Region:       *region,
-			DeploymentID: uuid.MustParse(*deploymentID),
 			Logger:       Log,
 		}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
