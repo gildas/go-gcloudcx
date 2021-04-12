@@ -1,9 +1,5 @@
 package purecloud
 
-import (
-	"time"
-)
-
 type OpenMessage struct {
 	ID              string                `json:"id"`
 	Channel         *OpenMessageChannel   `json:"channel"`
@@ -27,29 +23,6 @@ type OpenMessageResult struct {
 	Entity         string              `json:"originatingEntity"`
 	IsFinalReceipt bool                `json:"isFinalReceipt"`
 	Metadata       map[string]string   `json:"metadata"`
-}
-
-type OpenMessageChannel struct {
-	Platform  string           `json:"platform"` // Open
-	Type      string           `json:"type"` // Private, Public
-	MessageID string           `json:"messageId"`
-	Time      time.Time        `json:"time"`
-	To        *OpenMessageTo   `json:"to"`
-	From      *OpenMessageFrom `json:"from"`
-
-}
-
-type OpenMessageTo struct {
-	ID string `json:"id"`
-}
-
-type OpenMessageFrom struct {
-	ID string `json:"id"`
-	Type string `json:"idType"`
-	Firstname string `json:"firstName"`
-	Lastname  string `json:"lastName"`
-	Nickname  string `json:"nickname"`
-	ImageURL  string `json:"image"`     // TODO should be an url.URL
 }
 
 type OpenMessageContent struct {

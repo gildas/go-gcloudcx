@@ -2,7 +2,7 @@ const Chat = Vue.component('chat', {
   template: '#chat',
   data() {
     return {
-      user:     { userId: 'abcdef12345', displayName: 'John Doe', pictureUrl: 'https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x' },
+      user:     { userId: 'JohnDoe@KKT', displayName: 'John Doe', pictureUrl: 'https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x' },
       chatId:   '',
       iconKey:  0,
       messages: [],

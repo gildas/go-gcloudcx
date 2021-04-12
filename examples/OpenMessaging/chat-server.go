@@ -1,6 +1,9 @@
 package main
 
 import (
+	"net/url"
+
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
@@ -97,22 +100,18 @@ func (server *ChatServer) Start(config *Config) {
 				log := server.Logger.Child(nil, "sendCX", "chat", message.Chat.ID, "message", message.ID)
 
 				log.Debugf("Sending message to GENESYS Cloud")
-				message := &purecloud.OpenMessage{
-					Channel:   &purecloud.OpenMessageChannel{
-						MessageID: message.ID,
-						From:      &purecloud.OpenMessageFrom{
-							ID:        message.UserID,
-							Type:      "email",
-							Firstname: "Bob",
-							Lastname:  "Minion",
-							Nickname:  "",
-							ImageURL:  "https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x",
-						},
+				inboundResult, err := config.Integration.SendInboundTextMessage(
+					&purecloud.OpenMessageFrom{
+						ID:        message.UserID,
+						Type:      "email",
+						Firstname: "Bob",
+						Lastname:  "Minion",
+						Nickname:  "",
+						ImageURL:  core.Must(url.Parse("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x")).(*url.URL),
 					},
-					Type:      "Text",
-					Text:      message.Content,
-				}
-				inboundResult, err := config.Integration.SendInboundMessage(message)
+					message.ID,
+					message.Content,
+				)
 				if err != nil {
 					Log.Errorf("Failed to send inbound", err)
 				} else {
