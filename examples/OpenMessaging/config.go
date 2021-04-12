@@ -17,6 +17,7 @@ type Config struct {
 
 	Integration *purecloud.OpenMessagingIntegration
 	Client      *purecloud.Client
+	ChatServer  *ChatServer
 }
 
 type  key int

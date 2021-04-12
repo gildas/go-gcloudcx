@@ -19,7 +19,7 @@ func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
 	log := logger.Must(logger.FromContext(r.Context()))
 	config := core.Must(ConfigFromContext(r.Context())).(*Config)
 
-	log.Infof("Request Headers: %#v", r.Header)
+	log.Debugf("Request Headers: %#v", r.Header)
 	defer r.Body.Close()
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -55,5 +55,24 @@ func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Record("message", message).Infof("Received From GCloud: %s", message.Text)
+
+	// Sending message to Chat Server
+	chat, err := config.ChatServer.FindChatByUserID(message.Channel.To.ID)
+	if err != nil {
+		log.Warnf("Failed to find chat for user %s (Error: %s)", message.Channel.To.ID, err)
+		core.RespondWithError(w, http.StatusNotFound, errors.HTTPNotFound.With("user", message.Channel.To.ID))
+		return
+	}
+	chat.Logger.Infof("Sending message to chat")
+	chat.send <- body
 	core.RespondWithJSON(w, http.StatusOK, struct{}{})
+}
+
+// NotFoundHandler is called when all other routes did not match
+func NotFoundHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log := logger.Must(logger.FromContext(r.Context())).Child(nil, "notfound")
+		log.Errorf("Route not Found %s", r.URL.String())
+		core.RespondWithError(w, http.StatusNotFound, errors.HTTPNotFound.With("path", r.URL.String()))
+	})
 }

@@ -60,6 +60,12 @@ func main() {
 	defer Log.Flush()
 	Log.Infof(strings.Repeat("-", 80))
 	Log.Infof("Log Destination: %s", Log)
+	Log.Infof("Webserver Port=%d", *port)
+
+	if *port == 0 {
+		Log.Fatalf("Missing Webserver port, stopping...")
+		os.Exit(-1)
+	}
 
 	// Initializing the Config
 	config := &Config{
@@ -120,6 +126,11 @@ func main() {
 	router.Use(config.HttpHandler())
 	router.Methods("POST").Path("/hook").HandlerFunc(mainRouteHandler)
 
+	// Routes for the internal Chat Server (used by the chat web client)
+	ChatRoutes(router)
+	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./public/"))))
+	router.PathPrefix("/").Handler(NotFoundHandler())
+
 	// Initializing the web server
 	webServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),
@@ -128,6 +139,11 @@ func main() {
 		IdleTimeout:  time.Second * 60,
 		Handler:      router,
 	}
+
+	// Start the Chat Server
+	Log.Infof("Starting Chat server")
+	config.ChatServer = NewChatServer(router, Log)
+	go config.ChatServer.Start(config)
 
 	// Starting the server
 	go func() {
