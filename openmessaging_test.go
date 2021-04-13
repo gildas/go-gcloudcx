@@ -36,7 +36,7 @@ func (suite *OpenMessagingSuite) TestCanInitialize() {
 	integration := purecloud.OpenMessagingIntegration{}
 	err := integration.Initialize(suite.Client)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
-	err = integration.Initialize(purecloud.Client{ Logger: suite.Logger })
+	err = integration.Initialize(purecloud.Client{}, suite.Logger)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 }
 
