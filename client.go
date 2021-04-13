@@ -15,6 +15,7 @@ type Client struct {
 	DeploymentID       uuid.UUID          `json:"deploymentId"`
 	Organization       *Organization      `json:"-"`
 	API                *url.URL           `json:"apiUrl,omitempty"`
+	LoginURL           *url.URL           `json:"loginUrl,omitempty"`
 	Proxy              *url.URL           `json:"proxyUrl,omitempty"`
 	AuthorizationGrant AuthorizationGrant `json:"auth"`
 	RequestTimeout     time.Duration      `json:"requestTimout"`
@@ -59,13 +60,9 @@ func (client *Client) SetLogger(log *logger.Logger) *Client {
 
 // SetRegion sets the region and its main API
 func (client *Client) SetRegion(region string) *Client {
-	var err error
-
 	client.Region = region
-	client.API, err = url.Parse(fmt.Sprintf("https://api.%s", region))
-	if err != nil {
-		client.API, _ = url.Parse("https://api.mypurecloud.com")
-	}
+	client.API, _ = url.Parse(fmt.Sprintf("https://api.%s", region))
+	client.LoginURL, _ = url.Parse(fmt.Sprintf("https://login.%s", region))
 	return client
 }
 
