@@ -2,6 +2,7 @@ package purecloud
 
 import (
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/gildas/go-errors"
@@ -72,6 +73,11 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 
 	res, err := request.Send(options, results)
 	if err != nil {
+		urlError := &url.Error{}
+		if errors.As(err, &urlError) {
+			client.Logger.Errorf("URL Error", urlError)
+			return err
+		}
 		if errors.Is(err, errors.HTTPUnauthorized) && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
 			// This means our token most probably expired, we should try again without it
 			client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
