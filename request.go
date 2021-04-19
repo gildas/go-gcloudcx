@@ -36,6 +36,7 @@ func (client *Client) Delete(path URI, results interface{}) error {
 
 // SendRequest sends a REST request to PureCloud
 func (client *Client) SendRequest(path URI, options *request.Options, results interface{}) (err error) {
+	log := client.Logger.Child(nil, "request")
 	if options == nil {
 		options = &request.Options{}
 	}
@@ -72,15 +73,16 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 	options.Timeout = client.RequestTimeout
 
 	res, err := request.Send(options, results)
+	log = log.Record("inin-correlation", res.Headers.Get("Inin-Correlation-Id"))
 	if err != nil {
 		urlError := &url.Error{}
 		if errors.As(err, &urlError) {
-			client.Logger.Errorf("URL Error", urlError)
+			log.Errorf("URL Error", urlError)
 			return err
 		}
 		if errors.Is(err, errors.HTTPUnauthorized) && len(client.AuthorizationGrant.AccessToken().String()) > 0 {
 			// This means our token most probably expired, we should try again without it
-			client.Logger.Infof("Authorization Token is expired, we need to authenticate again")
+			log.Infof("Authorization Token is expired, we need to authenticate again")
 			options.Authorization = ""
 			client.AuthorizationGrant.AccessToken().Reset()
 			return client.SendRequest(path, options, results)
@@ -93,6 +95,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 			}
 			apiError.Status = details.Code
 			apiError.Code = details.ID
+			apiError.CorrelationID = res.Headers.Get("Inin-Correlation-Id")
 			if strings.HasPrefix(apiError.Message, "authentication failed") {
 				apiError.Status = errors.HTTPUnauthorized.Code
 				apiError.Code = errors.HTTPUnauthorized.ID

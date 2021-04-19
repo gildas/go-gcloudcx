@@ -66,6 +66,7 @@ type APIError struct {
 	EntityID          string            `json:"entityId,omitempty"`
 	EntityName        string            `json:"entityName,omitempty"`
 	ContextID         string            `json:"contextId,omitempty"`
+	CorrelationID     string            `json:"correlationId,omitempty"`
 	Details           []APIErrorDetails `json:"details,omitempty"`
 	Errors            []APIError        `json:"errors,omitempty"`
 }
