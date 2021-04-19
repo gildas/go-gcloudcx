@@ -178,7 +178,7 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 	return nil
 }
 
-// SendInboundMessage sends a text message from the middleware to GENESYS Cloud
+// SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
 func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
@@ -194,6 +194,38 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMe
 			),
 			Type: "Text",
 			Text: text,
+		},
+		&result,
+	)
+	return result, err
+}
+
+// SendInboundImageMessage sends a text message from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
+func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenMessageFrom, messageID, text string, imageMimeType string, imageURL *url.URL) (*OpenMessageResult, error) {
+	result := &OpenMessageResult{}
+	err := integration.Client.Post(
+		"/conversations/messages/inbound/open",
+		&OpenMessage{
+			Direction: "Inbound",
+			Channel: NewOpenMessageChannel(
+				messageID,
+				&OpenMessageTo{ ID: integration.ID.String() },
+				from,
+			),
+			Type: "Text",
+			Text: text,
+			Content: []*OpenMessageContent{
+				&OpenMessageContent{
+					Type: "Attachment",
+					Attachment: &OpenMessageAttachment{
+						Type: "Image",
+						Mime: imageMimeType,
+						URL:  imageURL,
+					},
+				},
+			},
 		},
 		&result,
 	)
