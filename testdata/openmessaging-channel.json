@@ -1,0 +1,18 @@
+{
+  "platform": "Open",
+  "type": "Private",
+  "messageId": "gmAy9zNkhf4ermFvHH9mB5",
+  "to": {
+    "id": "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"
+  },
+  "from": {
+    "id": "abcdef12345",
+    "idType": "Email",
+    "firstName": "Bob",
+    "lastName": "Minion",
+    "nickname": "Bobby",
+    "image": "https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x"
+
+  },
+  "time": "2021-04-09T04:43:33Z"
+}

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -31,13 +32,42 @@ func TestOpenMessagingSuite(t *testing.T) {
 	suite.Run(t, new(OpenMessagingSuite))
 }
 
-func (suite *OpenMessagingSuite) TestCanUnmarshal() {
+func (suite *OpenMessagingSuite) TestCanInitialize() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(suite.Client)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	err = integration.Initialize(purecloud.Client{}, suite.Logger)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize()
+	suite.Require().NotNil(err, "Should not initialize without a client")
+	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	var details *errors.Error
+	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
+	suite.Assert().Equal("Client", details.What)
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
+	client := &purecloud.Client{}
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(client)
+	suite.Require().NotNil(err, "Should not initialize without a client Logger")
+	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	var details *errors.Error
+	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
+	suite.Assert().Equal("Client Logger", details.What)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
 	integration := purecloud.OpenMessagingIntegration{}
 	err := LoadObject("openmessagingintegration.json", &integration)
 	if err != nil {
 		suite.Logger.Errorf("Failed to Unmarshal", err)
 	}
-	suite.Require().Nil(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
+	suite.Require().Nilf(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	suite.Assert().Equal("34071108-1569-4cb0-9137-a326b8a9e815", integration.ID.String())
 	suite.Assert().NotEmpty(integration.CreatedBy.ID)
@@ -56,7 +86,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshal() {
 	suite.Assert().Equal("https://www.acme.com/purecloud", integration.WebhookURL.String())
 }
 
-func (suite *OpenMessagingSuite) TestCanMarshal() {
+func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 	integration := purecloud.OpenMessagingIntegration{
 		ID:               uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"),
 		Name:             "TEST-GO-PURECLOUD",
@@ -81,12 +111,95 @@ func (suite *OpenMessagingSuite) TestCanMarshal() {
 	}
 
 	data, err := json.Marshal(integration)
-	suite.Require().Nil(err, "Failed to marshal OpenMessagingIntegration. %s", err)
+	suite.Require().Nilf(err, "Failed to marshal OpenMessagingIntegration. %s", err)
 	expected, err := LoadFile("openmessagingintegration.json")
-	suite.Require().Nil(err, "Failed to Load Data. %s", err)
+	suite.Require().Nilf(err, "Failed to Load Data. %s", err)
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
+func (suite *OpenMessagingSuite) TestShouldNotUnmarshalIntegrationWithInvalidJSON() {
+	var err error
+
+	integration := purecloud.OpenMessagingIntegration{}
+	err = json.Unmarshal([]byte(`{"Name": 15}`), &integration)
+	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
+	channel := purecloud.OpenMessageChannel{}
+	err := LoadObject("openmessaging-channel.json", &channel)
+	suite.Require().Nilf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
+	suite.Assert().Equal("Open", channel.Platform)
+	suite.Assert().Equal("Private", channel.Type)
+	suite.Assert().Equal("gmAy9zNkhf4ermFvHH9mB5", channel.MessageID)
+	suite.Assert().Equal(time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC), channel.Time)
+	suite.Assert().Equal("edce4efa-4abf-468b-ada7-cd6d35e7bbaf", channel.To.ID)
+	suite.Assert().Equal("Email", channel.From.Type)
+	suite.Assert().Equal("abcdef12345", channel.From.ID)
+	suite.Assert().Equal("Bob", channel.From.Firstname)
+	suite.Assert().Equal("Minion", channel.From.Lastname)
+	suite.Assert().Equal("Bobby", channel.From.Nickname)
+	suite.Assert().Equal("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x", channel.From.ImageURL.String())
+}
+
+func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
+	channel := purecloud.NewOpenMessageChannel(
+		"gmAy9zNkhf4ermFvHH9mB5",
+		&purecloud.OpenMessageTo{ ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+		&purecloud.OpenMessageFrom{
+			ID:        "abcdef12345",
+			Type:      "Email",
+			Firstname: "Bob",
+			Lastname:  "Minion",
+			Nickname:  "Bobby",
+			ImageURL:  core.Must(url.Parse("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x")).(*url.URL),
+		},
+	)
+	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+
+	data, err := json.Marshal(channel)
+	suite.Require().Nilf(err, "Failed to marshal OpenMessageChannel. %s", err)
+	suite.Require().NotNil(data, "Marshaled data should not be nil")
+	expected, err := LoadFile("openmessaging-channel.json")
+	suite.Require().Nilf(err, "Failed to Load Data. %s", err)
+	suite.Assert().JSONEq(string(expected), string(data))
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() {
+	var err error
+
+	channel := purecloud.OpenMessageChannel{}
+	err = json.Unmarshal([]byte(`{"Platform": 2}`), &channel)
+	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
+	var err error
+
+	from := purecloud.OpenMessageFrom{}
+	err = json.Unmarshal([]byte(`{"idType": 3}`), &from)
+	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+}
+
+func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
+	var err error
+
+	message := purecloud.OpenMessage{}
+	err = json.Unmarshal([]byte(`{"Direction": 6}`), &message)
+	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+}
+
+func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
+	integration := purecloud.OpenMessagingIntegration{}
+	err := integration.Initialize(suite.Client)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	id := uuid.New()
+	integration.Name = "Hello"
+	integration.ID = id
+	suite.Assert().Equal("Hello", integration.String())
+	integration.Name = ""
+	suite.Assert().Equal(id.String(), integration.String())
+}
 // Suite Tools
 
 func (suite *OpenMessagingSuite) SetupSuite() {

@@ -45,7 +45,7 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	}{}
 
 	err = client.SendRequest(
-		NewURI("https://login.%s/oauth/token", client.Region),
+		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
 			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
 			Payload: map[string]string{

@@ -178,32 +178,55 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 	return nil
 }
 
-// SendInboundMessage sends a message from the middleware to GENESYS Cloud
+// SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundMessage(message *OpenMessage) (*OpenMessageResult, error) {
-	if message.Channel == nil {
-		return nil, errors.ArgumentMissing.With("channel").WithStack()
-	}
-	if message.Channel.To == nil {
-		message.Channel.To = &OpenMessageTo{}
-	}
-	message.Channel.Platform = "Open"
-	if len(message.Channel.Type) == 0 {
-		message.Channel.Type = "Private"
-	}
-	if message.Channel.Time.IsZero() {
-		message.Channel.Time = time.Now().UTC()
-	}
-	if len(message.Type) == 0 {
-		message.Type = "Text"
-	}
-	message.Direction = "Inbound"
-	message.Channel.To.ID = integration.ID.String()
+func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/inbound/open",
-		message,
+		&OpenMessage{
+			Direction: "Inbound",
+			Channel: NewOpenMessageChannel(
+				messageID,
+				&OpenMessageTo{ ID: integration.ID.String() },
+				from,
+			),
+			Type: "Text",
+			Text: text,
+		},
+		&result,
+	)
+	return result, err
+}
+
+// SendInboundImageMessage sends a text message from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
+func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenMessageFrom, messageID, text string, imageMimeType string, imageURL *url.URL) (*OpenMessageResult, error) {
+	result := &OpenMessageResult{}
+	err := integration.Client.Post(
+		"/conversations/messages/inbound/open",
+		&OpenMessage{
+			Direction: "Inbound",
+			Channel: NewOpenMessageChannel(
+				messageID,
+				&OpenMessageTo{ ID: integration.ID.String() },
+				from,
+			),
+			Type: "Text",
+			Text: text,
+			Content: []*OpenMessageContent{
+				&OpenMessageContent{
+					Type: "Attachment",
+					Attachment: &OpenMessageAttachment{
+						Type: "Image",
+						Mime: imageMimeType,
+						URL:  imageURL,
+					},
+				},
+			},
+		},
 		&result,
 	)
 	return result, err

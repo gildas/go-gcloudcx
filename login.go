@@ -49,7 +49,7 @@ func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 			}
 
 			log.Infof("Cookie Not Found, need to login with PureCloud")
-			redirectURL, _ := url.Parse("https://login." + client.Region + "/oauth/authorize")
+			redirectURL, _ := NewURI("%s/oauth/authorize", client.LoginURL).URL()
 
 			if grant, ok := client.AuthorizationGrant.(*AuthorizationCodeGrant); ok {
 				query := redirectURL.Query()
