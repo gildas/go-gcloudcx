@@ -18,6 +18,14 @@ type AccessToken struct {
 	ExpiresOn time.Time `json:"tokenExpires"` // UTC!
 }
 
+// UpdatedAccessToken describes an updated Access Token
+//
+// This object is sent by the AuthorizationGrant.Authorize() when the token is updated
+type UpdatedAccessToken struct {
+	AccessToken
+	CustomData interface{}
+}
+
 var (
 	hashKey      = []byte(core.GetEnvAsString("PURECLOUD_SESSION_HASH_KEY", "Pur3Cl0udS3ss10nH@5hK3y"))
 	blockKey     = []byte(core.GetEnvAsString("PURECLOUD_SESSION_BLOCK_KEY", "Pur3Cl0udS3ss10nBl0ckK3y"))
