@@ -73,7 +73,6 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 	options.Timeout = client.RequestTimeout
 
 	res, err := request.Send(options, results)
-	log = log.Record("inin-correlation", res.Headers.Get("Inin-Correlation-Id"))
 	if err != nil {
 		urlError := &url.Error{}
 		if errors.As(err, &urlError) {
