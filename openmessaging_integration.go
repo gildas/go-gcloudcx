@@ -12,6 +12,9 @@ import (
 	"github.com/google/uuid"
 )
 
+// OpenMessagingIntegration  describes an GCloud OpenMessaging Integration
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging
 type OpenMessagingIntegration struct {
 	ID               uuid.UUID             `json:"id"`
 	Name             string                `json:"name"`
@@ -31,8 +34,10 @@ type OpenMessagingIntegration struct {
 }
 
 // Initialize initializes this from the given Client
-//   implements Initializable
+//
 //   if the parameters contain a uuid.UUID, the corresponding integration is fetched
+//
+//   implements Initializable
 func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) error {
 	client, logger, id, err := parseParameters(integration, parameters...)
 	if err != nil {
@@ -78,6 +83,7 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 // FetchOpenMessagingIntegration Fetches an OpenMessagingIntegration object
 //
 // If a UUID is given, fetches by UUID
+//
 // If a string is given, fetches by name
 func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingIntegration, error) {
 	client, logger, id, err := parseParameters(nil, parameters...)
@@ -130,6 +136,7 @@ func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingInt
 	return integration, nil
 }
 
+// Create creates a new OpenMessaging Integration
 func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url.URL, token string) error {
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Post(
@@ -152,10 +159,16 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 	return nil
 }
 
+// Delete deletes an OpenMessaging Integration
+//
+// If the integration was not created, nothing is done
 func (integration *OpenMessagingIntegration) Delete() error {
 	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
 }
 
+// Update updates an OpenMessaging Integration
+//
+// If the integration was not created, an error is return without reaching GENESYS Cloud
 func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url.URL, token string) error {
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Patch(
@@ -235,6 +248,7 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 // SendOutboundMessage sends a message from GENESYS Cloud to the middleware
 //
 // The message can be only text as it is sent bia the AgentLess Message API.
+//
 // This is mainly for debugging purposes
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
@@ -257,12 +271,14 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(destination, te
 }
 
 // GetID gets the identifier of this
+//
 //   implements Identifiable
 func (integration OpenMessagingIntegration) GetID() uuid.UUID {
 	return integration.ID
 }
 
 // String gets a string version
+//
 //   implements the fmt.Stringer interface
 func (integration OpenMessagingIntegration) String() string {
 	if len(integration.Name) > 0 {
