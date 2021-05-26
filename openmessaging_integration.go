@@ -163,6 +163,9 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 //
 // If the integration was not created, nothing is done
 func (integration *OpenMessagingIntegration) Delete() error {
+	if integration.ID == uuid.Nil {
+		return nil
+	}
 	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
 }
 
@@ -170,6 +173,9 @@ func (integration *OpenMessagingIntegration) Delete() error {
 //
 // If the integration was not created, an error is return without reaching GENESYS Cloud
 func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url.URL, token string) error {
+	if integration.ID == uuid.Nil {
+		return errors.ArgumentMissing.With("ID").WithStack()
+	}
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Patch(
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
@@ -185,7 +191,7 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 		&response,
 	)
 	if err != nil {
-		return err
+		return errors.CreationFailed.Wrap(err)
 	}
 	integration.Logger.Record("response", response).Debugf("Updated integration %#v", response)
 	return nil
@@ -195,6 +201,9 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
 func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
+	if integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID").WithStack()
+	}
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/inbound/open",
@@ -217,6 +226,9 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMe
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
 func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenMessageFrom, messageID, text string, imageMimeType string, imageURL *url.URL) (*OpenMessageResult, error) {
+	if integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID").WithStack()
+	}
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/inbound/open",
@@ -253,6 +265,9 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
 func (integration *OpenMessagingIntegration) SendOutboundMessage(destination, text string) (*AgentlessMessageResult, error) {
+	if integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID").WithStack()
+	}
 	result := &AgentlessMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/agentless",
