@@ -13,7 +13,6 @@ Have a look at the examples/ folder for complete examples on how to use this lib
 
 ## Usage
 
-
 You first start by creating a `purecloud.Client` that will allow to send requests to PureCloud:  
 ```go
 Log    := logger.Create("purecloud")
@@ -89,6 +88,49 @@ func mainRouteHandler() http.Handler {
 }
 ```
 
+When using the Client Credential grant, you can configure the grant to tell when the token gets updated, allowing you to store it and re-use it in the future:  
+```go
+var TokenUpdateChan = make(chan purecloud.UpdatedAccessToken)
+
+func main() {
+	// ...
+	defer close(TokenUpdateChan)
+
+	go func() {
+		for {
+			data, opened := <-TokenUpdateChan
+
+			if !opened {
+				return
+			}
+
+			log.Printf("Received Token: %s\n", data.Token)
+
+			myID, ok := data.CustomData.(string)
+			if (!ok) {
+				log.Printf("Shoot....\n")
+			} else {
+				log.Printf("myID: %s\n", myID)
+			}
+		}
+	}()
+
+	client := purecloud.NewClient(&purecloud.ClientOptions{
+		// ...
+	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		ClientID: "1234",
+		Secret:   "s3cr3t",
+		TokenUpdated: TokenUpdateChan,
+		CustomData:   "myspecialID",
+		Token: savedToken,
+	})
+
+	// do stuff with the client, etc.
+}
+```
+
+As you can see, you can even pass some custom data (`interface{}`, so anything really) to the grant and that data will be passed back to the `func` that handles the `chan`.
+
 ## Notifications
 
 The PureCloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
@@ -143,6 +185,8 @@ go func() {
 ## Agent Chat API
 
 ## Guest Chat API
+
+## OpenMessaging API
 
 # TODO
 
