@@ -242,7 +242,7 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 			Type: "Text",
 			Text: text,
 			Content: []*OpenMessageContent{
-				&OpenMessageContent{
+				{
 					Type: "Attachment",
 					Attachment: &OpenMessageAttachment{
 						Type: "Image",

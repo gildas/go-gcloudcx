@@ -139,7 +139,6 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
 	suite.Assert().Equal("Bob", channel.From.Firstname)
 	suite.Assert().Equal("Minion", channel.From.Lastname)
 	suite.Assert().Equal("Bobby", channel.From.Nickname)
-	suite.Assert().Equal("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x", channel.From.ImageURL.String())
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
@@ -152,7 +151,6 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 			Firstname: "Bob",
 			Lastname:  "Minion",
 			Nickname:  "Bobby",
-			ImageURL:  core.Must(url.Parse("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x")).(*url.URL),
 		},
 	)
 	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
