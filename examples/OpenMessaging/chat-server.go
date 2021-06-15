@@ -1,9 +1,6 @@
 package main
 
 import (
-	"net/url"
-
-	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/gildas/go-purecloud"
@@ -107,7 +104,6 @@ func (server *ChatServer) Start(config *Config) {
 						Firstname: "Bob",
 						Lastname:  "Minion",
 						Nickname:  "",
-						ImageURL:  core.Must(url.Parse("https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x")).(*url.URL),
 					},
 					message.ID,
 					message.Content,

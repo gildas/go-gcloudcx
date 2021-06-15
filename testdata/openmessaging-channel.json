@@ -10,8 +10,7 @@
     "idType": "Email",
     "firstName": "Bob",
     "lastName": "Minion",
-    "nickname": "Bobby",
-    "image": "https://gravatar.com/avatar/97959eb8244f0cb560e2d30b2075f013?s=400&d=robohash&r=x"
+    "nickname": "Bobby"
 
   },
   "time": "2021-04-09T04:43:33Z"
