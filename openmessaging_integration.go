@@ -127,7 +127,7 @@ func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingInt
 				break
 			}
 		}
-		if integration == nil {
+		if integration == nil || integration.ID == uuid.Nil {
 			return nil, errors.NotFound.With("name", name).WithStack()
 		}
 	}
