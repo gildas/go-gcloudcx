@@ -6,18 +6,26 @@ import (
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
+	"github.com/google/uuid"
 )
 
 // AuthorizationCodeGrant implements PureCloud's Client Authorization Code Grants
 //   See: https://developer.mypurecloud.com/api/rest/authorization/use-authorization-code.html
 type AuthorizationCodeGrant struct {
-	ClientID     string
+	ClientID     uuid.UUID
 	Secret       string
 	Code         string
 	RedirectURL  *url.URL
 	Token        AccessToken
 	CustomData   interface{}
 	TokenUpdated chan UpdatedAccessToken
+}
+
+// GetID gets the client Identifier
+//
+// Implements core.Identifiable
+func (grant *AuthorizationCodeGrant) GetID() uuid.UUID {
+	return grant.ClientID
 }
 
 // Authorize this Grant with PureCloud
@@ -27,7 +35,7 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	log.Infof("Authenticating with %s using Authorization Code grant", client.Region)
 
 	// Validates the Grant
-	if len(grant.ClientID) == 0 {
+	if grant.ClientID == uuid.Nil {
 		return errors.ArgumentMissing.With("ClientID").WithStack()
 	}
 	if len(grant.Secret) == 0 {
@@ -49,7 +57,7 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	err = client.SendRequest(
 		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
-			Authorization: request.BasicAuthorization(grant.ClientID, grant.Secret),
+			Authorization: request.BasicAuthorization(grant.ClientID.String(), grant.Secret),
 			Payload: map[string]string{
 				"grant_type":   "authorization_code",
 				"code":         grant.Code,

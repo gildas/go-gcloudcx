@@ -105,7 +105,7 @@ func main() {
 		DeploymentID: uuid.MustParse(*deploymentID),
 		Logger:       Log,
 	}).SetAuthorizationGrant(&purecloud.AuthorizationCodeGrant{
-		ClientID:    *clientID,
+		ClientID:    uuid.MustParse(*clientID),
 		Secret:      *secret,
 		RedirectURL: redirectURL,
 	})

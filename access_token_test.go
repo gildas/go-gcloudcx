@@ -72,12 +72,12 @@ func TestCanResetGrantAccessToken(t *testing.T) {
 		ExpiresOn: time.Now().UTC().Add(2 * time.Hour),
 	}
 	client := purecloud.NewClient(&purecloud.ClientOptions{}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{Token: token})
-	assert.Equal(t, "Bearer", client.AuthorizationGrant.AccessToken().Type)
-	assert.Equal(t, "Very Long String", client.AuthorizationGrant.AccessToken().Token)
+	assert.Equal(t, "Bearer", client.Grant.AccessToken().Type)
+	assert.Equal(t, "Very Long String", client.Grant.AccessToken().Token)
 
-	client.AuthorizationGrant.AccessToken().Reset()
-	assert.Empty(t, client.AuthorizationGrant.AccessToken().Token, "The Token string should be empty")
-	assert.Empty(t, client.AuthorizationGrant.AccessToken().Type, "The Token type should be empty")
-	assert.True(t, client.AuthorizationGrant.AccessToken().IsExpired(), "The Token should be expired")
-	assert.False(t, client.AuthorizationGrant.AccessToken().IsValid(), "The Token should not be valid")
+	client.Grant.AccessToken().Reset()
+	assert.Empty(t, client.Grant.AccessToken().Token, "The Token string should be empty")
+	assert.Empty(t, client.Grant.AccessToken().Type, "The Token type should be empty")
+	assert.True(t, client.Grant.AccessToken().IsExpired(), "The Token should be expired")
+	assert.False(t, client.Grant.AccessToken().IsValid(), "The Token should not be valid")
 }

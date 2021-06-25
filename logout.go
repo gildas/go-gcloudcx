@@ -7,8 +7,8 @@ import (
 // Logout logs out a Client from PureCloud
 func (client *Client) Logout() {
 	_ = client.Delete("/tokens/me", nil) // we don't care much about the error as we are logging out
-	if client.AuthorizationGrant != nil {
-		client.AuthorizationGrant.AccessToken().Reset()
+	if client.Grant != nil {
+		client.Grant.AccessToken().Reset()
 	}
 }
 
@@ -23,7 +23,7 @@ func (client *Client) LogoutHandler() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log := client.Logger.Scope("logout")
 
-			if client.AuthorizationGrant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
+			if client.Grant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
 				client.Logout()
 				client.DeleteCookie(w)
 				log.Infof("User is now logged out from PureCloud")
