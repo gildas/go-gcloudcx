@@ -63,7 +63,7 @@ func (user *User) Initialize(parameters ...interface{}) error {
 		if err := client.Get(NewURI("/users/%s", id), &user); err != nil {
 			return err
 		}
-	} else if _, ok := client.AuthorizationGrant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
+	} else if _, ok := client.Grant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
 		if err := client.Get("/users/me", &user); err != nil {
 			return err
 		}

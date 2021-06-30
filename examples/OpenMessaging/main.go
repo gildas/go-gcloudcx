@@ -28,9 +28,9 @@ func UpdateEnvFile(config *Config) {
 	config.Client.Logger.Infof("Updating the .env file")
 	_ = godotenv.Write(map[string]string{
 		"PURECLOUD_REGION":       config.Client.Region,
-		"PURECLOUD_CLIENTID":     config.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
-		"PURECLOUD_CLIENTSECRET": config.Client.AuthorizationGrant.(*purecloud.ClientCredentialsGrant).Secret,
-		"PURECLOUD_CLIENTTOKEN":  config.Client.AuthorizationGrant.AccessToken().Token,
+		"PURECLOUD_CLIENTID":     config.Client.Grant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
+		"PURECLOUD_CLIENTSECRET": config.Client.Grant.(*purecloud.ClientCredentialsGrant).Secret,
+		"PURECLOUD_CLIENTTOKEN":  config.Client.Grant.AccessToken().Token,
 		"PURECLOUD_DEPLOYMENTID": config.Client.DeploymentID.String(),
 		"INTEGRATION_NAME":       config.IntegrationName,
 		"INTEGRATION_WEBHOOK":    config.IntegrationWebhookURL.String(),

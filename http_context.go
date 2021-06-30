@@ -35,7 +35,7 @@ func (client *Client) HttpHandler() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log := client.Logger.Scope("middleware")
 
-			if client.AuthorizationGrant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
+			if client.Grant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
 				log.Infof("PureCloud Token loaded from cookies")
 			} else {
 				log.Debugf("PureCloud Token not found in cookies")

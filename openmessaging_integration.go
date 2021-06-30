@@ -127,7 +127,7 @@ func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingInt
 				break
 			}
 		}
-		if integration == nil {
+		if integration == nil || integration.ID == uuid.Nil {
 			return nil, errors.NotFound.With("name", name).WithStack()
 		}
 	}
@@ -156,6 +156,7 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 		return err
 	}
 	integration.Logger.Record("response", response).Debugf("Created integration %#v", response)
+	integration.ID = response.ID
 	return nil
 }
 

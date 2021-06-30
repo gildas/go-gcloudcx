@@ -14,11 +14,18 @@ import (
 //
 //   See: https://developer.mypurecloud.com/api/rest/authorization/use-client-credentials.html
 type ClientCredentialsGrant struct {
-	ClientID uuid.UUID
+	ClientID     uuid.UUID
 	Secret       string
 	Token        AccessToken
 	CustomData   interface{}
 	TokenUpdated chan UpdatedAccessToken
+}
+
+// GetID gets the client Identifier
+//
+// Implements core.Identifiable
+func (grant *ClientCredentialsGrant) GetID() uuid.UUID {
+	return grant.ClientID
 }
 
 // Authorize this Grant with PureCloud
@@ -28,7 +35,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
 
 	// Validates the Grant
-	if len(grant.ClientID) == 0 {
+	if grant.ClientID == uuid.Nil {
 		return errors.ArgumentMissing.With("ClientID").WithStack()
 	}
 	if len(grant.Secret) == 0 {
