@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -98,7 +98,7 @@ func (server *ChatServer) Start(config *Config) {
 
 				log.Debugf("Sending message to GENESYS Cloud")
 				inboundResult, err := config.Integration.SendInboundTextMessage(
-					&purecloud.OpenMessageFrom{
+					&gcloudcx.OpenMessageFrom{
 						ID:        message.UserID,
 						Type:      "email",
 						Firstname: "Bob",

@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // UserRoutingSkill describe a Routing Skill for a User
 type UserRoutingSkill struct {

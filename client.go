@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Client is the primary object to use PureCloud
+// Client is the primary object to use Gcloud
 type Client struct {
 	Region         string         `json:"region"`
 	DeploymentID   uuid.UUID      `json:"deploymentId"`
@@ -35,7 +35,7 @@ type ClientOptions struct {
 	Logger         *logger.Logger
 }
 
-// NewClient creates a new PureCloud Client
+// NewClient creates a new Gcloud Client
 func NewClient(options *ClientOptions) *Client {
 	if options == nil {
 		options = &ClientOptions{}
@@ -58,7 +58,7 @@ func NewClient(options *ClientOptions) *Client {
 
 // SetLogger sets the logger
 func (client *Client) SetLogger(log *logger.Logger) *Client {
-	client.Logger = logger.CreateIfNil(log, "PureCloud").Child("purecloud", "purecloud")
+	client.Logger = logger.CreateIfNil(log, "gcloudcx").Child("gcloudcx", "gcloudcx")
 	return client
 }
 

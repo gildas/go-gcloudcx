@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
@@ -26,19 +26,19 @@ func TestClientSuite(t *testing.T) {
 }
 
 func (suite *ClientSuite) TestCanInitialize() {
-	client := purecloud.NewClient(&purecloud.ClientOptions{
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: "mypurecloud.com",
 		Logger: suite.Logger,
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.New(),
 		Secret:   "s3cr3t",
 	})
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "gcloudcx Client is nil")
 }
 
 func (suite *ClientSuite) TestCanInitializeWithoutOptions() {
-	client := purecloud.NewClient(nil)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	client := gcloudcx.NewClient(nil)
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 }
 
 // Suite Tools

@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // commit contains the current git commit and is set in the build.sh script
 var commit string
@@ -7,4 +7,4 @@ var commit string
 var VERSION = "0.3.2" + commit
 
 // APP is the name of the application
-const APP string = "PureCloud Client"
+const APP string = "GCloudCX Client"

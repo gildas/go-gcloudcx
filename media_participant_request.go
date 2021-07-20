@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // MediaParticipantRequest describes a request Media Participant
 type MediaParticipantRequest struct {

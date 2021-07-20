@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -22,7 +22,7 @@ func (suite *ClientSuite) TestCanSendGetRequest() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Get("/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -33,7 +33,7 @@ func (suite *ClientSuite) TestCanSendPostRequest() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Post("/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -44,7 +44,7 @@ func (suite *ClientSuite) TestCanSendPatchRequest() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Patch("/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -55,7 +55,7 @@ func (suite *ClientSuite) TestCanSendPutRequest() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Put("/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -66,7 +66,7 @@ func (suite *ClientSuite) TestCanSendDeleteRequest() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Delete("/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -77,11 +77,11 @@ func (suite *ClientSuite) TestCanSendRequestWithFullyQualifiedURL() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	serverURL := core.Must(url.Parse(server.URL)).(*url.URL)
 	requestURL := core.Must(serverURL.Parse("/api/v2/path/to/resource")).(*url.URL)
-	err := client.Get(purecloud.NewURI(requestURL.String()), &stuff)
+	err := client.Get(gcloudcx.NewURI(requestURL.String()), &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -90,7 +90,7 @@ func (suite *ClientSuite) TestCanSendRequestWithAPIPrefix() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.Get("/api/v2/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
@@ -101,7 +101,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithInvalidProtocol() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.SendRequest("invalid://acme.com", nil, &stuff)
 	suite.Require().NotNil(err, "Should not send request withan invalid URL")
@@ -116,7 +116,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithInvalidURL() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
 	err := client.SendRequest("http://wrong hostname.com", nil, &stuff)
 	suite.Require().NotNil(err, "Should not send request withan invalid URL")
@@ -129,7 +129,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithNoAPI() {
 	defer server.Close()
 
 	client := CreateTestClient(server.URL, suite.Logger)
-	suite.Require().NotNil(client, "PureCloud Client is nil")
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	client.API = nil
 	stuff := struct{}{}
 	err := client.SendRequest("/path/to/resource", nil, &stuff)
@@ -152,14 +152,14 @@ func CreateTestServer(expectedMethod, expectedURL string, t *testing.T) *httptes
 	}))
 }
 
-func CreateTestClient(serverURL string, log *logger.Logger) *purecloud.Client {
-	client := purecloud.NewClient(&purecloud.ClientOptions{
+func CreateTestClient(serverURL string, log *logger.Logger) *gcloudcx.Client {
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: "mypurecloud.com",
 		Logger: log,
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.New(),
 		Secret:   "s3cr3t",
-		Token: purecloud.AccessToken{
+		Token: gcloudcx.AccessToken{
 			Type:      "bearer",
 			Token:     "F@k3T0k3nV@lu3",
 			ExpiresOn: time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC),

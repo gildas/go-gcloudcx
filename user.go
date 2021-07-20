@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"net/url"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// User describes a PureCloud User
+// User describes a GCloud User
 type User struct {
 	ID                  uuid.UUID                `json:"id"`
 	SelfURI             string                   `json:"selfUri"`

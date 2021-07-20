@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 type OpenMessagingSuite struct {
@@ -25,7 +25,7 @@ type OpenMessagingSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *purecloud.Client
+	Client *gcloudcx.Client
 }
 
 func TestOpenMessagingSuite(t *testing.T) {
@@ -33,15 +33,15 @@ func TestOpenMessagingSuite(t *testing.T) {
 }
 
 func (suite *OpenMessagingSuite) TestCanInitialize() {
-	integration := purecloud.OpenMessagingIntegration{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize(suite.Client)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
-	err = integration.Initialize(purecloud.Client{}, suite.Logger)
+	err = integration.Initialize(gcloudcx.Client{}, suite.Logger)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
-	integration := purecloud.OpenMessagingIntegration{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize()
 	suite.Require().NotNil(err, "Should not initialize without a client")
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
@@ -51,8 +51,8 @@ func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
-	client := &purecloud.Client{}
-	integration := purecloud.OpenMessagingIntegration{}
+	client := &gcloudcx.Client{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize(client)
 	suite.Require().NotNil(err, "Should not initialize without a client Logger")
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
@@ -62,7 +62,7 @@ func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
-	integration := purecloud.OpenMessagingIntegration{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err := LoadObject("openmessagingintegration.json", &integration)
 	if err != nil {
 		suite.Logger.Errorf("Failed to Unmarshal", err)
@@ -83,26 +83,26 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
 	suite.Assert().Equal("TEST-GO-PURECLOUD", integration.Name)
 	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
 	suite.Require().NotNil(integration.WebhookURL)
-	suite.Assert().Equal("https://www.acme.com/purecloud", integration.WebhookURL.String())
+	suite.Assert().Equal("https://www.acme.com/gcloudcx", integration.WebhookURL.String())
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
-	integration := purecloud.OpenMessagingIntegration{
+	integration := gcloudcx.OpenMessagingIntegration{
 		ID:               uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"),
 		Name:             "TEST-GO-PURECLOUD",
-		WebhookURL:       core.Must(url.Parse("https://www.acme.com/purecloud")).(*url.URL),
+		WebhookURL:       core.Must(url.Parse("https://www.acme.com/gcloudcx")).(*url.URL),
 		WebhookToken:     "DEADBEEF",
-		SupportedContent: &purecloud.AddressableEntityRef{
+		SupportedContent: &gcloudcx.AddressableEntityRef{
 			ID:      uuid.MustParse("832066dd-6030-46b1-baeb-b89b681c6636"),
 			SelfURI: "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636",
 		},
 		DateCreated:      time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
-		CreatedBy:        &purecloud.DomainEntityRef{
+		CreatedBy:        &gcloudcx.DomainEntityRef{
 			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
 			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
 		},
 		DateModified:     time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
-		ModifiedBy:       &purecloud.DomainEntityRef{
+		ModifiedBy:       &gcloudcx.DomainEntityRef{
 			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
 			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
 		},
@@ -120,13 +120,13 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalIntegrationWithInvalidJSON() {
 	var err error
 
-	integration := purecloud.OpenMessagingIntegration{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err = json.Unmarshal([]byte(`{"Name": 15}`), &integration)
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
-	channel := purecloud.OpenMessageChannel{}
+	channel := gcloudcx.OpenMessageChannel{}
 	err := LoadObject("openmessaging-channel.json", &channel)
 	suite.Require().Nilf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
 	suite.Assert().Equal("Open", channel.Platform)
@@ -142,10 +142,10 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
-	channel := purecloud.NewOpenMessageChannel(
+	channel := gcloudcx.NewOpenMessageChannel(
 		"gmAy9zNkhf4ermFvHH9mB5",
-		&purecloud.OpenMessageTo{ ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
-		&purecloud.OpenMessageFrom{
+		&gcloudcx.OpenMessageTo{ ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+		&gcloudcx.OpenMessageFrom{
 			ID:        "abcdef12345",
 			Type:      "Email",
 			Firstname: "Bob",
@@ -166,7 +166,7 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() {
 	var err error
 
-	channel := purecloud.OpenMessageChannel{}
+	channel := gcloudcx.OpenMessageChannel{}
 	err = json.Unmarshal([]byte(`{"Platform": 2}`), &channel)
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
@@ -174,7 +174,7 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 	var err error
 
-	from := purecloud.OpenMessageFrom{}
+	from := gcloudcx.OpenMessageFrom{}
 	err = json.Unmarshal([]byte(`{"idType": 3}`), &from)
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
@@ -182,13 +182,13 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
 	var err error
 
-	message := purecloud.OpenMessage{}
+	message := gcloudcx.OpenMessage{}
 	err = json.Unmarshal([]byte(`{"Direction": 6}`), &message)
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
-	integration := purecloud.OpenMessagingIntegration{}
+	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize(suite.Client)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 	id := uuid.New()
@@ -219,19 +219,19 @@ func (suite *OpenMessagingSuite) SetupSuite() {
 		token        = core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", "")
 		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
-	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
+	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region:       region,
 		DeploymentID: deploymentID,
 		Logger:       suite.Logger,
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: clientID,
 		Secret:   secret,
-		Token: purecloud.AccessToken{
+		Token: gcloudcx.AccessToken{
 			Type: "bearer",
 			Token: token,
 		},
 	})
-	suite.Require().NotNil(suite.Client, "PureCloud Client is nil")
+	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
 func (suite *OpenMessagingSuite) TearDownSuite() {

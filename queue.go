@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// Queue defines a PureCloud Queue
+// Queue defines a GCloud Queue
 type Queue struct {
 	ID                    uuid.UUID      `json:"id"`
 	Name                  string         `json:"name"`

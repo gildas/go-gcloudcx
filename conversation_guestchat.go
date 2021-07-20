@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -78,7 +78,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	}
 	conversation.Client = client
 	conversation.Logger = logger.Child("conversation", "conversation", "media", "chat", "conversation", conversation.ID)
-	// We get the guest's ID from PureCloud, the other fields should be from Initialize
+	// We get the guest's ID from Gcloud, the other fields should be from Initialize
 	conversation.Guest.DisplayName = guest.DisplayName
 	conversation.Guest.AvatarURL = guest.AvatarURL
 	conversation.Guest.Role = guest.Role
@@ -240,7 +240,7 @@ func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) 
 	return member, nil
 }
 
-// SendTyping sends a typing indicator to PureCloud as the chat guest
+// SendTyping sends a typing indicator to Gcloud as the chat guest
 func (conversation *ConversationGuestChat) SendTyping() (err error) {
 	response := &struct {
 		ID           string       `json:"id,omitempty"`

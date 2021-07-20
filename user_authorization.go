@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // UserAuthorization  desribes authorizations for a User
 type UserAuthorization struct {

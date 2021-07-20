@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/securecookie"
 )
 
-// AccessToken is used to consume the PureCloud API
+// AccessToken is used to consume the GCloud API
 //
 // It must be obtained via an AuthorizationGrant
 type AccessToken struct {

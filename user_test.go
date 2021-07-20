@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 type UserSuite struct {
@@ -24,7 +24,7 @@ type UserSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *purecloud.Client
+	Client *gcloudcx.Client
 }
 
 func TestUserSuite(t *testing.T) {
@@ -32,7 +32,7 @@ func TestUserSuite(t *testing.T) {
 }
 
 func (suite *UserSuite) TestCanUnmarshal() {
-	user := purecloud.User{}
+	user := gcloudcx.User{}
 	err := LoadObject("user.json", &user)
 	suite.Require().Nil(err, "Failed to unmarshal user. %s", err)
 	suite.Logger.Record("User", user).Infof("Got a user")
@@ -41,29 +41,29 @@ func (suite *UserSuite) TestCanUnmarshal() {
 }
 
 func (suite *UserSuite) TestCanMarshal() {
-	user := purecloud.User{
+	user := gcloudcx.User{
 		ID:       uuid.MustParse("06ffcd2e-1ada-412e-a5f5-30d7853246dd"),
 		Name:     "John Doe",
 		UserName: "john.doe@acme.com",
 		Mail:     "john.doe@acme.com",
 		Title:    "Junior",
-		Division: &purecloud.Division{
+		Division: &gcloudcx.Division{
 			ID:      uuid.MustParse("06ffcd2e-1ada-412e-a5f5-30d7853246dd"),
 			Name:    "",
 			SelfURI: "/api/v2/authorization/divisions/06ffcd2e-1ada-412e-a5f5-30d7853246dd",
 		},
-		Chat: &purecloud.Jabber{
+		Chat: &gcloudcx.Jabber{
 			ID: "98765432d220541234567654@genesysapacanz.orgspan.com",
 		},
-		Addresses: []*purecloud.Contact{},
-		PrimaryContact: []*purecloud.Contact{
+		Addresses: []*gcloudcx.Contact{},
+		PrimaryContact: []*gcloudcx.Contact{
 			{
 				Type:      "PRIMARY",
 				MediaType: "EMAIL",
 				Address:   "john.doe@acme.com",
 			},
 		},
-		Images: []*purecloud.UserImage{
+		Images: []*gcloudcx.UserImage{
 			{
 				Resolution: "x96",
 				ImageURL:   core.Must(url.Parse("https://prod-apse2-inin-directory-service-profile.s3-ap-southeast-2.amazonaws.com/7fac0a12/4643/4d0e/86f3/2467894311b5.jpg")).(*url.URL),
@@ -84,14 +84,14 @@ func (suite *UserSuite) TestCanMarshal() {
 
 func (suite *UserSuite) TestCanInitializeWithIDParameter() {
 	id := uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db")
-	user := purecloud.User{}
+	user := gcloudcx.User{}
 	err := user.Initialize(suite.Client, id)
 	suite.Require().Nil(err, "Failed to initialize User. %s", err)
 	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
 }
 
 func (suite *UserSuite) TestCanInitializeWithIDFromObject() {
-	user := purecloud.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
+	user := gcloudcx.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
 	err := user.Initialize(suite.Client)
 	suite.Require().Nil(err, "Failed to initialize User. %s", err)
 	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
@@ -117,14 +117,14 @@ func (suite *UserSuite) SetupSuite() {
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
 
-	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
+	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: region,
 		Logger: suite.Logger,
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: clientID,
 		Secret:   secret,
 	})
-	suite.Require().NotNil(suite.Client, "PureCloud Client is nil")
+	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
 func (suite *UserSuite) TearDownSuite() {

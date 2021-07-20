@@ -1,6 +1,6 @@
 // +build integration
 
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 type OrganizationSuite struct {
@@ -24,7 +24,7 @@ type OrganizationSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *purecloud.Client
+	Client *gcloudcx.Client
 }
 
 func TestOrganizationSuite(t *testing.T) {
@@ -32,7 +32,7 @@ func TestOrganizationSuite(t *testing.T) {
 }
 
 func (suite *OrganizationSuite) TestCanFetchOrganization() {
-	organization := &purecloud.Organization{}
+	organization := &gcloudcx.Organization{}
 	err := suite.Client.Fetch(organization)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
@@ -78,15 +78,15 @@ func (suite *OrganizationSuite) SetupSuite() {
 		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
 	)
 
-	suite.Client = purecloud.NewClient(&purecloud.ClientOptions{
+	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region:       region,
 		DeploymentID: deploymentID,
 		Logger:       suite.Logger,
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: clientID,
 		Secret:   secret,
 	})
-	suite.Require().NotNil(suite.Client, "PureCloud Client is nil")
+	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
 func (suite *OrganizationSuite) TearDownSuite() {

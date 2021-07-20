@@ -12,7 +12,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +47,7 @@ func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := &purecloud.OpenMessage{}
+	message := &gcloudcx.OpenMessage{}
 	if err = json.Unmarshal(body, &message); err != nil {
 		log.Errorf("Failed to unmarshal message", err)
 		core.RespondWithError(w, http.StatusBadRequest, err)

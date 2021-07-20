@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"time"
@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ClientCredentialsGrant implements PureCloud's Client Credentials Grants
+// ClientCredentialsGrant implements GCloud's Client Credentials Grants
 //
 // When the Token is updated, the new token is sent to the TokenUpdated chan along with the CustomData
 //
@@ -28,7 +28,7 @@ func (grant *ClientCredentialsGrant) GetID() uuid.UUID {
 	return grant.ClientID
 }
 
-// Authorize this Grant with PureCloud
+// Authorize this Grant with GCloud CX
 func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	log := client.Logger.Child(nil, "authorize", "grant", "client_credentials")
 

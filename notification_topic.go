@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ type NotificationTopic interface {
 	// Match tells if the given topicName matches this topic
 	Match(topicName string) bool
 
-	// Get the PureCloud Client associated with this
+	// Get the GCloud Client associated with this
 	GetClient() *Client
 
 	// Send sends the current topic to the Channel's chan

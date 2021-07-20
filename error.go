@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -56,7 +56,7 @@ var (
 	ChatCreateConversationRequestRoutingTargetError = APIError{Status: 400, Code: "chat.error.createconversationrequest.routingtarget", Message: "The routing target is not valid."}
 )
 
-// APIError represents an error from the PureCloud API
+// APIError represents an error from the Gcloud API
 type APIError struct {
 	Status            int               `json:"status,omitempty"`
 	Code              string            `json:"code,omitempty"`

@@ -5,18 +5,18 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
-// LoggedInHandler is called after the token is sent back to the app by PureCloud
+// LoggedInHandler is called after the token is sent back to the app by GCloud CX
 func LoggedInHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log := logger.Must(logger.FromContext(r.Context())).Child("route", "logged_in")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
-		client, err := purecloud.ClientFromContext(r.Context())
+		client, err := gcloudcx.ClientFromContext(r.Context())
 		if err != nil {
-			log.Errorf("Failed to retrieve the PureCloud Client", err)
+			log.Errorf("Failed to retrieve the GCloud CX Client", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}

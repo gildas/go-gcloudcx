@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // DomainRole describes a Role in a Domain
 type DomainRole struct {

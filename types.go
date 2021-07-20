@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"github.com/gildas/go-core"

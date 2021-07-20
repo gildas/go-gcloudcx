@@ -5,7 +5,7 @@
     "id": "832066dd-6030-46b1-baeb-b89b681c6636",
     "selfUri": "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636"
   },
-  "outboundNotificationWebhookUrl": "https://www.acme.com/purecloud",
+  "outboundNotificationWebhookUrl": "https://www.acme.com/gcloudcx",
   "outboundNotificationWebhookSignatureSecretToken": "DEADBEEF",
   "dateCreated": "2021-04-08T03:12:07.888Z",
   "dateModified": "2021-04-08T03:12:07.888Z",

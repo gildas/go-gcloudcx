@@ -8,7 +8,7 @@ import (
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 // AppConfig describes An Application Configuration
@@ -20,16 +20,16 @@ type AppConfig struct {
 	BotURL *url.URL
 
 	// BotQueue is the Queue used for sending the initial chat to
-	BotQueue *purecloud.Queue
+	BotQueue *gcloudcx.Queue
 
 	// AgentQueue is the Queue used when the customer wants to talk to an agent
-	AgentQueue *purecloud.Queue
+	AgentQueue *gcloudcx.Queue
 
 	// User is the currently Logged in User
-	User *purecloud.User
+	User *gcloudcx.User
 
-	// NotificationChannel is the channel used to receive notifications from PureCloud
-	NotificationChannel *purecloud.NotificationChannel
+	// NotificationChannel is the channel used to receive notifications from GCloud
+	NotificationChannel *gcloudcx.NotificationChannel
 
 	// Logger is the Logger for the configuration
 	Logger *logger.Logger
@@ -66,8 +66,8 @@ func (config *AppConfig) HttpHandler() func(http.Handler) http.Handler {
 	}
 }
 
-// Initialize configures this AppConfig by calling PureCloud as needed
-func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
+// Initialize configures this AppConfig by calling GCloud as needed
+func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
@@ -105,8 +105,8 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 	}
 
 	topics, err := config.NotificationChannel.Subscribe(
-		purecloud.UserPresenceTopic{}.TopicFor(config.User),
-		purecloud.UserConversationChatTopic{}.TopicFor(config.User),
+		gcloudcx.UserPresenceTopic{}.TopicFor(config.User),
+		gcloudcx.UserConversationChatTopic{}.TopicFor(config.User),
 	)
 	if err != nil {
 		log.Errorf("Failed to subscribe to topics", err)
@@ -114,7 +114,7 @@ func (config *AppConfig) Initialize(client *purecloud.Client) (err error) {
 	}
 	log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
-	// Call the PureCloud Notification Topic loop
+	// Call the Gcloud Notification Topic loop
 	go MessageLoop(config)
 
 	return nil
