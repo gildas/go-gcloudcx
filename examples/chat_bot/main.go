@@ -13,7 +13,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -21,8 +21,8 @@ import (
 // Log is the application Logger
 var Log *logger.Logger
 
-// Client is the PureCloud Client
-var Client *purecloud.Client
+// Client is the GCloud CX Client
+var Client *gcloudcx.Client
 
 // MyAppConfig holds the configuration of this Application
 var MyAppConfig *AppConfig
@@ -40,11 +40,11 @@ func NotFoundHandler() http.Handler {
 
 func main() {
 	var (
-		region         = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
-		clientID       = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the PureCloud Client ID for authentication")
-		secret         = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
-		deploymentID   = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
-		redirectRoot   = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
+		region         = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the GCloud CX Region. \nDefault: mypurecloud.com")
+		clientID       = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the GCloud CX Client ID for authentication")
+		secret         = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the GCloud CX Client Secret for authentication")
+		deploymentID   = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the GCloud CX Application Deployment ID")
+		redirectRoot   = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to GCloud CX as a Redirect URI")
 		agentQueueName = flag.String("agentqueue", core.GetEnvAsString("PURECLOUD_AGENTQUEUE", ""), "The queue to transfer to agents")
 		botURL         = flag.String("boturl", core.GetEnvAsString("PURECLOUD_BOTURL", ""), "The Bot URL to query for interpretation")
 		botQueueName   = flag.String("botqueue", core.GetEnvAsString("PURECLOUD_BOTQUEUE", ""), "The queue to send customers to initially")
@@ -75,8 +75,8 @@ func main() {
 	}
 
 	MyAppConfig = &AppConfig{
-		AgentQueue:  &purecloud.Queue{Name: *agentQueueName},
-		BotQueue:    &purecloud.Queue{Name: *botQueueName},
+		AgentQueue:  &gcloudcx.Queue{Name: *agentQueueName},
+		BotQueue:    &gcloudcx.Queue{Name: *botQueueName},
 		WebRootPath: *webrootpath,
 		Logger:      Log.Topic("config"),
 	}
@@ -98,13 +98,13 @@ func main() {
 		Log.Fatalf("Invalid Redirect URL: %s/token", *redirectRoot, err)
 		os.Exit(-1)
 	}
-	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
+	Log.Infof("Make sure your GCloud CX OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.NewClient(&purecloud.ClientOptions{
+	Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region:       *region,
 		DeploymentID: uuid.MustParse(*deploymentID),
 		Logger:       Log,
-	}).SetAuthorizationGrant(&purecloud.AuthorizationCodeGrant{
+	}).SetAuthorizationGrant(&gcloudcx.AuthorizationCodeGrant{
 		ClientID:    uuid.MustParse(*clientID),
 		Secret:      *secret,
 		RedirectURL: redirectURL,
@@ -116,13 +116,13 @@ func main() {
 	router.Use(Log.HttpHandler())
 	router.Use(MyAppConfig.HttpHandler())
 
-	// This route actually performs login the user using the grant of the purecloud.Client
+	// This route actually performs login the user using the grant of the gcloudcx.Client
 	//   Upon success, your route httpHandler is called
 	router.Methods("GET").Path("/token").Handler(Client.LoggedInHandler()(LoggedInHandler()))
 
 	// This route performs the login process makes sure the client is authorized,
 	//   if authorized, the LoggedInHandler is called to setup some variables
-	//   otherwise, the purecloud.AuthorizeHandler will redirect the user to the PureCloud Login page
+	//   otherwise, the gcloudcx.AuthorizeHandler will redirect the user to the GCloud CX Login page
 	//   that will end up with the grant.RedirectURL defined earlier
 	router.Methods("POST").Path("/login").Handler(Client.AuthorizeHandler()(LoggedInHandler()))
 
@@ -133,7 +133,7 @@ func main() {
 	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
 	router.Methods("GET").Path("/").Handler(Client.HttpHandler()(MainHandler()))
 
-	// This route gives the PureCloud Widget Javascript config to use
+	// This route gives the GCloud CX Widget Javascript config to use
 	//  See: https://developer.mypurecloud.com/api/webchat/widget-version2.html
 	router.Methods("GET").Path("/widget").Handler(Client.HttpHandler()(WidgetHandler()))
 

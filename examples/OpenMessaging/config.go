@@ -6,7 +6,7 @@ import (
 	"net/url"
 
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 )
 
 // Config carries an application Configuration
@@ -15,8 +15,8 @@ type Config struct {
 	IntegrationWebhookURL   *url.URL
 	IntegrationWebhookToken string
 
-	Integration *purecloud.OpenMessagingIntegration
-	Client      *purecloud.Client
+	Integration *gcloudcx.OpenMessagingIntegration
+	Client      *gcloudcx.Client
 	ChatServer  *ChatServer
 }
 

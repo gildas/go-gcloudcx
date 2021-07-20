@@ -6,12 +6,12 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 )
 
 // findParticipant finds a participant after its user id and purpose
-func findParticipant(participants []*purecloud.Participant, user *purecloud.User, purpose string) *purecloud.Participant {
+func findParticipant(participants []*gcloudcx.Participant, user *gcloudcx.User, purpose string) *gcloudcx.Participant {
 	for _, participant := range participants {
 		if participant.Purpose == purpose && participant.User != nil && user.ID == participant.User.ID {
 			return participant
@@ -31,9 +31,9 @@ func MainHandler() http.Handler {
 			return
 		}
 
-		client, err := purecloud.ClientFromContext(r.Context())
+		client, err := gcloudcx.ClientFromContext(r.Context())
 		if err != nil {
-			log.Errorf("Failed to retrieve the PureCloud Client", err)
+			log.Errorf("Failed to retrieve the GCloud CX Client", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
@@ -43,10 +43,10 @@ func MainHandler() http.Handler {
 			Region         string
 			DeploymentID   uuid.UUID
 			OrganizationID uuid.UUID
-			AgentQueue     *purecloud.Queue
-			BotQueue       *purecloud.Queue
+			AgentQueue     *gcloudcx.Queue
+			BotQueue       *gcloudcx.Queue
 			BotQueueID     uuid.UUID
-			User           *purecloud.User
+			User           *gcloudcx.User
 			ChannelID      uuid.UUID
 			WebsocketURL   string
 			WebRootPath    string

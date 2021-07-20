@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"net/http"
@@ -9,32 +9,32 @@ import (
 	"github.com/gildas/go-request"
 )
 
-// Post sends a POST HTTP Request to PureCloud and gets the results
+// Post sends a POST HTTP Request to GCloud and gets the results
 func (client *Client) Post(path URI, payload, results interface{}) error {
 	return client.SendRequest(path, &request.Options{Method: http.MethodPost, Payload: payload}, results)
 }
 
-// Patch sends a PATCH HTTP Request to PureCloud and gets the results
+// Patch sends a PATCH HTTP Request to GCloud and gets the results
 func (client *Client) Patch(path URI, payload, results interface{}) error {
 	return client.SendRequest(path, &request.Options{Method: http.MethodPatch, Payload: payload}, results)
 }
 
-// Put sends an UPDATE HTTP Request to PureCloud and gets the results
+// Put sends an UPDATE HTTP Request to GCloud and gets the results
 func (client *Client) Put(path URI, payload, results interface{}) error {
 	return client.SendRequest(path, &request.Options{Method: http.MethodPut, Payload: payload}, results)
 }
 
-// Get sends a GET HTTP Request to PureCloud and gets the results
+// Get sends a GET HTTP Request to GCloud and gets the results
 func (client *Client) Get(path URI, results interface{}) error {
 	return client.SendRequest(path, &request.Options{}, results)
 }
 
-// Delete sends a DELETE HTTP Request to PureCloud and gets the results
+// Delete sends a DELETE HTTP Request to GCloud and gets the results
 func (client *Client) Delete(path URI, results interface{}) error {
 	return client.SendRequest(path, &request.Options{Method: http.MethodDelete}, results)
 }
 
-// SendRequest sends a REST request to PureCloud
+// SendRequest sends a REST request to GCloud
 func (client *Client) SendRequest(path URI, options *request.Options, results interface{}) (err error) {
 	log := client.Logger.Child(nil, "request")
 	if options == nil {

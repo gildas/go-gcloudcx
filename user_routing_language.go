@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // UserRoutingLanguage describe a Routing Language for a User
 type UserRoutingLanguage struct {

@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"net/url"
@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// AuthorizationCodeGrant implements PureCloud's Client Authorization Code Grants
+// AuthorizationCodeGrant implements Gcloud's Client Authorization Code Grants
 //   See: https://developer.mypurecloud.com/api/rest/authorization/use-authorization-code.html
 type AuthorizationCodeGrant struct {
 	ClientID     uuid.UUID
@@ -28,7 +28,7 @@ func (grant *AuthorizationCodeGrant) GetID() uuid.UUID {
 	return grant.ClientID
 }
 
-// Authorize this Grant with PureCloud
+// Authorize this Grant with Gcloud
 func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	log := client.Logger.Child(nil, "authorize", "grant", "authorization_code")
 

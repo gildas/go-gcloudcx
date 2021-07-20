@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 type OpenMessage struct {
 	ID              string                `json:"id,omitempty"`

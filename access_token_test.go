@@ -1,17 +1,17 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"encoding/json"
 	"testing"
 	"time"
 
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCanMarshallAccessToken(t *testing.T) {
-	token := purecloud.AccessToken{
+	token := gcloudcx.AccessToken{
 		Type:      "Bearer",
 		Token:     "Very Long String",
 		ExpiresOn: time.Date(1996, 9, 23, 0, 0, 0, 0, time.UTC),
@@ -26,7 +26,7 @@ func TestCanMarshallAccessToken(t *testing.T) {
 
 func TestCanUnmarshallAccessToken(t *testing.T) {
 	source := `{"tokenType": "Bearer", "token": "Very Long String", "tokenExpires": "1996-09-23T00:00:00Z"}`
-	token := purecloud.AccessToken{}
+	token := gcloudcx.AccessToken{}
 
 	err := json.Unmarshal([]byte(source), &token)
 	require.Nil(t, err, "Failed to unmarshall token")
@@ -37,7 +37,7 @@ func TestCanUnmarshallAccessToken(t *testing.T) {
 }
 
 func TestCanTellExpirationOfAccessToken(t *testing.T) {
-	token := purecloud.AccessToken{
+	token := gcloudcx.AccessToken{
 		Type:      "Bearer",
 		Token:     "Very Long String",
 		ExpiresOn: time.Now().UTC().Add(2 * time.Hour),
@@ -52,7 +52,7 @@ func TestCanTellExpirationOfAccessToken(t *testing.T) {
 }
 
 func TestCanResetAccessToken(t *testing.T) {
-	token := purecloud.AccessToken{
+	token := gcloudcx.AccessToken{
 		Type:      "Bearer",
 		Token:     "Very Long String",
 		ExpiresOn: time.Now().UTC().Add(2 * time.Hour),
@@ -66,12 +66,12 @@ func TestCanResetAccessToken(t *testing.T) {
 }
 
 func TestCanResetGrantAccessToken(t *testing.T) {
-	token := purecloud.AccessToken{
+	token := gcloudcx.AccessToken{
 		Type:      "Bearer",
 		Token:     "Very Long String",
 		ExpiresOn: time.Now().UTC().Add(2 * time.Hour),
 	}
-	client := purecloud.NewClient(&purecloud.ClientOptions{}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{Token: token})
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{Token: token})
 	assert.Equal(t, "Bearer", client.Grant.AccessToken().Type)
 	assert.Equal(t, "Very Long String", client.Grant.AccessToken().Token)
 

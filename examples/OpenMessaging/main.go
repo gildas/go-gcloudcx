@@ -15,7 +15,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -28,8 +28,8 @@ func UpdateEnvFile(config *Config) {
 	config.Client.Logger.Infof("Updating the .env file")
 	_ = godotenv.Write(map[string]string{
 		"PURECLOUD_REGION":       config.Client.Region,
-		"PURECLOUD_CLIENTID":     config.Client.Grant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
-		"PURECLOUD_CLIENTSECRET": config.Client.Grant.(*purecloud.ClientCredentialsGrant).Secret,
+		"PURECLOUD_CLIENTID":     config.Client.Grant.(*gcloudcx.ClientCredentialsGrant).ClientID.String(),
+		"PURECLOUD_CLIENTSECRET": config.Client.Grant.(*gcloudcx.ClientCredentialsGrant).Secret,
 		"PURECLOUD_CLIENTTOKEN":  config.Client.Grant.AccessToken().Token,
 		"PURECLOUD_DEPLOYMENTID": config.Client.DeploymentID.String(),
 		"INTEGRATION_NAME":       config.IntegrationName,
@@ -71,13 +71,13 @@ func main() {
 		IntegrationName:         *integrationName,
 		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)).(*url.URL),
 		IntegrationWebhookToken: *integrationToken,
-		Client: purecloud.NewClient(&purecloud.ClientOptions{
+		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
 			Region:       *region,
 			Logger:       Log,
-		}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
 			Secret:   *clientSecret,
-			Token:    purecloud.AccessToken{
+			Token:    gcloudcx.AccessToken{
 				Type:  "bearer",
 				Token: *clientToken,
 			},
@@ -87,11 +87,11 @@ func main() {
 
 	// Initializing the OpenMessaging Integration
 	config.Client.Logger.Infof("Fetching OpenMessaging Integration %s", *integrationName)
-	integration, err := purecloud.FetchOpenMessagingIntegration(config.Client, *integrationName)
+	integration, err := gcloudcx.FetchOpenMessagingIntegration(config.Client, *integrationName)
 
 	if errors.Is(err, errors.NotFound) {
 		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		integration = &purecloud.OpenMessagingIntegration{}
+		integration = &gcloudcx.OpenMessagingIntegration{}
 		err = integration.Initialize(config.Client)
 		if err != nil {
 			Log.Fatalf("Failed initialize integration", err)

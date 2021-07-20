@@ -1,10 +1,10 @@
-package purecloud
+package gcloudcx
 
 import (
 	"net/http"
 )
 
-// Logout logs out a Client from PureCloud
+// Logout logs out a Client from GCloud
 func (client *Client) Logout() {
 	_ = client.Delete("/tokens/me", nil) // we don't care much about the error as we are logging out
 	if client.Grant != nil {
@@ -12,7 +12,7 @@ func (client *Client) Logout() {
 	}
 }
 
-// DeleteCookie deletes the PureCloud Client cookie from the response writer
+// DeleteCookie deletes the GCloud Client cookie from the response writer
 func (client *Client) DeleteCookie(w http.ResponseWriter) {
 	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: "", Path: "/", HttpOnly: true, MaxAge: -1})
 }
@@ -26,7 +26,7 @@ func (client *Client) LogoutHandler() func(http.Handler) http.Handler {
 			if client.Grant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
 				client.Logout()
 				client.DeleteCookie(w)
-				log.Infof("User is now logged out from PureCloud")
+				log.Infof("User is now logged out from GCloud")
 			}
 			next.ServeHTTP(w, r.WithContext(client.ToContext(r.Context())))
 		})

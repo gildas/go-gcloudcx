@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // Contact describes something that can be contacted
 type Contact struct {

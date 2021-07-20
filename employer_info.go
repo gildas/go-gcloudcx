@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // EmployerInfo  describes Employer Information
 type EmployerInfo struct {

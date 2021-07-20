@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"github.com/gildas/go-core"
@@ -7,7 +7,7 @@ import (
 
 // Authorizer describes what a grants should do
 type Authorizer interface {
-	Authorize(client *Client) error // Authorize a client with PureCloud
+	Authorize(client *Client) error // Authorize a client with Gcloud
 	AccessToken() *AccessToken      // Get the Access Token obtained by the Authorizer
 	core.Identifiable               // Implements core.Identifiable
 }

@@ -1,4 +1,4 @@
-module github.com/gildas/go-purecloud
+module github.com/gildas/go-gcloudcx
 
 go 1.13
 

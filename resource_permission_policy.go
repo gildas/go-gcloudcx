@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // ResourcePermissionPolicy describes...
 type ResourcePermissionPolicy struct {

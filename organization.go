@@ -1,11 +1,11 @@
-package purecloud
+package gcloudcx
 
 import (
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
 
-// Organization describes a PureCloud Organization
+// Organization describes a GCloud Organization
 type Organization struct {
 	ID                         uuid.UUID       `json:"id"`
 	Name                       string          `json:"name"`

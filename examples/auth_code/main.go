@@ -13,7 +13,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
@@ -21,8 +21,8 @@ import (
 // Log is the application Logger
 var Log *logger.Logger
 
-// Client is the PureCloud Client
-var Client *purecloud.Client
+// Client is the GCloud Client
+var Client *gcloudcx.Client
 
 func loggedInHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -49,9 +49,9 @@ func mainRouteHandler() http.Handler {
 		}
 		log = log.Scope("main")
 
-		client, err := purecloud.ClientFromContext(r.Context())
+		client, err := gcloudcx.ClientFromContext(r.Context())
 		if err != nil {
-			log.Errorf("Failed to retrieve the PureCloud Client", err)
+			log.Errorf("Failed to retrieve the GCloud Client", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
@@ -85,11 +85,11 @@ func mainRouteHandler() http.Handler {
 
 func main() {
 	var (
-		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the PureCloud Region. \nDefault: mypurecloud.com")
-		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the PureCloud Client ID for authentication")
-		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the PureCloud Client Secret for authentication")
-		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the PureCloud Application Deployment ID")
-		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to PureCloud as a Redirect URI")
+		region       = flag.String("region", core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"), "the GCloud CX Region. \nDefault: mypurecloud.com")
+		clientID     = flag.String("clientid", core.GetEnvAsString("PURECLOUD_CLIENTID", ""), "the GCloud CX Client ID for authentication")
+		secret       = flag.String("secret", core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""), "the GCloud CX Client Secret for authentication")
+		deploymentID = flag.String("deploymentid", core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""), "the GCloud CX Application Deployment ID")
+		redirectRoot = flag.String("redirecturi", core.GetEnvAsString("PURECLOUD_REDIRECTURI", ""), "The root uri to give to GCloud CX as a Redirect URI")
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 	)
 	flag.Parse()
@@ -105,13 +105,13 @@ func main() {
 		Log.Fatalf("Invalid Redirect URL: %s/token", *redirectRoot, err)
 		os.Exit(-1)
 	}
-	Log.Infof("Make sure your PureCloud OAUTH accepts redirects to: %s", redirectURL.String())
+	Log.Infof("Make sure your GCloud OAUTH accepts redirects to: %s", redirectURL.String())
 
-	Client = purecloud.NewClient(&purecloud.ClientOptions{
+	Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region:       *region,
 		DeploymentID: uuid.MustParse(*deploymentID),
 		Logger:       Log,
-	}).SetAuthorizationGrant(&purecloud.AuthorizationCodeGrant{
+	}).SetAuthorizationGrant(&gcloudcx.AuthorizationCodeGrant{
 		ClientID:    uuid.MustParse(*clientID),
 		Secret:      *secret,
 		RedirectURL: redirectURL,
@@ -119,13 +119,13 @@ func main() {
 
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)
-	// This route actually performs login the user using the grant of the purecloud.Client
+	// This route actually performs login the user using the grant of the gcloudcx.Client
 	//   Upon success, your route httpHandler is called
 	router.Methods("GET").Path("/token").Handler(Log.HttpHandler()(Client.LoggedInHandler()(loggedInHandler())))
 
 	// This route performs your actions, but makes sure the client is authorized,
 	//   if authorized, your route http.Handler is called
-	//   otherwise, the AuthorizeHandler will redirect the user to the PureCloud Login page
+	//   otherwise, the AuthorizeHandler will redirect the user to the GCloud Login page
 	//   that will end up with the grant.RedirectURL defined earlier
 	router.Methods("GET").Path("/").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(mainRouteHandler())))
 

@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // Biography describes a User's biography
 type Biography struct {

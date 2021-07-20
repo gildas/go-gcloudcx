@@ -6,21 +6,21 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Client *purecloud.Client
+	Client *gcloudcx.Client
 }
 
 func UpdateEnvFile(config *Config) {
 	config.Client.Logger.Infof("Updating the .env file")
 	_ = godotenv.Write(map[string]string{
 		"PURECLOUD_REGION":       config.Client.Region,
-		"PURECLOUD_CLIENTID":     config.Client.Grant.(*purecloud.ClientCredentialsGrant).ClientID.String(),
-		"PURECLOUD_CLIENTSECRET": config.Client.Grant.(*purecloud.ClientCredentialsGrant).Secret,
+		"PURECLOUD_CLIENTID":     config.Client.Grant.(*gcloudcx.ClientCredentialsGrant).ClientID.String(),
+		"PURECLOUD_CLIENTSECRET": config.Client.Grant.(*gcloudcx.ClientCredentialsGrant).Secret,
 		"PURECLOUD_CLIENTTOKEN":  config.Client.Grant.AccessToken().Token,
 	}, ".env")
 }
@@ -42,13 +42,13 @@ func main() {
 
 	// Initializing the Config
 	config := &Config{
-		Client: purecloud.NewClient(&purecloud.ClientOptions{
+		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
 			Region:       *region,
 			Logger:       log,
-		}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+		}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
 			Secret:   *clientSecret,
-			Token:    purecloud.AccessToken{
+			Token:    gcloudcx.AccessToken{
 				Type:  "bearer",
 				Token: *clientToken,
 			},

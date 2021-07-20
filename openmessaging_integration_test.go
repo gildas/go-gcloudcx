@@ -1,17 +1,17 @@
 // +build integration
 
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"net/url"
 
-	purecloud "github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 )
 
 
 func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
-	integrations, err := purecloud.FetchOpenMessagingIntegrations(suite.Client)
+	integrations, err := gcloudcx.FetchOpenMessagingIntegrations(suite.Client)
 	suite.Require().Nil(err, "Failed to fetch my Organization")
 	suite.T().Logf("Found %d integrations", len(integrations))
 	if len(integrations) > 0 {
@@ -27,10 +27,10 @@ func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
 }
 
 func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
-	integration := &purecloud.OpenMessagingIntegration{}
+	integration := &gcloudcx.OpenMessagingIntegration{}
 	_ = integration.Initialize(suite.Client)
 	name := "TEST-GO-PURECLOUD"
-	webhookURL, _ := url.Parse("https://www.breizh.org/sim/purecloud")
+	webhookURL, _ := url.Parse("https://www.breizh.org/sim/gcloudcx")
 	webhookToken := "DEADBEEF"
 	err := integration.Create(name, webhookURL, webhookToken)
 	suite.Require().Nil(err, "Failed to create integration")
@@ -38,7 +38,7 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 }
 
 func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
-	integration := &purecloud.OpenMessagingIntegration{}
+	integration := &gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize(suite.Client, uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"))
 	suite.Require().Nil(err, "Failed to fetch integration")
 	suite.Logger.Record("integration", integration).Infof("Got a integration")

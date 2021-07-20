@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ func (topic MetadataTopic) Match(topicName string) bool {
 	return topicName == "channel.metadata"
 }
 
-// GetClient gets the PureCloud Client associated with this
+// GetClient gets the GCloud Client associated with this
 func (topic *MetadataTopic) GetClient() *Client {
 	return topic.Client
 }

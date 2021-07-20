@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 // UserConversationSummary  describes the summary of a User's conversations
 type UserConversationSummary struct {

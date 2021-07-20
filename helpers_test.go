@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 )
@@ -25,7 +25,7 @@ func TestHelpersSuite(t *testing.T) {
 	suite.Run(t, new(HelpersSuite))
 }
 func (suite *HelpersSuite) TestCanRunInitializable() {
-	client := purecloud.NewClient(&purecloud.ClientOptions{
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		DeploymentID: uuid.New(),
 		Logger:       suite.Logger,
 	})
@@ -36,7 +36,7 @@ func (suite *HelpersSuite) TestCanRunInitializable() {
 }
 
 func (suite *HelpersSuite) TestCanInitializeWithFetch() {
-	client := purecloud.NewClient(&purecloud.ClientOptions{
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		DeploymentID: uuid.New(),
 		Logger:       suite.Logger,
 	})
@@ -48,19 +48,19 @@ func (suite *HelpersSuite) TestCanInitializeWithFetch() {
 
 type Stuff struct {
 	ID     string            `json:"id"`
-	Client *purecloud.Client `json:"-"`
+	Client *gcloudcx.Client `json:"-"`
 	Logger *logger.Logger    `json:"-"`
 }
 
 func (stuff *Stuff) Initialize(parameters ...interface{}) error {
 	var (
-		client *purecloud.Client
+		client *gcloudcx.Client
 		log    *logger.Logger
 	)
 
 	for _, parameter := range parameters {
 		switch object := parameter.(type) {
-		case *purecloud.Client:
+		case *gcloudcx.Client:
 			client = object
 		case *logger.Logger:
 			log = object

@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ func (topic UserPresenceTopic) Match(topicName string) bool {
 	return strings.HasPrefix(topicName, "v2.users.") && strings.HasSuffix(topicName, ".presence")
 }
 
-// GetClient gets the PureCloud Client associated with this
+// GetClient gets the GCloud Client associated with this
 func (topic *UserPresenceTopic) GetClient() *Client {
 	return topic.Client
 }

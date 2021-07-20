@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"context"
@@ -36,9 +36,9 @@ func (client *Client) HttpHandler() func(http.Handler) http.Handler {
 			log := client.Logger.Scope("middleware")
 
 			if client.Grant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
-				log.Infof("PureCloud Token loaded from cookies")
+				log.Infof("Gcloud Token loaded from cookies")
 			} else {
-				log.Debugf("PureCloud Token not found in cookies")
+				log.Debugf("Gcloud Token not found in cookies")
 			}
 			next.ServeHTTP(w, r.WithContext(client.ToContext(r.Context())))
 		})

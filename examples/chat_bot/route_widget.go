@@ -6,7 +6,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-logger"
-	"github.com/gildas/go-purecloud"
+	"github.com/gildas/go-gcloudcx"
 	"github.com/google/uuid"
 )
 
@@ -55,20 +55,20 @@ const widgetJS = `
   };
 `
 
-// WidgetHandler gives the Javascript to help configuring a PureCloud Widget
+// WidgetHandler gives the Javascript to help configuring a GCloud CX Widget
 func WidgetHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log := logger.Must(logger.FromContext(r.Context())).Child("route", "widget")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
-		client, err := purecloud.ClientFromContext(r.Context())
+		client, err := gcloudcx.ClientFromContext(r.Context())
 		if err != nil {
-			log.Errorf("Failed to retrieve the PureCloud Client", err)
+			log.Errorf("Failed to retrieve the GCloud CX Client", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
 
-		log.Infof("Providing PureCloud Config")
+		log.Infof("Providing GCloud CX Config")
 		viewData := struct {
 			Region         string
 			DeploymentID   uuid.UUID

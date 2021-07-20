@@ -1,4 +1,4 @@
-package purecloud
+package gcloudcx
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// Authorization contains the login options to connect the client to PureCloud
+// Authorization contains the login options to connect the client to GCloud
 type Authorization struct {
 	ClientID     string    `json:"clientId"`
 	Secret       string    `json:"clientSecret"`
@@ -19,13 +19,13 @@ type Authorization struct {
 	TokenExpires time.Time `json:"tokenExpires"`
 }
 
-// Login logs in a Client to PureCloud
+// Login logs in a Client to Gcloud
 //   Uses the credentials stored in the Client
 func (client *Client) Login() error {
 	return client.LoginWithAuthorizationGrant(client.Grant)
 }
 
-// LoginWithAuthorizationGrant logs in a Client to PureCloud with given authorization Grant
+// LoginWithAuthorizationGrant logs in a Client to Gcloud with given authorization Grant
 func (client *Client) LoginWithAuthorizationGrant(grant Authorizer) (err error) {
 	if grant == nil {
 		return errors.ArgumentMissing.With("Authorization Grant").WithStack()
@@ -36,7 +36,7 @@ func (client *Client) LoginWithAuthorizationGrant(grant Authorizer) (err error) 
 	return
 }
 
-// AuthorizeHandler validates an incoming Request and sends to PureCloud Authorize process if not
+// AuthorizeHandler validates an incoming Request and sends to Gcloud Authorize process if not
 func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +48,7 @@ func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 				return
 			}
 
-			log.Infof("Cookie Not Found, need to login with PureCloud")
+			log.Infof("Cookie Not Found, need to login with Gcloud CX")
 			redirectURL, _ := NewURI("%s/oauth/authorize", client.LoginURL).URL()
 
 			if grant, ok := client.Grant.(*AuthorizationCodeGrant); ok {
@@ -64,7 +64,7 @@ func (client *Client) AuthorizeHandler() func(http.Handler) http.Handler {
 	}
 }
 
-// LoggedInHandler gets a valid Token from PureCloud using an AuthorizationGrant
+// LoggedInHandler gets a valid Token from GCloud using an AuthorizationGrant
 func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +72,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			grant, ok := client.Grant.(*AuthorizationCodeGrant)
 			if !ok {
 				log.Errorf("Client's Grant is not an Authorization Code Grant, we cannot continue")
-				core.RespondWithError(w, http.StatusUnauthorized, errors.New("Invalid PureCloud OAUTH Grant"))
+				core.RespondWithError(w, http.StatusUnauthorized, errors.New("Invalid GCloud OAUTH Grant"))
 				return
 			}
 

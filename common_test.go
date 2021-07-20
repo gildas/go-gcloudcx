@@ -1,4 +1,4 @@
-package purecloud_test
+package gcloudcx_test
 
 import (
 	"encoding/json"
