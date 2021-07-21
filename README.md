@@ -1,22 +1,22 @@
-# go-purecloud
+# go-gcloudcx
 
-![GoVersion](https://img.shields.io/github/go-mod/go-version/gildas/go-purecloud)
-[![GoDoc](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/gildas/go-purecloud) 
-[![License](https://img.shields.io/github/license/gildas/go-purecloud)](https://github.com/gildas/go-purecloud/blob/master/LICENSE) 
-[![Report](https://goreportcard.com/badge/github.com/gildas/go-purecloud)](https://goreportcard.com/report/github.com/gildas/go-purecloud)  
+![GoVersion](https://img.shields.io/github/go-mod/go-version/gildas/go-gcloudcx)
+[![GoDoc](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/gildas/go-gcloudcx) 
+[![License](https://img.shields.io/github/license/gildas/go-gcloudcx)](https://github.com/gildas/go-gcloudcx/blob/master/LICENSE) 
+[![Report](https://goreportcard.com/badge/github.com/gildas/go-gcloudcx)](https://goreportcard.com/report/github.com/gildas/go-gcloudcx)  
 
 A Package to send requests to HTTP/REST services.
 
-PureCloud Client Library in GO
+Genesys Cloud CX Client Library in GO
 
 Have a look at the examples/ folder for complete examples on how to use this library.
 
 ## Usage
 
-You first start by creating a `purecloud.Client` that will allow to send requests to PureCloud:  
+You first start by creating a `gcloudcx.Client` that will allow to send requests to Genesys Cloud:  
 ```go
-Log    := logger.Create("purecloud")
-client := purecloud.NewClient(&purecloud.ClientOptions{
+Log    := logger.Create("gcloudcx")
+client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
 	Logger:       Log,
 })
@@ -24,11 +24,11 @@ client := purecloud.NewClient(&purecloud.ClientOptions{
 
 You can choose the authorization grant right away as well:  
 ```go
-Log    := logger.Create("purecloud")
-client := purecloud.NewClient(&purecloud.ClientOptions{
+Log    := logger.Create("gcloudcx")
+client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
 	Logger:       Log,
-}).SetAuthorizationGrant(&purecloud.AuthorizationCodeGrant{
+}).SetAuthorizationGrant(&gcloudcx.AuthorizationCodeGrant{
 	ClientID:    "hlkjshdgpiuy123387",
 	Secret:      "879e8ugspojdgj",
 	RedirectURL: "http://my.acme.com/token",
@@ -37,11 +37,11 @@ client := purecloud.NewClient(&purecloud.ClientOptions{
 
 Or,  
 ```go
-Log    := logger.Create("purecloud")
-client := purecloud.NewClient(&purecloud.ClientOptions{
+Log    := logger.Create("gcloudcx")
+client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
 	Logger:       Log,
-}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 	ClientID: "jklsdufg89u9j234",
 	Secret:   "sdfgjlskdfjglksdfjg",
 })
@@ -57,7 +57,7 @@ In the case of the Authorization Code, the best is to run a Webserver in your co
 They can be used like this (using the [gorilla/mux](https://github.com/gorilla/mux) router, for example):  
 ```go
 router := mux.NewRouter()
-// This is the main route of this application, we want a fully functional purecloud.Client
+// This is the main route of this application, we want a fully functional gcloudcx.Client
 router.Methods("GET").Path("/").Handler(Client.AuthorizeHandler()(mainRouteHandler()))
 // This route is used as the RedirectURL of the client
 router.Methods("GET").Path("/token").Handler(Client.LoggedInHandler()(myhandler()))
@@ -67,7 +67,7 @@ In you *HttpHandler*, the client will be available from the request's context:
 ```go
 func mainRouteHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		client, err := purecloud.ClientFromContext(r.Context())
+		client, err := gcloudcx.ClientFromContext(r.Context())
 		if err != nil {
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
@@ -90,7 +90,7 @@ func mainRouteHandler() http.Handler {
 
 When using the Client Credential grant, you can configure the grant to tell when the token gets updated, allowing you to store it and re-use it in the future:  
 ```go
-var TokenUpdateChan = make(chan purecloud.UpdatedAccessToken)
+var TokenUpdateChan = make(chan gcloudcx.UpdatedAccessToken)
 
 func main() {
 	// ...
@@ -115,9 +115,9 @@ func main() {
 		}
 	}()
 
-	client := purecloud.NewClient(&purecloud.ClientOptions{
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		// ...
-	}).SetAuthorizationGrant(&purecloud.ClientCredentialsGrant{
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: "1234",
 		Secret:   "s3cr3t",
 		TokenUpdated: TokenUpdateChan,
@@ -133,7 +133,7 @@ As you can see, you can even pass some custom data (`interface{}`, so anything r
 
 ## Notifications
 
-The PureCloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
+The Genesys Cloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
 
 Here is a quick example:  
 ```go
@@ -150,7 +150,7 @@ if err != nil {
 }
 
 topics, err := config.NotificationChannel.Subscribe(
-	purecloud.UserPresenceTopic{}.TopicFor(user),
+	gcloudcx.UserPresenceTopic{}.TopicFor(user),
 )
 if err != nil {
 	log.Errorf("Failed to subscribe to topics", err)
@@ -158,7 +158,7 @@ if err != nil {
 }
 log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
-// Call the PureCloud Notification Topic loop
+// Call the Genesys Cloud Notification Topic loop
 go func() {
 	for {
 		select {
@@ -168,7 +168,7 @@ go func() {
 				return
 			}
 			switch topic := receivedTopic.(type) {
-			case *purecloud.UserPresenceTopic:
+			case *gcloudcx.UserPresenceTopic:
 				log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
 			default:
 				log.Warnf("Unknown topic: %s", topic)
@@ -190,4 +190,4 @@ go func() {
 
 # TODO
 
-This library implements only a very small set of PureCloud's API at the moment, but I keep adding stuff...
+This library implements only a very small set of Genesys Cloud CX's API at the moment, but I keep adding stuff...
