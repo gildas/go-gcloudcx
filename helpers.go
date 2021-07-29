@@ -37,11 +37,11 @@ func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *lo
 		}
 	}
 	if client == nil {
-		return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client").WithStack()
+		return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client")
 	}
 	if log == nil {
 		if client.Logger == nil {
-			return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client Logger").WithStack()
+			return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client Logger")
 		}
 		log = client.Logger
 	}

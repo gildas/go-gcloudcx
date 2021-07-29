@@ -43,7 +43,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 	if path.HasProtocol() {
 		options.URL, err = path.URL()
 	} else if client.API == nil {
-		return errors.ArgumentMissing.With("Client API").WithStack()
+		return errors.ArgumentMissing.With("Client API")
 	} else if !path.HasPrefix("/api") {
 		options.URL, err = client.API.Parse(NewURI("/api/v2/").Join(path).String())
 	} else {
@@ -60,7 +60,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 				return errors.WithStack(err)
 			}
 			if !client.IsAuthorized() {
-				return errors.HTTPUnauthorized.WithMessage("Not Authorized Yet")
+				return errors.HTTPUnauthorized.WithStack()
 			}
 			options.Authorization = client.Grant.AccessToken().String()
 		}

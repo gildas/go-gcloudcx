@@ -28,7 +28,7 @@ func ConfigFromContext(context context.Context) (*Config, error) {
 	if logger, ok := context.Value(contextKey).(*Config); ok {
 		return logger, nil
 	}
-	return nil, errors.ArgumentMissing.With("Config").WithStack()
+	return nil, errors.ArgumentMissing.With("Config")
 }
 
 // ToContext stores the Logger in the given context
