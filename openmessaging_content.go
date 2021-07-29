@@ -21,11 +21,11 @@ func (content *OpenMessageContent) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*content = OpenMessageContent(inner)
 	if content.Attachment == nil {
-		return errors.ArgumentMissing.With("attachment").WithStack()
+		return errors.ArgumentMissing.With("attachment")
 	}
 	// if !Contains(content.Type, []string{"Attachment", "Location", "QuickReply", "ButtonResponse", "Notification", "GenericTemplate", "ListTemplate", "Postback", "Reactions", "Mention"}) {
 	if !Contains(content.Type, []string{"Attachment", "Notification"}) {
-		return errors.ArgumentInvalid.With("contentType", content.Type).WithStack()
+		return errors.ArgumentInvalid.With("contentType", content.Type)
 	}
 	return
 }

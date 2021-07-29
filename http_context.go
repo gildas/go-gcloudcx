@@ -21,12 +21,12 @@ func (client *Client) ToContext(parent context.Context) context.Context {
 func ClientFromContext(context context.Context) (*Client, error) {
 	value := context.Value(ClientContextKey)
 	if value == nil {
-		return nil, errors.ArgumentMissing.With("Client").WithStack()
+		return nil, errors.ArgumentMissing.With("Client")
 	}
 	if client, ok := value.(*Client); ok {
 		return client, nil
 	}
-	return nil, errors.ArgumentInvalid.With("Client", value).WithStack()
+	return nil, errors.ArgumentInvalid.With("Client", value)
 }
 
 // HttpHandler wraps the client into an http Handler

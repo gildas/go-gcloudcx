@@ -55,7 +55,7 @@ func (server *ChatServer) FindChatByID(id uuid.UUID) (*Chat, error) {
 	if chat, found := server.chats[id]; found {
 		return chat, nil
 	}
-	return nil, errors.NotFound.With("chat", id.String()).WithStack()
+	return nil, errors.NotFound.With("chat", id.String())
 }
 
 func (server *ChatServer) FindChatByUserID(userID string) (*Chat, error) {
@@ -67,7 +67,7 @@ func (server *ChatServer) FindChatByUserID(userID string) (*Chat, error) {
 			return chat, nil
 		}
 	}
-	return nil, errors.NotFound.With("user", userID).WithStack()
+	return nil, errors.NotFound.With("user", userID)
 }
 
 func (server *ChatServer) FindChatByMessageID(id string) (*Chat, error) {
@@ -77,7 +77,7 @@ func (server *ChatServer) FindChatByMessageID(id string) (*Chat, error) {
 	if message, found := server.messages[id]; found {
 		return message.Chat, nil
 	}
-	return nil, errors.NotFound.With("message", id).WithStack()
+	return nil, errors.NotFound.With("message", id)
 }
 
 func (server *ChatServer) Start(config *Config) {

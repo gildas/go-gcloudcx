@@ -49,12 +49,12 @@ func (config *AppConfig) ToContext(parent context.Context) context.Context {
 func AppConfigFromContext(context context.Context) (*AppConfig, error) {
 	value := context.Value(AppConfigKey)
 	if value == nil {
-		return nil, errors.ArgumentMissing.With("AppConfig").WithStack()
+		return nil, errors.ArgumentMissing.With("AppConfig")
 	}
 	if config, ok := value.(*AppConfig); ok {
 		return config, nil
 	}
-	return nil, errors.ArgumentInvalid.With("AppConfig", value).WithStack()
+	return nil, errors.ArgumentInvalid.With("AppConfig", value)
 }
 
 // HttpHandler wraps this AppConfig into an http.Handler
@@ -71,7 +71,7 @@ func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
-		return errors.ArgumentMissing.With("Queue").WithStack()
+		return errors.ArgumentMissing.With("Queue")
 	}
 	if len(config.AgentQueue.ID) == 0 {
 		queueName := config.AgentQueue.Name
