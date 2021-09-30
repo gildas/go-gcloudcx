@@ -11,3 +11,20 @@ type OpenMessageFrom struct {
 	Lastname  string   `json:"lastName"`
 	Nickname  string   `json:"nickname"`
 }
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (from OpenMessageFrom) Redact() interface{} {
+	redacted := from
+	if len(from.Firstname) > 0 {
+		redacted.Firstname = "REDACTED"
+	}
+	if len(from.Lastname) > 0 {
+		redacted.Lastname = "REDACTED"
+	}
+	if len(from.Nickname) > 0 {
+		redacted.Nickname = "REDACTED"
+	}
+	return &redacted
+}

@@ -11,8 +11,30 @@ type OpenMessage struct {
 	Reasons         []*StatusReason       `json:"reasons,omitempty"`
 }
 
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (message OpenMessage) Redact() interface{} {
+	redacted := message
+	if message.Channel != nil {
+		redacted.Channel = message.Channel.Redact().(*OpenMessageChannel)
+	}
+	return &redacted
+}
+
 type OpenMessageResult struct {
 	OpenMessage
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (result OpenMessageResult) Redact() interface{} {
+	redacted := result
+	if result.Channel != nil {
+		redacted.Channel = result.Channel.Redact().(*OpenMessageChannel)
+	}
+	return &redacted
 }
 
 type StatusReason struct {

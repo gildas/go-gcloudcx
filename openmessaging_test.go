@@ -45,7 +45,7 @@ func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
 	err := integration.Initialize()
 	suite.Require().NotNil(err, "Should not initialize without a client")
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
-	var details *errors.Error
+	var details errors.Error
 	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
 	suite.Assert().Equal("Client", details.What)
 }
@@ -56,7 +56,7 @@ func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
 	err := integration.Initialize(client)
 	suite.Require().NotNil(err, "Should not initialize without a client Logger")
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
-	var details *errors.Error
+	var details errors.Error
 	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
 	suite.Assert().Equal("Client Logger", details.What)
 }
@@ -161,6 +161,56 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 	expected, err := LoadFile("openmessaging-channel.json")
 	suite.Require().Nilf(err, "Failed to Load Data. %s", err)
 	suite.Assert().JSONEq(string(expected), string(data))
+}
+
+func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
+	message := gcloudcx.OpenMessage{
+		ID:        "12345678",
+		Direction: "inbound",
+		Type:      "text",
+		Text:       "text message",
+	}
+	message.Channel = gcloudcx.NewOpenMessageChannel(
+		"gmAy9zNkhf4ermFvHH9mB5",
+		&gcloudcx.OpenMessageTo{ ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+		&gcloudcx.OpenMessageFrom{
+			ID:        "abcdef12345",
+			Type:      "Email",
+			Firstname: "Bob",
+			Lastname:  "Minion",
+			Nickname:  "Bobby",
+		},
+	)
+	message.Channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+
+	suite.Logger.Record("message", message).Infof("message")
+}
+
+func (suite *OpenMessagingSuite) TestCanRedactOpenMessageChannel() {
+	channel := gcloudcx.NewOpenMessageChannel(
+		"gmAy9zNkhf4ermFvHH9mB5",
+		&gcloudcx.OpenMessageTo{ ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+		&gcloudcx.OpenMessageFrom{
+			ID:        "abcdef12345",
+			Type:      "Email",
+			Firstname: "Bob",
+			Lastname:  "Minion",
+			Nickname:  "Bobby",
+		},
+	)
+	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+	suite.Logger.Record("channel", channel).Infof("channel")
+}
+
+func (suite *OpenMessagingSuite) TestCanRedactOpenMessageFrom() {
+	from := gcloudcx.OpenMessageFrom{
+		ID:        "abcdef12345",
+		Type:      "Email",
+		Firstname: "Bob",
+		Lastname:  "Minion",
+		Nickname:  "Bobby",
+	}
+	suite.Logger.Record("from", from).Infof("from")
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() {
