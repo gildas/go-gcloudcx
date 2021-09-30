@@ -136,7 +136,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithNoAPI() {
 	suite.Require().NotNil(err, "Should not send request without an API URL")
 	suite.Logger.Errorf("Expected error", err)
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
-	var details *errors.Error
+	var details errors.Error
 	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
 	suite.Assert().Equal("Client API", details.What)
 }
