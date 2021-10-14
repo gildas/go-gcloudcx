@@ -2,7 +2,9 @@ package gcloudcx
 
 import (
 	"encoding/json"
+	"mime"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -230,6 +232,11 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
+	fileExtension := path.Ext(imageURL.Path)
+	if fileExtensions, err := mime.ExtensionsByType(imageMimeType); err == nil && len(fileExtensions) > 0 {
+		fileExtension = fileExtensions[0]
+	}
+	filename := "image" + fileExtension
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/inbound/open",
@@ -246,9 +253,10 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 				{
 					Type: "Attachment",
 					Attachment: &OpenMessageAttachment{
-						Type: "Image",
-						Mime: imageMimeType,
-						URL:  imageURL,
+						Type:     "Image",
+						Mime:     imageMimeType,
+						URL:      imageURL,
+						Filename: filename,
 					},
 				},
 			},
