@@ -12,6 +12,7 @@ import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
+	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
 // OpenMessagingIntegration  describes an GCloud OpenMessaging Integration
@@ -203,7 +204,7 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 // SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendInboundMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
@@ -225,18 +226,42 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(from *OpenMe
 	return result, err
 }
 
-// SendInboundImageMessage sends a text message from the middleware to GENESYS Cloud
+// SendInboundAudioMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
-func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenMessageFrom, messageID, text string, imageMimeType string, imageURL *url.URL) (*OpenMessageResult, error) {
+// See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
+func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (*OpenMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
-	fileExtension := path.Ext(imageURL.Path)
-	if fileExtensions, err := mime.ExtensionsByType(imageMimeType); err == nil && len(fileExtensions) > 0 {
-		fileExtension = fileExtensions[0]
+	if attachmentURL == nil {
+		return nil, errors.ArgumentMissing.With("url")
 	}
-	filename := "image" + fileExtension
+
+	var attachmentType string
+	switch {
+	case len(attachmentMimeType) == 0:
+		attachmentType = "Link"
+	case strings.HasPrefix(attachmentMimeType, "audio"):
+		attachmentType = "Audio"
+	case strings.HasPrefix(attachmentMimeType, "image"):
+		attachmentType = "Image"
+	case strings.HasPrefix(attachmentMimeType, "video"):
+		attachmentType = "Video"
+	default:
+		attachmentType = "File"
+	}
+
+	var attachmentFilename string
+	if attachmentType != "Link" {
+		fileExtension := path.Ext(attachmentURL.Path)
+		if fileExtensions, err := mime.ExtensionsByType(attachmentMimeType); err == nil && len(fileExtensions) > 0 {
+			fileExtension = fileExtensions[0]
+		}
+		fileID, _ := nanoid.New()
+		attachmentFilename = strings.ToLower(attachmentType) + "-" + fileID + fileExtension
+	}
+
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
 		"/conversations/messages/inbound/open",
@@ -253,10 +278,11 @@ func (integration *OpenMessagingIntegration) SendInboundImageMessage(from *OpenM
 				{
 					Type: "Attachment",
 					Attachment: &OpenMessageAttachment{
-						Type:     "Image",
-						Mime:     imageMimeType,
-						URL:      imageURL,
-						Filename: filename,
+						Type:     attachmentType,
+						ID:       attachmentID,
+						Mime:     attachmentMimeType,
+						URL:      attachmentURL,
+						Filename: attachmentFilename,
 					},
 				},
 			},
