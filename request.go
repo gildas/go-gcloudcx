@@ -86,6 +86,9 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 			client.Grant.AccessToken().Reset()
 			return client.SendRequest(path, options, results)
 		}
+		if errors.Is(err, errors.HTTPBadRequest) {
+			log.Record("payload", options.Payload).Errorf("Bad Request from remote")
+		}
 		var details *errors.Error
 		if errors.As(err, &details) {
 			apiError := APIError{}
