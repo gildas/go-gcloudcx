@@ -97,7 +97,7 @@ func (server *ChatServer) Start(config *Config) {
 				log := server.Logger.Child(nil, "sendCX", "chat", message.Chat.ID, "message", message.ID)
 
 				log.Debugf("Sending message to GENESYS Cloud")
-				inboundResult, err := config.Integration.SendInboundTextMessage(
+				inboundResult, err := config.Integration.SendInboundMessage(
 					&gcloudcx.OpenMessageFrom{
 						ID:        message.UserID,
 						Type:      "email",

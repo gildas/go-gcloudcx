@@ -27,6 +27,18 @@ func NewOpenMessageChannel(messageID string, to *OpenMessageTo, from *OpenMessag
 		From:      from,
 	}
 }
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (channel OpenMessageChannel) Redact() interface{} {
+	redacted := channel
+	if channel.From != nil {
+		redacted.From = channel.From.Redact().(*OpenMessageFrom)
+	}
+	return &redacted
+}
+
 // MarshalJSON marshals this into JSON
 func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessageChannel
