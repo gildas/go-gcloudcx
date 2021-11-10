@@ -58,14 +58,14 @@ func mainRouteHandler() http.Handler {
 
 		// Let's get my user and organization here, as an example...
 
-		organization, err := client.GetMyOrganization()
+		organization, err := client.GetMyOrganization(context.Background())
 		if err != nil {
 			log.Errorf("Failed to retrieve my Organization", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}
 
-		user, err := client.GetMyUser("presence")
+		user, err := client.GetMyUser(r.Context(), "presence")
 		if err != nil {
 			log.Errorf("Failed to retrieve my User", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
@@ -119,15 +119,18 @@ func main() {
 
 	// Create the HTTP Incoming Request Router
 	router := mux.NewRouter().StrictSlash(true)
+
+	router.Use(Log.HttpHandler())
+
 	// This route actually performs login the user using the grant of the gcloudcx.Client
 	//   Upon success, your route httpHandler is called
-	router.Methods("GET").Path("/token").Handler(Log.HttpHandler()(Client.LoggedInHandler()(loggedInHandler())))
+	router.Methods("GET").Path("/token").Handler(Client.LoggedInHandler()(loggedInHandler()))
 
 	// This route performs your actions, but makes sure the client is authorized,
 	//   if authorized, your route http.Handler is called
 	//   otherwise, the AuthorizeHandler will redirect the user to the GCloud Login page
 	//   that will end up with the grant.RedirectURL defined earlier
-	router.Methods("GET").Path("/").Handler(Log.HttpHandler()(Client.AuthorizeHandler()(mainRouteHandler())))
+	router.Methods("GET").Path("/").Handler(Client.AuthorizeHandler()(mainRouteHandler()))
 
 	WebServer := &http.Server{
 		Addr:         fmt.Sprintf("0.0.0.0:%d", *port),

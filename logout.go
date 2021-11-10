@@ -1,12 +1,13 @@
 package gcloudcx
 
 import (
+	"context"
 	"net/http"
 )
 
 // Logout logs out a Client from GCloud
-func (client *Client) Logout() {
-	_ = client.Delete("/tokens/me", nil) // we don't care much about the error as we are logging out
+func (client *Client) Logout(context context.Context) {
+	_ = client.Delete(context, "/tokens/me", nil) // we don't care much about the error as we are logging out
 	if client.Grant != nil {
 		client.Grant.AccessToken().Reset()
 	}
@@ -24,7 +25,7 @@ func (client *Client) LogoutHandler() func(http.Handler) http.Handler {
 			log := client.Logger.Scope("logout")
 
 			if client.Grant.AccessToken().LoadFromCookie(r, "pcsession").IsValid() {
-				client.Logout()
+				client.Logout(r.Context())
 				client.DeleteCookie(w)
 				log.Infof("User is now logged out from GCloud")
 			}

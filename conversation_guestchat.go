@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -33,7 +34,7 @@ type ConversationGuestChat struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	client, logger, _, err := parseParameters(conversation, parameters...)
+	context, client, logger, _, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}
@@ -60,7 +61,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		return errors.ArgumentMissing.With("DeploymentID")
 	}
 
-	if err = client.Post("/webchat/guest/conversations",
+	if err = client.Post(context, "/webchat/guest/conversations",
 		struct {
 			OrganizationID string         `json:"organizationId"`
 			DeploymentID   string         `json:"deploymentId"`
@@ -106,13 +107,13 @@ func (conversation ConversationGuestChat) String() string {
 // Connect connects a Guest Chat to its websocket and starts its message loop
 //   If the websocket was already connected, nothing happens
 //   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
-func (conversation *ConversationGuestChat) Connect() (err error) {
+func (conversation *ConversationGuestChat) Connect(context context.Context) (err error) {
 	if conversation.Socket != nil {
 		return
 	}
 	conversation.Socket, _, err = websocket.DefaultDialer.Dial(conversation.EventStream, nil)
 	if err != nil {
-		_ = conversation.Close()
+		_ = conversation.Close(context)
 		// return errors.NotConnectedError.With("Conversation")
 		return errors.NotConnected.Wrap(err)
 	}
@@ -121,7 +122,7 @@ func (conversation *ConversationGuestChat) Connect() (err error) {
 }
 
 // Close disconnects the websocket and the guest
-func (conversation *ConversationGuestChat) Close() (err error) {
+func (conversation *ConversationGuestChat) Close(context context.Context) (err error) {
 	log := conversation.Logger.Scope("close")
 
 	if conversation.Socket != nil {
@@ -134,7 +135,7 @@ func (conversation *ConversationGuestChat) Close() (err error) {
 	}
 	if conversation.Guest != nil {
 		log.Debugf("Disconnecting Guest Member")
-		if err = conversation.Client.Delete(NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
+		if err = conversation.Client.Delete(context, NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while disconnecting Guest Member", err)
 			return err
 		}
@@ -220,12 +221,13 @@ func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []b
 }
 
 // GetMember fetches the given member of this Conversation (caches the member)
-func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) (*ChatMember, error) {
+func (conversation *ConversationGuestChat) GetMember(context context.Context, identifiable Identifiable) (*ChatMember, error) {
 	if member, ok := conversation.Members[identifiable.GetID()]; ok {
 		return member, nil
 	}
 	member := &ChatMember{}
 	err := conversation.Client.SendRequest(
+		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,
@@ -241,7 +243,7 @@ func (conversation *ConversationGuestChat) GetMember(identifiable Identifiable) 
 }
 
 // SendTyping sends a typing indicator to Gcloud as the chat guest
-func (conversation *ConversationGuestChat) SendTyping() (err error) {
+func (conversation *ConversationGuestChat) SendTyping(context context.Context, ) (err error) {
 	response := &struct {
 		ID           string       `json:"id,omitempty"`
 		Name         string       `json:"name,omitempty"`
@@ -250,9 +252,10 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
+		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
 		&request.Options{
-			Method:        http.MethodPost, // since payload is empty
+			Method:        http.MethodPost,
 			Authorization: "bearer " + conversation.JWT,
 		},
 		&response,
@@ -263,17 +266,17 @@ func (conversation *ConversationGuestChat) SendTyping() (err error) {
 }
 
 // SendMessage sends a message as the chat guest
-func (conversation *ConversationGuestChat) SendMessage(text string) (err error) {
-	return conversation.sendBody("standard", text)
+func (conversation *ConversationGuestChat) SendMessage(context context.Context, text string) (err error) {
+	return conversation.sendBody(context, "standard", text)
 }
 
 // SendNotice sends a notice as the chat guest
-func (conversation *ConversationGuestChat) SendNotice(text string) (err error) {
-	return conversation.sendBody("notice", text)
+func (conversation *ConversationGuestChat) SendNotice(context context.Context, text string) (err error) {
+	return conversation.sendBody(context, "notice", text)
 }
 
 // sendBody sends a body message as the chat guest
-func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err error) {
+func (conversation *ConversationGuestChat) sendBody(context context.Context, bodyType, body string) (err error) {
 	response := &struct {
 		ID           string       `json:"id,omitempty"`
 		Name         string       `json:"name,omitempty"`
@@ -285,6 +288,7 @@ func (conversation *ConversationGuestChat) sendBody(bodyType, body string) (err 
 		SelfURI      string       `json:"selfUri,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
+		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
 		&request.Options{
 			Authorization: "bearer " + conversation.JWT,

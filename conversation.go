@@ -79,12 +79,12 @@ type Voicemail struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *Conversation) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(conversation, parameters...)
+	context, client, logger, id, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := conversation.Client.Get(NewURI("/conversations/%s", id), &conversation); err != nil {
+		if err := conversation.Client.Get(context, NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
 	}

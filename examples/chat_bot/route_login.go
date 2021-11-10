@@ -21,9 +21,9 @@ func LoggedInHandler() http.Handler {
 			return
 		}
 
-		client.Organization, _ = client.GetMyOrganization()
+		client.Organization, _ = client.GetMyOrganization(r.Context())
 
-		if err = appConfig.Initialize(client); err != nil {
+		if err = appConfig.Initialize(r.Context(), client); err != nil {
 			log.Errorf("Failed to Initialize App Config", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return

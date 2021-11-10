@@ -1,13 +1,15 @@
 package gcloudcx
 
 import (
+	"context"
+
 	"github.com/gildas/go-core"
 	"github.com/google/uuid"
 )
 
 // Authorizer describes what a grants should do
 type Authorizer interface {
-	Authorize(client *Client) error // Authorize a client with Gcloud
+	Authorize(context context.Context, client *Client) error // Authorize a client with Gcloud
 	AccessToken() *AccessToken      // Get the Access Token obtained by the Authorizer
 	core.Identifiable               // Implements core.Identifiable
 }

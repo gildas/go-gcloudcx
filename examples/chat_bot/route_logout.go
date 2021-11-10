@@ -12,7 +12,7 @@ func LoggedOutHandler() http.Handler {
 		log := logger.Must(logger.FromContext(r.Context())).Child("route", "logged_out")
 		appConfig, _ := AppConfigFromContext(r.Context())
 
-		if err := appConfig.Reset(); err != nil {
+		if err := appConfig.Reset(r.Context()); err != nil {
 			log.Errorf("Failed to reset the app")
 		}
 

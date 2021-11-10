@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"strings"
@@ -30,10 +31,10 @@ type NotificationChannel struct {
 // CreateNotificationChannel creates a new channel for notifications
 //
 //   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
-func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) {
+func (client *Client) CreateNotificationChannel(context context.Context) (*NotificationChannel, error) {
 	var err error
 	channel := &NotificationChannel{}
-	if err = client.Post("/notifications/channels", struct{}{}, &channel); err != nil {
+	if err = client.Post(context, "/notifications/channels", struct{}{}, &channel); err != nil {
 		return nil, err
 	}
 	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
@@ -53,9 +54,9 @@ func (client *Client) CreateNotificationChannel() (*NotificationChannel, error) 
 }
 
 // Close unsubscribes from all subscriptions and closes the websocket
-func (channel *NotificationChannel) Close() (err error) {
+func (channel *NotificationChannel) Close(context context.Context) (err error) {
 	if channel.Client != nil && channel.Client.IsAuthorized() {
-		_ = channel.Unsubscribe()
+		_ = channel.Unsubscribe(context)
 	}
 	if channel.Socket != nil {
 		close(channel.TopicReceived)
@@ -69,9 +70,10 @@ func (channel *NotificationChannel) Close() (err error) {
 }
 
 // GetTopics gets all subscription topics set on this
-func (channel *NotificationChannel) GetTopics() ([]string, error) {
+func (channel *NotificationChannel) GetTopics(context context.Context) ([]string, error) {
 	results := struct{ Entities []ChannelTopic }{}
 	if err := channel.Client.Get(
+		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
 	); err != nil {
@@ -85,7 +87,7 @@ func (channel *NotificationChannel) GetTopics() ([]string, error) {
 }
 
 // SetTopics sets the subscriptions. It overrides any previous subscriptions
-func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error) {
+func (channel *NotificationChannel) SetTopics(context context.Context, topics ...string) ([]string, error) {
 	channelTopics := make([]ChannelTopic, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
@@ -94,6 +96,7 @@ func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error
 		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Put(
+		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
@@ -108,8 +111,8 @@ func (channel *NotificationChannel) SetTopics(topics ...string) ([]string, error
 }
 
 // IsSubscribed tells if the channel is subscribed to the given topic
-func (channel *NotificationChannel) IsSubscribed(topic string) bool {
-	topics, err := channel.GetTopics()
+func (channel *NotificationChannel) IsSubscribed(context context.Context, topic string) bool {
+	topics, err := channel.GetTopics(context)
 	if err != nil {
 		return false
 	}
@@ -122,7 +125,7 @@ func (channel *NotificationChannel) IsSubscribed(topic string) bool {
 }
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
-func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error) {
+func (channel *NotificationChannel) Subscribe(context context.Context, topics ...string) ([]string, error) {
 	channelTopics := make([]ChannelTopic, len(topics))
 	for i, topic := range topics {
 		channelTopics[i].ID = topic
@@ -131,6 +134,7 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 		Entities []ChannelTopic `json:"entities"`
 	}{}
 	if err := channel.Client.Post(
+		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
@@ -147,11 +151,11 @@ func (channel *NotificationChannel) Subscribe(topics ...string) ([]string, error
 // Unsubscribe unsubscribes from some topics,
 //
 // If there is no argument, unsubscribe from all topics
-func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
+func (channel *NotificationChannel) Unsubscribe(context context.Context, topics ...string) error {
 	if len(topics) == 0 {
-		return channel.Client.Delete(NewURI("/notifications/channels/%s/subscriptions", channel.ID), nil)
+		return channel.Client.Delete(context, NewURI("/notifications/channels/%s/subscriptions", channel.ID), nil)
 	}
-	currentTopics, err := channel.GetTopics()
+	currentTopics, err := channel.GetTopics(context)
 	if err != nil {
 		return err
 	}
@@ -168,7 +172,7 @@ func (channel *NotificationChannel) Unsubscribe(topics ...string) error {
 			filteredTopics = append(filteredTopics, current)
 		}
 	}
-	_, err = channel.SetTopics(filteredTopics...)
+	_, err = channel.SetTopics(context, filteredTopics...)
 	return err
 }
 

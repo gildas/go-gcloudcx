@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"time"
@@ -58,14 +59,14 @@ type JourneyContext struct {
 // Initialize initializes this from the given Client
 //   implements Initializable
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(conversation, parameters...)
+	context, client, logger, id, err := parseParameters(conversation, parameters...)
 	if err != nil {
 		return err
 	}
 	// TODO: get /conversations/chats/$id when that REST call works better
 	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
 	if id != uuid.Nil {
-		if err := conversation.Client.Get(NewURI("/conversations/%s", id), &conversation); err != nil {
+		if err := conversation.Client.Get(context, NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
 	}
@@ -88,8 +89,9 @@ func (conversation ConversationChat) String() string {
 
 // Disconnect disconnect an Identifiable from this
 //   implements Disconnecter
-func (conversation ConversationChat) Disconnect(identifiable Identifiable) error {
+func (conversation ConversationChat) Disconnect(context context.Context, identifiable Identifiable) error {
 	return conversation.Client.Patch(
+		context,
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: "disconnected"},
 		nil,
@@ -98,8 +100,9 @@ func (conversation ConversationChat) Disconnect(identifiable Identifiable) error
 
 // UpdateState update the state of an identifiable in this
 //   implements StateUpdater
-func (conversation ConversationChat) UpdateState(identifiable Identifiable, state string) error {
+func (conversation ConversationChat) UpdateState(context context.Context, identifiable Identifiable, state string) error {
 	return conversation.Client.Patch(
+		context,
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
 		nil,
@@ -108,8 +111,9 @@ func (conversation ConversationChat) UpdateState(identifiable Identifiable, stat
 
 // Transfer transfers a participant of this Conversation to the given Queue
 //   implement Transferrer
-func (conversation ConversationChat) Transfer(identifiable Identifiable, queue Identifiable) error {
+func (conversation ConversationChat) Transfer(context context.Context, identifiable Identifiable, queue Identifiable) error {
 	return conversation.Client.Post(
+		context,
 		NewURI("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
 		struct {
 			ID string `json:"queueId"`
@@ -119,8 +123,9 @@ func (conversation ConversationChat) Transfer(identifiable Identifiable, queue I
 }
 
 // Post sends a text message to a chat member
-func (conversation ConversationChat) Post(member Identifiable, text string) error {
+func (conversation ConversationChat) Post(context context.Context, member Identifiable, text string) error {
 	return conversation.Client.Post(
+		context,
 		NewURI("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
 		struct {
 			BodyType string `json:"bodyType"`
@@ -134,8 +139,9 @@ func (conversation ConversationChat) Post(member Identifiable, text string) erro
 }
 
 // SetTyping send a typing indicator to the chat member
-func (conversation ConversationChat) SetTyping(member Identifiable) error {
+func (conversation ConversationChat) SetTyping(context context.Context, member Identifiable) error {
 	return conversation.Client.Post(
+		context,
 		NewURI("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()),
 		nil,
 		nil,
@@ -143,8 +149,9 @@ func (conversation ConversationChat) SetTyping(member Identifiable) error {
 }
 
 // Wrapup wraps up a Participant of this Conversation
-func (conversation ConversationChat) Wrapup(identifiable Identifiable, wrapup *Wrapup) error {
+func (conversation ConversationChat) Wrapup(context context.Context, identifiable Identifiable, wrapup *Wrapup) error {
 	return conversation.Client.Patch(
+		context,
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{Wrapup: wrapup},
 		nil,

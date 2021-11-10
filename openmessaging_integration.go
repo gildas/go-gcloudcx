@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"mime"
 	"net/url"
@@ -42,12 +43,12 @@ type OpenMessagingIntegration struct {
 //
 //   implements Initializable
 func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(integration, parameters...)
+	context, client, logger, id, err := parseParameters(integration, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
+		if err := client.Get(context, NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
 			return err
 		}
 	}
@@ -58,7 +59,7 @@ func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{
 
 // FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
 func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessagingIntegration, error) {
-	client, logger, _, err := parseParameters(nil, parameters...)
+	context, client, logger, _, err := parseParameters(nil, parameters...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +73,7 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 		SelfURI      string                      `json:"selfUri"`
 		LastURI      string                      `json:"lastUri"`
 	}{}
-	if err = client.Get("/conversations/messaging/integrations/open", &response); err != nil {
+	if err = client.Get(context, "/conversations/messaging/integrations/open", &response); err != nil {
 		return nil, err
 	}
 	logger.Record("response", response).Infof("Got a response")
@@ -89,14 +90,14 @@ func FetchOpenMessagingIntegrations(parameters ...interface{}) ([]*OpenMessaging
 //
 // If a string is given, fetches by name
 func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingIntegration, error) {
-	client, logger, id, err := parseParameters(nil, parameters...)
+	context, client, logger, id, err := parseParameters(nil, parameters...)
 	if err != nil {
 		return nil, err
 	}
 
 	integration := &OpenMessagingIntegration{}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
+		if err := client.Get(context, NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
 			return nil, err
 		}
 	} else {
@@ -120,7 +121,7 @@ func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingInt
 			SelfURI      string                      `json:"selfUri"`
 			LastURI      string                      `json:"lastUri"`
 		}{}
-		if err = client.Get("/conversations/messaging/integrations/open", &response); err != nil {
+		if err = client.Get(context, "/conversations/messaging/integrations/open", &response); err != nil {
 			return nil, err
 		}
 		nameLowercase := strings.ToLower(name)
@@ -140,9 +141,10 @@ func FetchOpenMessagingIntegration(parameters ...interface{}) (*OpenMessagingInt
 }
 
 // Create creates a new OpenMessaging Integration
-func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url.URL, token string) error {
+func (integration *OpenMessagingIntegration) Create(context context.Context, name string, webhookURL *url.URL, token string) error {
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Post(
+		context,
 		"/conversations/messaging/integrations/open",
 		struct {
 			Name    string `json:"name"`
@@ -166,22 +168,23 @@ func (integration *OpenMessagingIntegration) Create(name string, webhookURL *url
 // Delete deletes an OpenMessaging Integration
 //
 // If the integration was not created, nothing is done
-func (integration *OpenMessagingIntegration) Delete() error {
+func (integration *OpenMessagingIntegration) Delete(context context.Context) error {
 	if integration.ID == uuid.Nil {
 		return nil
 	}
-	return integration.Client.Delete(NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
+	return integration.Client.Delete(context, NewURI("/conversations/messaging/integrations/open/%s", integration.ID), nil)
 }
 
 // Update updates an OpenMessaging Integration
 //
 // If the integration was not created, an error is return without reaching GENESYS Cloud
-func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url.URL, token string) error {
+func (integration *OpenMessagingIntegration) Update(context context.Context, name string, webhookURL *url.URL, token string) error {
 	if integration.ID == uuid.Nil {
 		return errors.ArgumentMissing.With("ID")
 	}
 	response := &OpenMessagingIntegration{}
 	err := integration.Client.Patch(
+		context,
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
 		struct {
 			Name    string `json:"name"`
@@ -204,12 +207,13 @@ func (integration *OpenMessagingIntegration) Update(name string, webhookURL *url
 // SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundMessage(from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
+		context,
 		"/conversations/messages/inbound/open",
 		&OpenMessage{
 			Direction: "Inbound",
@@ -230,7 +234,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(from *OpenMessag
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
 // See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
-func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (*OpenMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (*OpenMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
@@ -264,6 +268,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(fr
 
 	result := &OpenMessageResult{}
 	err := integration.Client.Post(
+		context,
 		"/conversations/messages/inbound/open",
 		&OpenMessage{
 			Direction: "Inbound",
@@ -299,12 +304,13 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(fr
 // This is mainly for debugging purposes
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
-func (integration *OpenMessagingIntegration) SendOutboundMessage(destination, text string) (*AgentlessMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendOutboundMessage(context context.Context, destination, text string) (*AgentlessMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
 	result := &AgentlessMessageResult{}
 	err := integration.Client.Post(
+		context,
 		"/conversations/messages/agentless",
 		AgentlessMessage{
 			From:          integration.ID.String(),

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ func MessageLoop(config *AppConfig) {
 	log := config.Logger.Child("topic", "process")
 
 	channel := config.NotificationChannel
+	context := context.Background()
 
 	// Processing Received NotificationTopic by reading the chan
 	// We do this in a non-blocking way with a timeout to not loop too fast
@@ -39,24 +41,24 @@ func MessageLoop(config *AppConfig) {
 					log.Infof("User's Participant %s state: %s", participant, participant.State)
 					switch participant.State {
 					case "alerting": // Now we need to "answer" the participant, i.e. turn them connected
-						if channel.IsSubscribed(chatTopic) {
+						if channel.IsSubscribed(context, chatTopic) {
 							continue
 						}
 						log.Infof("Subscribing to Conversation %s", topic.Conversation)
-						_, err := channel.Subscribe(gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+						_, err := channel.Subscribe(context, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
 						if err != nil {
 							log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 							continue
 						}
 
 						log.Infof("Setting Participant %s state to %s", participant, "connected")
-						err = participant.UpdateState(topic.Conversation, "connected")
+						err = participant.UpdateState(context, topic.Conversation, "connected")
 						if err != nil {
 							log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
 							continue
 						}
 					case "disconnected": // Finally, if we need tp wrap up the chat, let's do it
-						if !channel.IsSubscribed(chatTopic) {
+						if !channel.IsSubscribed(context, chatTopic) {
 							continue
 						}
 						if participant.WrapupRequired && participant.Wrapup == nil {
@@ -64,12 +66,12 @@ func MessageLoop(config *AppConfig) {
 							// Once the transfer is initiated, we should "Wrapup" the participant
 							//   if needed (queue request a wrapup)
 							wrapup := &gcloudcx.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-							if err := topic.Conversation.Wrapup(participant, wrapup); err != nil {
+							if err := topic.Conversation.Wrapup(context, participant, wrapup); err != nil {
 								log.Errorf("Failed to wrapup Participant %s", participant)
 								continue
 							}
 						}
-						if err := channel.Unsubscribe(gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)); err != nil {
+						if err := channel.Unsubscribe(context, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)); err != nil {
 							log.Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
 							continue
 						}
@@ -80,7 +82,7 @@ func MessageLoop(config *AppConfig) {
 				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.Conversation, topic.BodyType, topic.Body, topic.Sender)
 				if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
 					// We need a full conversation object, so we can operate on it
-					err := topic.Client.Fetch(topic.Conversation)
+					err := topic.Client.Fetch(context, topic.Conversation)
 					if err != nil {
 						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.Conversation, err)
 						continue
@@ -103,7 +105,7 @@ func MessageLoop(config *AppConfig) {
 					}
 					// Pretend the Chat Bot is typing... (whereis it is thinking... isn't it?)
 					log.Record("chat", participant.Chats[0]).Debugf("The agent is now typing")
-					err = topic.Conversation.SetTyping(participant.Chats[0])
+					err = topic.Conversation.SetTyping(context, participant.Chats[0])
 					if err != nil {
 						log.Errorf("Failed to send Typing to Chat Member", err)
 					}
@@ -130,20 +132,20 @@ func MessageLoop(config *AppConfig) {
 						continue
 					}
 					log.Record("response", response).Debugf("Received: %s", response.Fulfillment)
-					if err = topic.Conversation.Post(participant.Chats[0], response.Fulfillment); err != nil {
+					if err = topic.Conversation.Post(context, participant.Chats[0], response.Fulfillment); err != nil {
 						log.Errorf("Failed to send Text to Chat Member", err)
 					}
 					switch {
 					case response.EndConversation:
 						log.Infof("Disconnecting Participant %s", participant)
-						if err := topic.Conversation.Disconnect(participant); err != nil {
+						if err := topic.Conversation.Disconnect(context, participant); err != nil {
 							log.Errorf("Failed to Wrapup Participant %s", &participant, err)
 							continue
 						}
 					case "agenttransfer" == strings.ToLower(response.Intent):
 						log.Infof("Transferring Participant %s to Queue %s", participant, config.AgentQueue)
 						log.Record("queue", config.AgentQueue).Debugf("Agent Queue: %s", config.AgentQueue)
-						if err := topic.Conversation.Transfer(participant, config.AgentQueue); err != nil {
+						if err := topic.Conversation.Transfer(context, participant, config.AgentQueue); err != nil {
 							log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
 							continue
 						}

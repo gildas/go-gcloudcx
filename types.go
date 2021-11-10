@@ -1,6 +1,8 @@
 package gcloudcx
 
 import (
+	"context"
+
 	"github.com/gildas/go-core"
 )
 
@@ -16,17 +18,17 @@ type Initializable interface {
 
 // StateUpdater describes objects than can update the state of an Identifiable
 type StateUpdater interface {
-	UpdateState(identifiable Identifiable, state string) error
+	UpdateState(context context.Context, identifiable Identifiable, state string) error
 }
 
 // Disconnecter describes objects that can disconnect an Identifiable from themselves
 type Disconnecter interface {
-	Disconnect(identifiable Identifiable) error
+	Disconnect(context context.Context, identifiable Identifiable) error
 }
 
 // Transferrer describes objects that can transfer an Identifiable somewhere else
 type Transferrer interface {
-	Transfer(identifiable Identifiable, target Identifiable) error
+	Transfer(context context.Context, identifiable Identifiable, target Identifiable) error
 }
 
 // Address describes an Address (telno, etc)

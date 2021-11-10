@@ -1,6 +1,7 @@
 package gcloudcx_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -9,8 +10,8 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +25,7 @@ func (suite *ClientSuite) TestCanSendGetRequest() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Get("/path/to/resource", &stuff)
+	err := client.Get(context.Background(), "/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -35,7 +36,7 @@ func (suite *ClientSuite) TestCanSendPostRequest() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Post("/path/to/resource", struct{}{}, &stuff)
+	err := client.Post(context.Background(), "/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -46,7 +47,7 @@ func (suite *ClientSuite) TestCanSendPatchRequest() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Patch("/path/to/resource", struct{}{}, &stuff)
+	err := client.Patch(context.Background(), "/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -57,7 +58,7 @@ func (suite *ClientSuite) TestCanSendPutRequest() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Put("/path/to/resource", struct{}{}, &stuff)
+	err := client.Put(context.Background(), "/path/to/resource", struct{}{}, &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -68,7 +69,7 @@ func (suite *ClientSuite) TestCanSendDeleteRequest() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Delete("/path/to/resource", &stuff)
+	err := client.Delete(context.Background(), "/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -81,7 +82,7 @@ func (suite *ClientSuite) TestCanSendRequestWithFullyQualifiedURL() {
 	stuff := struct{}{}
 	serverURL := core.Must(url.Parse(server.URL)).(*url.URL)
 	requestURL := core.Must(serverURL.Parse("/api/v2/path/to/resource")).(*url.URL)
-	err := client.Get(gcloudcx.NewURI(requestURL.String()), &stuff)
+	err := client.Get(context.Background(), gcloudcx.NewURI(requestURL.String()), &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -92,7 +93,7 @@ func (suite *ClientSuite) TestCanSendRequestWithAPIPrefix() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.Get("/api/v2/path/to/resource", &stuff)
+	err := client.Get(context.Background(), "/api/v2/path/to/resource", &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
@@ -103,7 +104,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithInvalidProtocol() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.SendRequest("invalid://acme.com", nil, &stuff)
+	err := client.SendRequest(context.Background(), "invalid://acme.com", nil, &stuff)
 	suite.Require().NotNil(err, "Should not send request withan invalid URL")
 	suite.Logger.Errorf("Expected error", err)
 	var details *url.Error
@@ -118,7 +119,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithInvalidURL() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	err := client.SendRequest("http://wrong hostname.com", nil, &stuff)
+	err := client.SendRequest(context.Background(), "http://wrong hostname.com", nil, &stuff)
 	suite.Require().NotNil(err, "Should not send request withan invalid URL")
 	suite.Logger.Errorf("Expected error", err)
 	suite.Assert().Contains(err.Error(), "invalid character")
@@ -132,7 +133,7 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithNoAPI() {
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	client.API = nil
 	stuff := struct{}{}
-	err := client.SendRequest("/path/to/resource", nil, &stuff)
+	err := client.SendRequest(context.Background(), "/path/to/resource", nil, &stuff)
 	suite.Require().NotNil(err, "Should not send request without an API URL")
 	suite.Logger.Errorf("Expected error", err)
 	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))

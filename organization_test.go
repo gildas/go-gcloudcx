@@ -1,8 +1,10 @@
+//go:build integration
 // +build integration
 
 package gcloudcx_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -33,7 +35,7 @@ func TestOrganizationSuite(t *testing.T) {
 
 func (suite *OrganizationSuite) TestCanFetchOrganization() {
 	organization := &gcloudcx.Organization{}
-	err := suite.Client.Fetch(organization)
+	err := suite.Client.Fetch(context.Background(), organization)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -47,7 +49,7 @@ func (suite *OrganizationSuite) TestCanFetchOrganization() {
 }
 
 func (suite *OrganizationSuite) TestOrganizationHasName() {
-	organization, err := suite.Client.GetMyOrganization()
+	organization, err := suite.Client.GetMyOrganization(context.Background())
 	suite.Require().Nil(err, "Failed to fetch my Organization")
 	suite.Require().NotNil(organization, "Client's Organization is not loaded")
 	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")
@@ -107,7 +109,7 @@ func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login()
+		err := suite.Client.Login(context.Background())
 		suite.Require().Nil(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {

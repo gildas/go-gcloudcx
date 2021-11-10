@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -21,16 +22,16 @@ type Authorization struct {
 
 // Login logs in a Client to Gcloud
 //   Uses the credentials stored in the Client
-func (client *Client) Login() error {
-	return client.LoginWithAuthorizationGrant(client.Grant)
+func (client *Client) Login(context context.Context) error {
+	return client.LoginWithAuthorizationGrant(context, client.Grant)
 }
 
 // LoginWithAuthorizationGrant logs in a Client to Gcloud with given authorization Grant
-func (client *Client) LoginWithAuthorizationGrant(grant Authorizer) (err error) {
+func (client *Client) LoginWithAuthorizationGrant(context context.Context, grant Authorizer) (err error) {
 	if grant == nil {
 		return errors.ArgumentMissing.With("Authorization Grant")
 	}
-	if err = grant.Authorize(client); err != nil {
+	if err = grant.Authorize(context, client); err != nil {
 		return err
 	}
 	return
@@ -80,7 +81,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			params := r.URL.Query()
 			grant.Code = params.Get("code")
 			log.Tracef("Authorization Code: %s", grant.Code)
-			if err := client.Login(); err != nil {
+			if err := client.Login(r.Context()); err != nil {
 				log.Errorf("Failed to Authorize Grant", err)
 				core.RespondWithError(w, http.StatusInternalServerError, err)
 				return

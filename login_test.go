@@ -1,8 +1,10 @@
+//go:build integration
 // +build integration
 
 package gcloudcx_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -36,12 +38,12 @@ func (suite *LoginSuite) TestCanLogin() {
 	err := suite.Client.SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
-	}).Login()
+	}).Login(context.Background())
 	suite.Assert().Nil(err, "Failed to login")
 }
 
 func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
-	err := suite.Client.LoginWithAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.New(), // that UUID should not be anywhere in GCloud
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})
@@ -56,7 +58,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
 }
 
 func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
-	err := suite.Client.LoginWithAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   "WRONGSECRET",
 	})
@@ -71,7 +73,7 @@ func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
 }
 
 func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
-	err := suite.Client.LoginWithAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
 	})

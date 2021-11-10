@@ -1,6 +1,8 @@
 package gcloudcx
 
 import (
+	"context"
+
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
@@ -9,8 +11,9 @@ import (
 // parseParameters extracts Client, Logger, ID, from the given parameters
 //
 // Note, *uuid.UUID is optional and no error will be generated when it is not present
-func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *logger.Logger, uuid.UUID, error) {
+func parseParameters(seed Identifiable, parameters ...interface{}) (context.Context, *Client, *logger.Logger, uuid.UUID, error) {
 	var (
+		ctx    context.Context
 		client *Client
 		log    *logger.Logger
 		id     uuid.UUID = uuid.Nil
@@ -24,6 +27,8 @@ func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *lo
 		switch object := parameter.(type) {
 		case Client:
 			client = &object
+		case context.Context:
+			ctx = object
 		case *Client:
 			client = object
 		case *logger.Logger:
@@ -37,13 +42,16 @@ func parseParameters(seed Identifiable, parameters ...interface{}) (*Client, *lo
 		}
 	}
 	if client == nil {
-		return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client")
+		return nil, nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client")
 	}
 	if log == nil {
-		if client.Logger == nil {
-			return nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client Logger")
+		if clog, err := logger.FromContext(ctx); err == nil {
+			log = clog
+		} else if client.Logger != nil {
+			log = client.Logger
+		} else {
+			return nil, nil, nil, uuid.Nil, errors.ArgumentMissing.With("Client Logger")
 		}
-		log = client.Logger
 	}
-	return client, log, id, nil
+	return ctx, client, log, id, nil
 }

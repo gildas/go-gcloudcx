@@ -15,19 +15,19 @@ Have a look at the examples/ folder for complete examples on how to use this lib
 
 You first start by creating a `gcloudcx.Client` that will allow to send requests to Genesys Cloud:  
 ```go
-Log    := logger.Create("gcloudcx")
+log    := logger.Create("gcloudcx")
 client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
-	Logger:       Log,
+	Logger:       log,
 })
 ```
 
 You can choose the authorization grant right away as well:  
 ```go
-Log    := logger.Create("gcloudcx")
+log    := logger.Create("gcloudcx")
 client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
-	Logger:       Log,
+	Logger:       log,
 }).SetAuthorizationGrant(&gcloudcx.AuthorizationCodeGrant{
 	ClientID:    "hlkjshdgpiuy123387",
 	Secret:      "879e8ugspojdgj",
@@ -37,10 +37,10 @@ client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 
 Or,  
 ```go
-Log    := logger.Create("gcloudcx")
+log    := logger.Create("gcloudcx")
 client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 	DeploymentID: "123abc0981234i0df8g0",
-	Logger:       Log,
+	Logger:       log,
 }).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 	ClientID: "jklsdufg89u9j234",
 	Secret:   "sdfgjlskdfjglksdfjg",
@@ -57,33 +57,36 @@ In the case of the Authorization Code, the best is to run a Webserver in your co
 They can be used like this (using the [gorilla/mux](https://github.com/gorilla/mux) router, for example):  
 ```go
 router := mux.NewRouter()
-// This is the main route of this application, we want a fully functional gcloudcx.Client
-router.Methods("GET").Path("/").Handler(Client.AuthorizeHandler()(mainRouteHandler()))
 // This route is used as the RedirectURL of the client
-router.Methods("GET").Path("/token").Handler(Client.LoggedInHandler()(myhandler()))
+router.Methods("GET").Path("/token").Handler(client.LoggedInHandler()(myhandler()))
+
+authorizedRouter := router.PathPrefix("/").Subrouter()
+
+authorizedRouter.Use(client.AuthorizeHandler())
+
+// This is the main route of this application, we want a fully functional gcloudcx.Client
+authorizedRouter.Methods("GET").Path("/").HandlerFunc(mainRouteHandler)
 ```
 
 In you *HttpHandler*, the client will be available from the request's context:  
 ```go
-func mainRouteHandler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		client, err := gcloudcx.ClientFromContext(r.Context())
-		if err != nil {
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
-		}
+func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
+	client, err := gcloudcx.ClientFromContext(r.Context())
+	if err != nil {
+		core.RespondWithError(w, http.StatusServiceUnavailable, err)
+		return
+	}
 
-		// Let's get my organization here, as an example...
-		organization, err := client.GetMyOrganization()
-		if err != nil {
-			core.RespondWithError(w, http.StatusServiceUnavailable, err)
-			return
-		}
-		core.RespondWithJSON(w, http.StatusOK, struct {
-			OrgName  string `json:"organization"`
-		}{
-			OrgName:  organization.String(),
-		})
+	// Let's get my organization here, as an example...
+	organization, err := client.GetMyOrganization(r.Context())
+	if err != nil {
+		core.RespondWithError(w, http.StatusServiceUnavailable, err)
+		return
+	}
+	core.RespondWithJSON(w, http.StatusOK, struct {
+		OrgName  string `json:"organization"`
+	}{
+		OrgName:  organization.String(),
 	})
 }
 ```
@@ -131,25 +134,42 @@ func main() {
 
 As you can see, you can even pass some custom data (`interface{}`, so anything really) to the grant and that data will be passed back to the `func` that handles the `chan`.
 
+## Using Go's contexts
+
+All functions that will end up calling the Genesys Cloud API must use a [context](https://pkg.go.dev/context) as their first argument.
+
+This allow developers to, eventually, control timeouts, and other things.
+
+A useful pattern is to add a [logger](https://github.com/gildas/go-logger) to the context with various records, when the library function executes, it will send its logs to that logger, thus using all the records that were set:
+```go
+log := logger.Create("MYAPP").Record("coolId", myID)
+
+user := client.GetMyUser(log.ToContext(someContext))
+```
+In the logs, you will see the value of `coolId` in every line produced by client.GetMyUser.
+
+If the context does not contain a logger, the client.Logger is used.
+
 ## Notifications
 
 The Genesys Cloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
 
 Here is a quick example:  
 ```go
-user, err := client.GetMyUser()
+user, err := client.GetMyUser(context.Background())
 if err != nil {
 	log.Errorf("Failed to retrieve my User", err)
 	panic(err)
 }
 
-notificationChannel, err := client.CreateNotificationChannel()
+notificationChannel, err := client.CreateNotificationChannel(context.Background())
 if err != nil {
 	log.Errorf("Failed to create a notification channel", err)
 	panic(err)
 }
 
 topics, err := config.NotificationChannel.Subscribe(
+	context.Background(),
 	gcloudcx.UserPresenceTopic{}.TopicFor(user),
 )
 if err != nil {

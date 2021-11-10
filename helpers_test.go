@@ -1,6 +1,7 @@
 package gcloudcx_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -8,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 )
@@ -42,7 +43,7 @@ func (suite *HelpersSuite) TestCanInitializeWithFetch() {
 	})
 
 	stuff := &Stuff{}
-	err := client.Fetch(stuff)
+	err := client.Fetch(context.Background(), stuff)
 	suite.Assert().Nil(err, "Failed to fetch stuff")
 }
 

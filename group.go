@@ -31,12 +31,12 @@ type Group struct {
 //   implements Initializable
 //   if the group ID is given in group, the group is fetched
 func (group *Group) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(group, parameters...)
+	context, client, logger, id, err := parseParameters(group, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/groups/%s", id), &group); err != nil {
+		if err := client.Get(context, NewURI("/groups/%s", id), &group); err != nil {
 			return err
 		}
 	}

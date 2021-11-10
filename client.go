@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -76,6 +77,18 @@ func (client *Client) SetAuthorizationGrant(grant Authorizer) *Client {
 	return client
 }
 
+// GetLogger gets the logger from the given Context
+//
+// If the Context is nil or does not contain a logger, it returns the default logger
+func (client Client) GetLogger(context context.Context) *logger.Logger {
+	if context != nil {
+		if log, err := logger.FromContext(context); err == nil {
+			return log
+		}
+	}
+	return client.Logger
+}
+
 // IsAuthorized tells if the client has an Authorization Token
 // It migt be expired and the app should login again as needed
 func (client *Client) IsAuthorized() bool {
@@ -83,13 +96,14 @@ func (client *Client) IsAuthorized() bool {
 }
 
 // Fetch fetches an initializable object
-func (client *Client) Fetch(object Initializable) error {
-	return object.Initialize(client)
+func (client *Client) Fetch(context context.Context, object Initializable) error {
+	return object.Initialize(context, client)
 }
 
-func (client *Client) CheckPermissions(permissions ...string) (permitted []string, missing []string) {
-	log := client.Logger.Child(nil, "checkpermissions")
-	subject, err := client.FetchRolesAndPermissions()
+// CheckPermissions checks if the current client has the given permissions
+func (client *Client) CheckPermissions(context context.Context, permissions ...string) (permitted []string, missing []string) {
+	log := client.GetLogger(context).Child(nil, "checkpermissions")
+	subject, err := client.FetchRolesAndPermissions(context)
 	if err != nil {
 		return []string{}, permissions
 	}
@@ -135,17 +149,17 @@ func (client *Client) CheckPermissions(permissions ...string) (permitted []strin
 }
 
 // FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissions() (*AuthorizationSubject, error) {
-	return client.FetchRolesAndPermissionsOf(client.Grant)
+func (client *Client) FetchRolesAndPermissions(context context.Context) (*AuthorizationSubject, error) {
+	return client.FetchRolesAndPermissionsOf(context, client.Grant)
 }
 
 // FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissionsOf(id core.Identifiable) (*AuthorizationSubject, error) {
-	log := client.Logger.Child(nil, "fetch_roles_permissions")
+func (client *Client) FetchRolesAndPermissionsOf(context context.Context, id core.Identifiable) (*AuthorizationSubject, error) {
+	log := client.GetLogger(context).Child(nil, "fetch_roles_permissions")
 	subject := AuthorizationSubject{}
 
 	log.Debugf("Fetching roles and permissions for %s", id.GetID())
-	if err := client.Get(NewURI("/authorization/subjects/%s", id.GetID().String()), &subject); err != nil {
+	if err := client.Get(context, NewURI("/authorization/subjects/%s", id.GetID().String()), &subject); err != nil {
 		return nil, err
 	}
 	return &subject, nil
