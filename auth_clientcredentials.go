@@ -1,6 +1,8 @@
 package gcloudcx
 
 import (
+	"context"
+	"net/http"
 	"time"
 
 	"github.com/gildas/go-errors"
@@ -29,8 +31,8 @@ func (grant *ClientCredentialsGrant) GetID() uuid.UUID {
 }
 
 // Authorize this Grant with GCloud CX
-func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
-	log := client.Logger.Child(nil, "authorize", "grant", "client_credentials")
+func (grant *ClientCredentialsGrant) Authorize(context context.Context, client *Client) (err error) {
+	log := client.GetLogger(context).Child(nil, "authorize", "grant", "client_credentials")
 
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
 
@@ -52,8 +54,10 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 	}{}
 
 	err = client.SendRequest(
+		context,
 		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
+			Method: http.MethodPost,
 			Authorization: request.BasicAuthorization(grant.ClientID.String(), grant.Secret),
 			Payload: map[string]string{
 				"grant_type": "client_credentials",
@@ -78,7 +82,7 @@ func (grant *ClientCredentialsGrant) Authorize(client *Client) (err error) {
 			CustomData:  grant.CustomData,
 		}
 	}
-	client.Organization, _ = client.GetMyOrganization()
+	client.Organization, _ = client.GetMyOrganization(context)
 
 	return
 }

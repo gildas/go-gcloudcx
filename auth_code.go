@@ -1,6 +1,8 @@
 package gcloudcx
 
 import (
+	"context"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -29,8 +31,8 @@ func (grant *AuthorizationCodeGrant) GetID() uuid.UUID {
 }
 
 // Authorize this Grant with Gcloud
-func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
-	log := client.Logger.Child(nil, "authorize", "grant", "authorization_code")
+func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *Client) (err error) {
+	log := client.GetLogger(context).Child(nil, "authorize", "grant", "authorization_code")
 
 	log.Infof("Authenticating with %s using Authorization Code grant", client.Region)
 
@@ -55,8 +57,10 @@ func (grant *AuthorizationCodeGrant) Authorize(client *Client) (err error) {
 	}{}
 
 	err = client.SendRequest(
+		context,
 		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
+			Method: http.MethodPost,
 			Authorization: request.BasicAuthorization(grant.ClientID.String(), grant.Secret),
 			Payload: map[string]string{
 				"grant_type":   "authorization_code",

@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"strings"
@@ -42,7 +43,7 @@ type NotificationTopicDefinition struct {
 // GetNotificationAvailableTopics retrieves available notification topics
 //   properties is one of more properties that should be expanded
 //   see https://developer.mypurecloud.com/api/rest/v2/notifications/#get-api-v2-notifications-availabletopics
-func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]NotificationTopicDefinition, error) {
+func (client *Client) GetNotificationAvailableTopics(context context.Context, properties ...string) ([]NotificationTopicDefinition, error) {
 	query := url.Values{}
 	if len(properties) > 0 {
 		query.Add("expand", strings.Join(properties, ","))
@@ -50,7 +51,7 @@ func (client *Client) GetNotificationAvailableTopics(properties ...string) ([]No
 	results := &struct {
 		Entities []NotificationTopicDefinition `json:"entities"`
 	}{}
-	if err := client.Get(NewURI("/notifications/availabletopics?%s", query.Encode()), &results); err != nil {
+	if err := client.Get(context, NewURI("/notifications/availabletopics?%s", query.Encode()), &results); err != nil {
 		return []NotificationTopicDefinition{}, err
 	}
 	return results.Entities, nil

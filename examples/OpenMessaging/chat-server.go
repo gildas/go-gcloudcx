@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -98,6 +100,7 @@ func (server *ChatServer) Start(config *Config) {
 
 				log.Debugf("Sending message to GENESYS Cloud")
 				inboundResult, err := config.Integration.SendInboundMessage(
+					context.Background(),
 					&gcloudcx.OpenMessageFrom{
 						ID:        message.UserID,
 						Type:      "email",

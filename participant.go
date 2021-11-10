@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"time"
@@ -157,8 +158,8 @@ func (participant Participant) String() string {
 }
 
 // UpdateState updates the state of the Participant in target
-func (participant *Participant) UpdateState(target StateUpdater, state string) error {
-	return target.UpdateState(participant, state)
+func (participant *Participant) UpdateState(context context.Context, target StateUpdater, state string) error {
+	return target.UpdateState(context, participant, state)
 }
 
 // MarshalJSON marshals this into JSON

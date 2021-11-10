@@ -1,6 +1,7 @@
 package gcloudcx_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -85,14 +86,14 @@ func (suite *UserSuite) TestCanMarshal() {
 func (suite *UserSuite) TestCanInitializeWithIDParameter() {
 	id := uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db")
 	user := gcloudcx.User{}
-	err := user.Initialize(suite.Client, id)
+	err := user.Initialize(context.Background(), suite.Client, id)
 	suite.Require().Nil(err, "Failed to initialize User. %s", err)
 	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
 }
 
 func (suite *UserSuite) TestCanInitializeWithIDFromObject() {
 	user := gcloudcx.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
-	err := user.Initialize(suite.Client)
+	err := user.Initialize(context.Background(), suite.Client)
 	suite.Require().Nil(err, "Failed to initialize User. %s", err)
 	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
 }
@@ -145,7 +146,7 @@ func (suite *UserSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login()
+		err := suite.Client.Login(context.Background())
 		suite.Require().Nil(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {

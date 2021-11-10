@@ -1,42 +1,44 @@
 package gcloudcx
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
 )
 
 // Post sends a POST HTTP Request to GCloud and gets the results
-func (client *Client) Post(path URI, payload, results interface{}) error {
-	return client.SendRequest(path, &request.Options{Method: http.MethodPost, Payload: payload}, results)
+func (client *Client) Post(context context.Context, path URI, payload, results interface{}) error {
+	return client.SendRequest(context, path, &request.Options{Method: http.MethodPost, Payload: payload}, results)
 }
 
 // Patch sends a PATCH HTTP Request to GCloud and gets the results
-func (client *Client) Patch(path URI, payload, results interface{}) error {
-	return client.SendRequest(path, &request.Options{Method: http.MethodPatch, Payload: payload}, results)
+func (client *Client) Patch(context context.Context, path URI, payload, results interface{}) error {
+	return client.SendRequest(context, path, &request.Options{Method: http.MethodPatch, Payload: payload}, results)
 }
 
 // Put sends an UPDATE HTTP Request to GCloud and gets the results
-func (client *Client) Put(path URI, payload, results interface{}) error {
-	return client.SendRequest(path, &request.Options{Method: http.MethodPut, Payload: payload}, results)
+func (client *Client) Put(context context.Context, path URI, payload, results interface{}) error {
+	return client.SendRequest(context, path, &request.Options{Method: http.MethodPut, Payload: payload}, results)
 }
 
 // Get sends a GET HTTP Request to GCloud and gets the results
-func (client *Client) Get(path URI, results interface{}) error {
-	return client.SendRequest(path, &request.Options{}, results)
+func (client *Client) Get(context context.Context, path URI, results interface{}) error {
+	return client.SendRequest(context, path, &request.Options{Method: http.MethodGet}, results)
 }
 
 // Delete sends a DELETE HTTP Request to GCloud and gets the results
-func (client *Client) Delete(path URI, results interface{}) error {
-	return client.SendRequest(path, &request.Options{Method: http.MethodDelete}, results)
+func (client *Client) Delete(context context.Context, path URI, results interface{}) error {
+	return client.SendRequest(context, path, &request.Options{Method: http.MethodDelete}, results)
 }
 
 // SendRequest sends a REST request to GCloud
-func (client *Client) SendRequest(path URI, options *request.Options, results interface{}) (err error) {
-	log := client.Logger.Child(nil, "request")
+func (client *Client) SendRequest(context context.Context, path URI, options *request.Options, results interface{}) (err error) {
+	log := client.GetLogger(context).Child(nil, "request")
 	if options == nil {
 		options = &request.Options{}
 	}
@@ -56,7 +58,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 		if client.IsAuthorized() {
 			options.Authorization = client.Grant.AccessToken().String()
 		} else {
-			if err = client.Login(); err != nil {
+			if err = client.Login(context); err != nil {
 				return errors.WithStack(err)
 			}
 			if !client.IsAuthorized() {
@@ -66,14 +68,24 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 		}
 	}
 
+	options.Context = context
 	options.Proxy = client.Proxy
 	options.UserAgent = APP + " " + VERSION
-	options.Logger = client.Logger
+	options.Logger = log
 	options.ResponseBodyLogSize = 4096
 	options.Timeout = client.RequestTimeout
 
+	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)
+	start := time.Now()
 	res, err := request.Send(options, results)
+	duration := time.Since(start)
+	if res != nil {
+		log = log.Child(nil, nil, "duration", duration.String(), "correlationId", res.Headers.Get("Inin-Correlation-Id"))
+	} else {
+		log = log.Record("duration", duration.String())
+	}
 	if err != nil {
+		
 		urlError := &url.Error{}
 		if errors.As(err, &urlError) {
 			log.Errorf("URL Error", urlError)
@@ -84,7 +96,7 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 			log.Infof("Authorization Token is expired, we need to authenticate again")
 			options.Authorization = ""
 			client.Grant.AccessToken().Reset()
-			return client.SendRequest(path, options, results)
+			return client.SendRequest(context, path, options, results)
 		}
 		if errors.Is(err, errors.HTTPBadRequest) {
 			log.Record("payload", options.Payload).Errorf("Bad Request from remote")
@@ -106,5 +118,6 @@ func (client *Client) SendRequest(path URI, options *request.Options, results in
 		}
 		return err
 	}
+	log.Debugf("Successfuly sent request")
 	return nil
 }

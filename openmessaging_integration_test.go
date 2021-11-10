@@ -1,8 +1,10 @@
+//go:build integration
 // +build integration
 
 package gcloudcx_test
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/gildas/go-gcloudcx"
@@ -32,7 +34,7 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	name := "TEST-GO-PURECLOUD"
 	webhookURL, _ := url.Parse("https://www.breizh.org/sim/gcloudcx")
 	webhookToken := "DEADBEEF"
-	err := integration.Create(name, webhookURL, webhookToken)
+	err := integration.Create(context.Background(), name, webhookURL, webhookToken)
 	suite.Require().Nil(err, "Failed to create integration")
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 }
@@ -42,7 +44,7 @@ func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
 	err := integration.Initialize(suite.Client, uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"))
 	suite.Require().Nil(err, "Failed to fetch integration")
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
-	err = integration.Delete()
+	err = integration.Delete(context.Background())
 	suite.Require().Nil(err, "Failed to delete integration")
 	err = integration.Initialize(suite.Client)
 	suite.Require().NotNil(err, "Integration should not exist anymore")

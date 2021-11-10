@@ -71,8 +71,8 @@ func MainHandler() http.Handler {
 			} else {
 				// We are logged in the client, but message loops are not started, better logging out!
 				log.Warnf("Client is logged in but Notification Channel is not operational, logging out")
-				_ = appConfig.Reset()
-				client.Logout()
+				_ = appConfig.Reset(r.Context())
+				client.Logout(r.Context())
 				client.DeleteCookie(w)
 				viewData.LoggedIn = false
 			}

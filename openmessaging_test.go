@@ -1,6 +1,7 @@
 package gcloudcx_test
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -38,13 +39,17 @@ func (suite *OpenMessagingSuite) TestCanInitialize() {
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 	err = integration.Initialize(gcloudcx.Client{}, suite.Logger)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	err = integration.Initialize(context.Background(), gcloudcx.Client{}, suite.Logger)
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+	err = integration.Initialize(suite.Logger.ToContext(context.Background()), gcloudcx.Client{})
+	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
 	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize()
 	suite.Require().NotNil(err, "Should not initialize without a client")
-	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
 	var details errors.Error
 	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
 	suite.Assert().Equal("Client", details.What)
@@ -55,8 +60,14 @@ func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
 	integration := gcloudcx.OpenMessagingIntegration{}
 	err := integration.Initialize(client)
 	suite.Require().NotNil(err, "Should not initialize without a client Logger")
-	suite.Assert().True(errors.Is(err, errors.ArgumentMissing))
+	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
 	var details errors.Error
+	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
+	suite.Assert().Equal("Client Logger", details.What)
+
+	err = integration.Initialize(context.Background(), client)
+	suite.Require().NotNil(err, "Should not initialize without a client Logger")
+	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
 	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
 	suite.Assert().Equal("Client Logger", details.What)
 }
@@ -239,7 +250,7 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() 
 
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 	integration := gcloudcx.OpenMessagingIntegration{}
-	err := integration.Initialize(suite.Client)
+	err := integration.Initialize(context.Background(), suite.Client)
 	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 	id := uuid.New()
 	integration.Name = "Hello"
@@ -303,7 +314,7 @@ func (suite *OpenMessagingSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login()
+		err := suite.Client.Login(context.Background())
 		suite.Require().Nil(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {

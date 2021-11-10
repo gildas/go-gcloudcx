@@ -1,6 +1,7 @@
 package gcloudcx_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -8,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
@@ -79,7 +80,7 @@ func (suite *GroupSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login()
+		err := suite.Client.Login(context.Background())
 		suite.Require().Nil(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {

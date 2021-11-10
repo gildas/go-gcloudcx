@@ -97,7 +97,7 @@ func main() {
 			Log.Fatalf("Failed initialize integration", err)
 			os.Exit(1)
 		}
-		err = integration.Create(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
+		err = integration.Create(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
 		if err != nil {
 			Log.Fatalf("Failed creating integration", err)
 			os.Exit(1)
@@ -110,7 +110,7 @@ func main() {
 
 	if strings.Compare(integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
 		Log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
-		if err := integration.Update(config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
+		if err := integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
 			Log.Fatalf("Failed to update the OpenMessaging Integration")
 			os.Exit(1)
 		}

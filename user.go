@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"net/url"
 	"strings"
 
@@ -55,16 +56,16 @@ type Jabber struct {
 //   implements Initializable
 //   if the user ID is not given, /users/me is fetched (if grant allows)
 func (user *User) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(user, parameters...)
+	context, client, logger, id, err := parseParameters(user, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/users/%s", id), &user); err != nil {
+		if err := client.Get(context, NewURI("/users/%s", id), &user); err != nil {
 			return err
 		}
 	} else if _, ok := client.Grant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
-		if err := client.Get("/users/me", &user); err != nil {
+		if err := client.Get(context, "/users/me", &user); err != nil {
 			return err
 		}
 	}
@@ -76,13 +77,13 @@ func (user *User) Initialize(parameters ...interface{}) error {
 // GetMyUser retrieves the User that authenticated with the client
 //   properties is one of more properties that should be expanded
 //   see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
-func (client *Client) GetMyUser(properties ...string) (*User, error) {
+func (client *Client) GetMyUser(context context.Context, properties ...string) (*User, error) {
 	query := url.Values{}
 	if len(properties) > 0 {
 		query.Add("expand", strings.Join(properties, ","))
 	}
 	user := &User{}
-	if err := client.Get(NewURI("/users/me?%s", query.Encode()), &user); err != nil {
+	if err := client.Get(context, NewURI("/users/me?%s", query.Encode()), &user); err != nil {
 		return nil, err
 	}
 	user.Client = client

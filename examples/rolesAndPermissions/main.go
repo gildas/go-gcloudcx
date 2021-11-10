@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"strings"
 
 	"github.com/gildas/go-core"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
@@ -57,7 +58,7 @@ func main() {
 	defer UpdateEnvFile(config)
 
 	log.Infof("Permissions: %d", len(flag.Args()))
-	if permitted, missing := config.Client.CheckPermissions(flag.Args()...); len(missing) == 0 {
+	if permitted, missing := config.Client.CheckPermissions(context.Background(), flag.Args()...); len(missing) == 0 {
 		log.Infof("You can do %s", strings.Join(permitted, ", "))
 	} else {
 		log.Errorf("You are missing %s", strings.Join(missing, ", "))

@@ -67,7 +67,7 @@ func (config *AppConfig) HttpHandler() func(http.Handler) http.Handler {
 }
 
 // Initialize configures this AppConfig by calling GCloud as needed
-func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
+func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Client) (err error) {
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
@@ -75,7 +75,7 @@ func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
 	}
 	if len(config.AgentQueue.ID) == 0 {
 		queueName := config.AgentQueue.Name
-		config.AgentQueue, err = client.FindQueueByName(queueName)
+		config.AgentQueue, err = client.FindQueueByName(context, queueName)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to retrieve the Agent Queue %s", queueName)
 		}
@@ -85,26 +85,27 @@ func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
 	}
 	if len(config.BotQueue.ID) == 0 {
 		queueName := config.BotQueue.Name
-		config.BotQueue, err = client.FindQueueByName(queueName)
+		config.BotQueue, err = client.FindQueueByName(context, queueName)
 		if err != nil {
 			return errors.Wrapf(err, "Failed to retrieve the Bot Queue %s", queueName)
 		}
 	}
 
-	config.User, err = client.GetMyUser()
+	config.User, err = client.GetMyUser(context)
 	if err != nil {
 		log.Errorf("Failed to retrieve my User", err)
 		return
 	}
 	log.Infof("Current User: %s", config.User)
 
-	config.NotificationChannel, err = client.CreateNotificationChannel()
+	config.NotificationChannel, err = client.CreateNotificationChannel(context)
 	if err != nil {
 		log.Errorf("Failed to create a notification channel", err)
 		return
 	}
 
 	topics, err := config.NotificationChannel.Subscribe(
+		context,
 		gcloudcx.UserPresenceTopic{}.TopicFor(config.User),
 		gcloudcx.UserConversationChatTopic{}.TopicFor(config.User),
 	)
@@ -121,12 +122,12 @@ func (config *AppConfig) Initialize(client *gcloudcx.Client) (err error) {
 }
 
 // Reset resets the config
-func (config *AppConfig) Reset() (err error) {
+func (config *AppConfig) Reset(context context.Context) (err error) {
 	log := config.Logger.Scope("reset")
 
 	if config.NotificationChannel != nil {
 		log.Debugf("Closing Notification Channel %s", config.NotificationChannel)
-		err = config.NotificationChannel.Close()
+		err = config.NotificationChannel.Close(context)
 		if err != nil {
 			config.NotificationChannel.Logger.Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
 			return err

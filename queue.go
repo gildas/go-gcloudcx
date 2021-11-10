@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"time"
@@ -36,7 +37,7 @@ type RoutingTarget struct {
 }
 
 // FindQueueByName finds a Queue by its name
-func (client *Client) FindQueueByName(name string) (*Queue, error) {
+func (client *Client) FindQueueByName(context context.Context, name string) (*Queue, error) {
 	response := struct {
 		Entities   []*Queue `json:"entities"`
 		PageSize   int64    `json:"pageSize"`
@@ -49,7 +50,7 @@ func (client *Client) FindQueueByName(name string) (*Queue, error) {
 	}{}
 	query := url.Values{}
 	query.Add("name", name)
-	err := client.Get(NewURI("/routing/queues?%s", query.Encode()), &response)
+	err := client.Get(context, NewURI("/routing/queues?%s", query.Encode()), &response)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}

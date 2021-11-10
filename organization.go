@@ -1,6 +1,8 @@
 package gcloudcx
 
 import (
+	"context"
+
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -28,16 +30,16 @@ type Organization struct {
 //   implements Initializable
 //   If the organzation ID is not given, /organizations/me is fetched
 func (organization *Organization) Initialize(parameters ...interface{}) error {
-	client, logger, id, err := parseParameters(organization, parameters...)
+	context, client, logger, id, err := parseParameters(organization, parameters...)
 	if err != nil {
 		return err
 	}
 	if id != uuid.Nil {
-		if err := client.Get(NewURI("/organizations/%s", id), &organization); err != nil {
+		if err := client.Get(context, NewURI("/organizations/%s", id), &organization); err != nil {
 			return err
 		}
 	} else {
-		if err := client.Get(NewURI("/organizations/me"), &organization); err != nil {
+		if err := client.Get(context, NewURI("/organizations/me"), &organization); err != nil {
 			return err
 		}
 	}
@@ -47,9 +49,9 @@ func (organization *Organization) Initialize(parameters ...interface{}) error {
 }
 
 // GetMyOrganization retrives the current Organization
-func (client *Client) GetMyOrganization() (*Organization, error) {
+func (client *Client) GetMyOrganization(context context.Context) (*Organization, error) {
 	organization := &Organization{}
-	if err := client.Get("/organizations/me", &organization); err != nil {
+	if err := client.Get(context, "/organizations/me", &organization); err != nil {
 		return nil, err
 	}
 	organization.Client = client
