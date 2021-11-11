@@ -79,13 +79,11 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 	start := time.Now()
 	res, err := request.Send(options, results)
 	duration := time.Since(start)
+	log = log.Record("duration", duration)
 	if res != nil {
-		log = log.Child(nil, nil, "duration", duration.String(), "correlationId", res.Headers.Get("Inin-Correlation-Id"))
-	} else {
-		log = log.Record("duration", duration.String())
+		log = log.Record("correlationId", res.Headers.Get("Inin-Correlation-Id"))
 	}
 	if err != nil {
-		
 		urlError := &url.Error{}
 		if errors.As(err, &urlError) {
 			log.Errorf("URL Error", urlError)
@@ -109,7 +107,9 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 			}
 			apiError.Status = details.Code
 			apiError.Code = details.ID
-			apiError.CorrelationID = res.Headers.Get("Inin-Correlation-Id")
+			if res != nil {
+				apiError.CorrelationID = res.Headers.Get("Inin-Correlation-Id")
+			}
 			if strings.HasPrefix(apiError.Message, "authentication failed") {
 				apiError.Status = errors.HTTPUnauthorized.Code
 				apiError.Code = errors.HTTPUnauthorized.ID
@@ -118,6 +118,6 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 		}
 		return err
 	}
-	log.Debugf("Successfuly sent request")
+	log.Debugf("Successfuly sent request in %s", duration)
 	return nil
 }

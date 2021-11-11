@@ -149,6 +149,7 @@ func CreateTestServer(expectedMethod, expectedURL string, t *testing.T) *httptes
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, expectedMethod, r.Method)
 		assert.Equal(t, "/api/v2/path/to/resource", r.URL.String())
+		w.Header().Add("Inin-Correlation-Id", "12345")
 		core.RespondWithJSON(w, http.StatusOK, struct{}{})
 	}))
 }
