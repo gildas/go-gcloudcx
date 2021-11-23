@@ -11,6 +11,11 @@ type Identifiable interface {
 	core.Identifiable
 }
 
+// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
+type Addressable interface {
+	GetURI() URI
+}
+
 // Initializable describes things that can be initialized
 type Initializable interface {
 	Initialize(parameters ...interface{}) error
