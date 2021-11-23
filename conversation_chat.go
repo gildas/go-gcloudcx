@@ -15,7 +15,7 @@ import (
 // ConversationChat describes a Agent-side Chat
 type ConversationChat struct {
 	ID                uuid.UUID       `json:"id"`
-	SelfURI           string          `json:"selfUri,omitempty"`
+	SelfURI           URI             `json:"selfUri,omitempty"`
 	State             string          `json:"state"`          // alerting,dialing,contacting,offering,connected,disconnected,terminated,converting,uploading,transmitting,scheduled,none
 	Direction         string          `json:"direction"`      // inbound,outbound
 	DisconnectType    string          `json:"disconnectType"` // endpoint,client,system,transfer,timeout,transfer.conference,transfer.consult,transfer.forward,transfer.noanswer,transfer.notavailable,transport.failure,error,peer,other,spam,uncallable
@@ -79,6 +79,12 @@ func (conversation *ConversationChat) Initialize(parameters ...interface{}) erro
 //   implements Identifiable
 func (conversation ConversationChat) GetID() uuid.UUID {
 	return conversation.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (conversation ConversationChat) GetURI() URI {
+	return conversation.SelfURI
 }
 
 // String gets a string version

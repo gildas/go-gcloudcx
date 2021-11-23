@@ -10,7 +10,7 @@ import (
 // Group describe a Group of users
 type Group struct {
 	ID           uuid.UUID      `json:"id"`
-	SelfURI      string         `json:"selfUri"`
+	SelfURI      URI            `json:"selfUri"`
 	Name         string         `json:"name"`
 	Type         string         `json:"type"`
 	Description  string         `json:"description"`
@@ -49,6 +49,12 @@ func (group *Group) Initialize(parameters ...interface{}) error {
 //   implements Identifiable
 func (group Group) GetID() uuid.UUID {
 	return group.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (group Group) GetURI() URI {
+	return group.SelfURI
 }
 
 // String gets a string version

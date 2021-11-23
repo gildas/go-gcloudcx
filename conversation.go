@@ -11,7 +11,7 @@ import (
 //   See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
 	ID              uuid.UUID      `json:"id"`
-	SelfURI         string         `json:"selfUri,omitempty"`
+	SelfURI         URI            `json:"selfUri,omitempty"`
 	Name            string         `json:"name"`
 	StartTime       time.Time      `json:"startTime"`
 	EndTime         time.Time      `json:"endTime"`
@@ -97,6 +97,12 @@ func (conversation *Conversation) Initialize(parameters ...interface{}) error {
 //   implements Identifiable
 func (conversation Conversation) GetID() uuid.UUID {
 	return conversation.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (conversation Conversation) GetURI() URI {
+	return conversation.SelfURI
 }
 
 // String gets a string version

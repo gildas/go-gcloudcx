@@ -28,8 +28,8 @@ type NotificationTopic interface {
 //
 // See https://developer.genesys.cloud/api/rest/v2/notifications/notification_service#topic-subscriptions
 type ChannelTopic struct {
-	ID string `json:"id"` // ID is a string of the form v2.xxx.uuuid.yyy
-	SelfURI string `json:"selfUri,omitempty"`
+	ID      string `json:"id"` // ID is a string of the form v2.xxx.uuuid.yyy
+	SelfURI URI    `json:"selfUri,omitempty"`
 }
 
 // NotificationTopicDefinition defines a Notification Topic that can subscribed to
@@ -38,6 +38,12 @@ type NotificationTopicDefinition struct {
 	Description string                 `json:"description"`
 	Permissions []string               `json:"requiresPermissions"`
 	Schema      map[string]interface{} `json:"schema"`
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (topic ChannelTopic) GetURI() URI {
+	return topic.SelfURI
 }
 
 // GetNotificationAvailableTopics retrieves available notification topics

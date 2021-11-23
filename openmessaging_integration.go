@@ -37,6 +37,18 @@ type OpenMessagingIntegration struct {
 	Logger           *logger.Logger        `json:"-"`
 }
 
+// GetID gets the identifier of this
+//   implements Identifiable
+func (integration OpenMessagingIntegration) GetID() uuid.UUID {
+	return integration.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (integration OpenMessagingIntegration) GetURI() URI {
+	return integration.SelfURI
+}
+
 // Initialize initializes this from the given Client
 //
 //   if the parameters contain a uuid.UUID, the corresponding integration is fetched
@@ -324,13 +336,6 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(context context
 		return nil, err
 	}
 	return result, nil
-}
-
-// GetID gets the identifier of this
-//
-//   implements Identifiable
-func (integration OpenMessagingIntegration) GetID() uuid.UUID {
-	return integration.ID
 }
 
 // String gets a string version

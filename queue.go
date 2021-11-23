@@ -25,7 +25,7 @@ type Queue struct {
 	SkillEvaluationMethod string         `json:"skillEvaluationMethod"`
 	AutoAnswerOnly        bool           `json:"true"`
 	DefaultScripts        interface{}    `json:"defaultScripts"`
-	SelfURI               string         `json:"selfUri"`
+	SelfURI               URI            `json:"selfUri"`
 	Client                *Client        `json:"-"`
 	Logger                *logger.Logger `json:"-"`
 }
@@ -72,6 +72,12 @@ func (client *Client) FindQueueByName(context context.Context, name string) (*Qu
 //   implements Identifiable
 func (queue Queue) GetID() uuid.UUID {
 	return queue.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (queue Queue) GetURI() URI {
+	return queue.SelfURI
 }
 
 func (queue Queue) String() string {

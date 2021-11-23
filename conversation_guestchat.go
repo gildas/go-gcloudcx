@@ -18,7 +18,7 @@ import (
 // ConversationGuestChat describes a Guest Chat
 type ConversationGuestChat struct {
 	ID            uuid.UUID                 `json:"id"`
-	SelfURI       string                    `json:"selfUri,omitempty"`
+	SelfURI       URI                       `json:"selfUri,omitempty"`
 	Target        *RoutingTarget            `json:"-"`
 	Guest         *ChatMember               `json:"member,omitempty"`
 	Members       map[uuid.UUID]*ChatMember `json:"-"`
@@ -96,6 +96,12 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 //   implements Identifiable
 func (conversation ConversationGuestChat) GetID() uuid.UUID {
 	return conversation.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (conversation ConversationGuestChat) GetURI() URI {
+	return conversation.SelfURI
 }
 
 // String gets a string version
@@ -285,7 +291,7 @@ func (conversation *ConversationGuestChat) sendBody(context context.Context, bod
 		Body         string       `json:"body,omitempty"`
 		BodyType     string       `json:"bodyType,omitempty"`
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
-		SelfURI      string       `json:"selfUri,omitempty"`
+		SelfURI      URI          `json:"selfUri,omitempty"`
 	}{}
 	if err = conversation.Client.SendRequest(
 		context,

@@ -31,14 +31,26 @@ type TemplateParameter struct {
 
 // AgentlessMessageResult describes the results of the send action on an AgentlessMessage
 type AgentlessMessageResult struct {
-	ID             string               `json:"id"`
-	ConversationID uuid.UUID            `json:"conversationId"`
-	From          string                `json:"fromAddress"`
-	To            string                `json:"toAddress"`
-	MessengerType string                `json:"messengerType"`
-	Text          string                `json:"textBody"`
-	Template      *MessagingTemplate    `json:"messagingTemplate,omitempty"`
-	JobUser       *AddressableEntityRef `json:"user,omitempty"`
-	Timestamp     time.Time             `json:"timestamp"`
-	SelfURI       string                `json:"selfUri"`
+	ID             uuid.UUID             `json:"id"`
+	ConversationID uuid.UUID             `json:"conversationId"`
+	From           string                `json:"fromAddress"`
+	To             string                `json:"toAddress"`
+	MessengerType  string                `json:"messengerType"`
+	Text           string                `json:"textBody"`
+	Template       *MessagingTemplate    `json:"messagingTemplate,omitempty"`
+	JobUser        *AddressableEntityRef `json:"user,omitempty"`
+	Timestamp      time.Time             `json:"timestamp"`
+	SelfURI        URI                   `json:"selfUri"`
+}
+
+// GetID gets the identifier of this
+//   implements Identifiable
+func (result AgentlessMessageResult) GetID() uuid.UUID {
+	return result.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (result AgentlessMessageResult) GetURI() URI {
+	return result.SelfURI
 }

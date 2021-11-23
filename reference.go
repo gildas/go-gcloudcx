@@ -16,7 +16,7 @@ func (ref EntityRef) GetID() uuid.UUID {
 // AddressableEntityRef describes an Entity that can be addressed
 type AddressableEntityRef struct {
 	ID      uuid.UUID `json:"id"`
-	SelfURI string    `json:"selfUri,omitempty"`
+	SelfURI URI       `json:"selfUri,omitempty"`
 }
 
 // GetID gets the identifier of this
@@ -27,15 +27,15 @@ func (ref AddressableEntityRef) GetID() uuid.UUID {
 
 // GetURI gets the URI of this
 //   implements Addressable
-func (ref AddressableEntityRef) GetURI() string {
+func (ref AddressableEntityRef) GetURI() URI {
 	return ref.SelfURI
 }
 
 // DomainEntityRef describes a DomainEntity Reference
 type DomainEntityRef struct {
 	ID      uuid.UUID `json:"id"`
-	Name    string `json:"name,omitempty"`
-	SelfURI string `json:"selfUri,omitempty"`
+	Name    string    `json:"name,omitempty"`
+	SelfURI URI       `json:"selfUri,omitempty"`
 }
 
 // GetID gets the identifier of this
@@ -46,6 +46,6 @@ func (ref DomainEntityRef) GetID() uuid.UUID {
 
 // GetURI gets the URI of this
 //   implements Addressable
-func (ref DomainEntityRef) GetURI() string {
+func (ref DomainEntityRef) GetURI() URI {
 	return ref.SelfURI
 }

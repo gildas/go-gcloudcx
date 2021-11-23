@@ -19,7 +19,7 @@ type Organization struct {
 	DefaultSiteID              string          `json:"defaultSiteId"`
 	SupportURI                 string          `json:"supportURI"`
 	VoicemailEnabled           bool            `json:"voicemailEnabled"`
-	SelfURI                    string          `json:"selfURI"`
+	SelfURI                    URI             `json:"selfURI"`
 	Features                   map[string]bool `json:"features"`
 	Version                    uint32          `json:"version"`
 	Client                     *Client         `json:"-"`
@@ -63,6 +63,12 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 //   implements Identifiable
 func (organization Organization) GetID() uuid.UUID {
 	return organization.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (organization Organization) GetURI() URI {
+	return organization.SelfURI
 }
 
 // String gets a string version

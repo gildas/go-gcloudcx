@@ -12,14 +12,14 @@ import (
 // User describes a GCloud User
 type User struct {
 	ID                  uuid.UUID                `json:"id"`
-	SelfURI             string                   `json:"selfUri"`
+	SelfURI             URI                      `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
 	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title"`
 	Division            *Division                `json:"division"`
 	Mail                string                   `json:"email"`
-	Images              []*UserImage              `json:"images"`
+	Images              []*UserImage             `json:"images"`
 	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
 	Addresses           []*Contact               `json:"addresses"`
 	State               string                   `json:"state"`
@@ -94,6 +94,12 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 //   implements Identifiable
 func (user User) GetID() uuid.UUID {
 	return user.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (user User) GetURI() URI {
+	return user.SelfURI
 }
 
 // String gets a string version

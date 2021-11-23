@@ -9,12 +9,17 @@ import (
 )
 
 type OpenMessageChannel struct {
-	Platform  string           `json:"platform"` // Open
-	Type      string           `json:"type"` // Private, Public
-	MessageID string           `json:"messageId"`
-	Time      time.Time        `json:"-"`
-	To        *OpenMessageTo   `json:"to"`
-	From      *OpenMessageFrom `json:"from"`
+	Platform  string                      `json:"platform"` // Open
+	Type      string                      `json:"type"` // Private, Public
+	MessageID string                      `json:"messageId"`
+	Time      time.Time                   `json:"-"`
+	To        *OpenMessageTo              `json:"to"`
+	From      *OpenMessageFrom            `json:"from"`
+	Metadata  *OpenMessageChannelMetadata `json:"metadata,omitempty"`
+}
+
+type OpenMessageChannelMetadata struct {
+	Attributes map[string]string `json:"customAttributes,omitempty"`
 }
 
 func NewOpenMessageChannel(messageID string, to *OpenMessageTo, from *OpenMessageFrom) *OpenMessageChannel {
