@@ -44,10 +44,10 @@ func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessageChannel
 	data, err := json.Marshal(struct{
 		surrogate
-		T core.Time `json:"time"`
+		Time core.Time `json:"time"`
 	}{
 		surrogate: surrogate(channel),
-		T:         (core.Time)(channel.Time),
+		Time:      (core.Time)(channel.Time),
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
 }
@@ -57,12 +57,12 @@ func (channel *OpenMessageChannel) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageChannel
 	var inner struct {
 		surrogate
-		T core.Time `json:"time"`
+		Time core.Time `json:"time"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*channel = OpenMessageChannel(inner.surrogate)
-	channel.Time = inner.T.AsTime()
+	channel.Time = inner.Time.AsTime()
 	return
 }
