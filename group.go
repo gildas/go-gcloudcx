@@ -1,8 +1,10 @@
 package gcloudcx
 
 import (
+	"context"
 	"time"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -23,25 +25,30 @@ type Group struct {
 	Visibility   bool           `json:"visibility"`
 	DateModified time.Time      `json:"dateModified"`
 	Version      int            `json:"version"`
-	Client       *Client        `json:"-"`
-	Logger       *logger.Logger `json:"-"`
+	client       *Client        `json:"-"`
+	logger       *logger.Logger `json:"-"`
 }
 
-// Initialize initializes this from the given Client
-//   implements Initializable
-//   if the group ID is given in group, the group is fetched
-func (group *Group) Initialize(parameters ...interface{}) error {
-	context, client, logger, id, err := parseParameters(group, parameters...)
-	if err != nil {
-		return err
-	}
+// Fetch fetches a group
+//
+// implements Fetchable
+func (group *Group) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, name, selfURI, log := client.ParseParameters(ctx, group, parameters...)
+
 	if id != uuid.Nil {
-		if err := client.Get(context, NewURI("/groups/%s", id), &group); err != nil {
+		if err := client.Get(ctx, NewURI("/groups/%s", id), &group); err != nil {
 			return err
 		}
+		group.logger = log
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &group); err != nil {
+			return err
+		}
+		group.logger = log.Record("id", group.ID)
+	} else if len(name) > 0 {
+		return errors.NotImplemented.WithStack()
 	}
-	group.Client = client
-	group.Logger = logger.Topic("group").Scope("group").Record("group", group.ID)
+	group.client = client
 	return nil
 }
 

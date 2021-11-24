@@ -29,6 +29,16 @@ func TestGroupSuite(t *testing.T) {
 	suite.Run(t, new(GroupSuite))
 }
 
+func (suite *GroupSuite) TestCanStringify() {
+	id := uuid.New()
+	group := gcloudcx.Group{
+		ID:   id,
+		Name: "Hello",
+	}
+	suite.Assert().Equal("Hello", group.String())
+	group.Name = ""
+	suite.Assert().Equal(id.String(), group.String())
+}
 
 // Suite Tools
 

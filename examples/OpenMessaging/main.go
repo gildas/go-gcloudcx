@@ -87,36 +87,29 @@ func main() {
 
 	// Initializing the OpenMessaging Integration
 	config.Client.Logger.Infof("Fetching OpenMessaging Integration %s", *integrationName)
-	integration, err := gcloudcx.FetchOpenMessagingIntegration(config.Client, *integrationName)
+	err := config.Client.Fetch(context.Background(), config.Integration, *integrationName)
 
 	if errors.Is(err, errors.NotFound) {
 		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		integration = &gcloudcx.OpenMessagingIntegration{}
-		err = integration.Initialize(config.Client)
-		if err != nil {
-			Log.Fatalf("Failed initialize integration", err)
-			os.Exit(1)
-		}
-		err = integration.Create(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
+		config.Integration, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
 		if err != nil {
 			Log.Fatalf("Failed creating integration", err)
 			os.Exit(1)
 		}
-		Log.Record("integration", integration).Infof("Created new integration")
+		Log.Record("integration", config.Integration).Infof("Created new integration")
 	} else if err != nil {
 		Log.Fatalf("Failed to retrieve OpenMessaging Integration", err)
 		os.Exit(1)
 	}
 
-	if strings.Compare(integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
+	if strings.Compare(config.Integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(config.Integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
 		Log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
-		if err := integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
+		if err := config.Integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
 			Log.Fatalf("Failed to update the OpenMessaging Integration")
 			os.Exit(1)
 		}
-		Log.Record("integration", integration).Infof("Updated integration")
+		Log.Record("integration", config.Integration).Infof("Updated integration")
 	}
-	config.Integration = integration
 
 	// Setting up web routes
 	router := mux.NewRouter().StrictSlash(true)

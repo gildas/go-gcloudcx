@@ -25,7 +25,9 @@ type UserSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *gcloudcx.Client
+	UserID   uuid.UUID
+	UserName string
+	Client   *gcloudcx.Client
 }
 
 func TestUserSuite(t *testing.T) {
@@ -83,24 +85,19 @@ func (suite *UserSuite) TestCanMarshal() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
-func (suite *UserSuite) TestCanInitializeWithIDParameter() {
-	id := uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db")
+func (suite *UserSuite) TestCanFetchByID() {
 	user := gcloudcx.User{}
-	err := user.Initialize(context.Background(), suite.Client, id)
-	suite.Require().Nil(err, "Failed to initialize User. %s", err)
-	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
-}
-
-func (suite *UserSuite) TestCanInitializeWithIDFromObject() {
-	user := gcloudcx.User{ ID: uuid.MustParse("2229bd78-a6e4-412f-b789-ef70f447e5db") }
-	err := user.Initialize(context.Background(), suite.Client)
-	suite.Require().Nil(err, "Failed to initialize User. %s", err)
-	suite.Assert().Equal("ncnlincja+gildas@genesys.com", user.Mail)
+	err := suite.Client.Fetch(context.Background(), &user, suite.UserID)
+	suite.Require().Nilf(err, "Failed to fetch User %s. %s", suite.UserID, err)
+	suite.Assert().Equal(suite.UserName, user.Name)
 }
 
 // Suite Tools
 
 func (suite *UserSuite) SetupSuite() {
+	var err error
+	var value string
+
 	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
@@ -117,6 +114,15 @@ func (suite *UserSuite) SetupSuite() {
 		clientID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
+
+	value = core.GetEnvAsString("USER_ID", "")
+	suite.Require().NotEmpty(value, "USER_ID is not set in your environment")
+
+	suite.UserID, err = uuid.Parse(value)
+	suite.Require().Nil(err, "USER_ID is not a valid UUID")
+
+	suite.UserName = core.GetEnvAsString("USER_NAME", "")
+	suite.Require().NotEmpty(suite.UserName, "USER_NAME is not set in your environment")
 
 	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: region,

@@ -26,35 +26,39 @@ type OrganizationSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *gcloudcx.Client
+	OrganizationName string
+	OrganizationID   uuid.UUID
+	Client           *gcloudcx.Client
 }
 
 func TestOrganizationSuite(t *testing.T) {
 	suite.Run(t, new(OrganizationSuite))
 }
 
-func (suite *OrganizationSuite) TestCanFetchOrganization() {
-	organization := &gcloudcx.Organization{}
-	err := suite.Client.Fetch(context.Background(), organization)
+func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
+	organization := gcloudcx.Organization{}
+	err := suite.Client.Fetch(context.Background(), &organization)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Require().NotNil(organization, "Client's Organization is not loaded")
-	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")
-	suite.Assert().NotEmpty(organization.Name, "Client's Orgization has no Name")
-	suite.Assert().NotEmpty(organization.Features, "Client's Orgization has no features")
+	suite.Assert().Equal(suite.OrganizationID, organization.ID, "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.Name, "Client's Organization Name is not the same")
+	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
 	suite.T().Logf("Organization: %s", organization.Name)
 	suite.Logger.Record("org", organization).Infof("Organization Details")
 }
 
-func (suite *OrganizationSuite) TestOrganizationHasName() {
-	organization, err := suite.Client.GetMyOrganization(context.Background())
+func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
+	organization := gcloudcx.Organization{}
+	err := suite.Client.Fetch(context.Background(), &organization, suite.OrganizationID)
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Require().NotNil(organization, "Client's Organization is not loaded")
-	suite.Assert().NotEmpty(organization.ID, "Client's Orgization has no ID")
-	suite.Assert().NotEmpty(organization.Name, "Client's Orgization has no Name")
-	suite.Assert().NotEmpty(organization.Features, "Client's Orgization has no features")
+	suite.Assert().Equal(suite.OrganizationID, organization.ID, "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.Name, "Client's Organization Name is not the same")
+	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
 	suite.T().Logf("Organization: %s", organization.Name)
 	suite.Logger.Record("org", organization).Infof("Organization Details")
 }
@@ -62,6 +66,9 @@ func (suite *OrganizationSuite) TestOrganizationHasName() {
 // Suite Tools
 
 func (suite *OrganizationSuite) SetupSuite() {
+	var err error
+	var value string
+
 	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
 	suite.Logger = logger.Create("test",
@@ -73,12 +80,31 @@ func (suite *OrganizationSuite) SetupSuite() {
 	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
-	var (
-		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
-		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
-		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
-	)
+	region := core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com")
+	
+	value = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
+	suite.Require().NotEmpty(value, "PURECLOUD_CLIENTID is not set")
+
+	clientID, err := uuid.Parse(value)
+	suite.Require().Nil(err, "PURECLOUD_CLIENTID is not a valid UUID")
+
+	secret := core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
+	suite.Require().NotEmpty(secret, "PURECLOUD_CLIENTSECRET is not set")
+
+	value = core.GetEnvAsString("PURECLOUD_ORGANIZATIONID", "")
+	suite.Require().NotEmpty(value, "PURECLOUD_ORGANIZATIONID is not set")
+
+	deploymentID, err := uuid.Parse(value)
+	suite.Require().Nil(err, "PURECLOUD_ORGANIZATIONID is not a valid UUID")
+
+	value = core.GetEnvAsString("ORGANIZATION_ID", "")
+	suite.Require().NotEmpty(value, "ORGANIZATION_ID is not set in your environment")
+
+	suite.OrganizationID, err = uuid.Parse(value)
+	suite.Require().Nil(err, "ORGANIZATION_ID is not a valid UUID")
+
+	suite.OrganizationName = core.GetEnvAsString("ORGANIZATION_NAME", "")
+	suite.Require().NotEmpty(suite.OrganizationName, "ORGANIZATION_NAME is not set in your environment")
 
 	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region:       region,

@@ -10,7 +10,7 @@ import (
 )
 
 // MessageLoop receives PureCloud Notification Topics and handles them
-func MessageLoop(config *AppConfig) {
+func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 	log := config.Logger.Child("topic", "process")
 
 	channel := config.NotificationChannel
@@ -82,7 +82,7 @@ func MessageLoop(config *AppConfig) {
 				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.Conversation, topic.BodyType, topic.Body, topic.Sender)
 				if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
 					// We need a full conversation object, so we can operate on it
-					err := topic.Client.Fetch(context, topic.Conversation)
+					err := client.Fetch(context, topic.Conversation)
 					if err != nil {
 						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.Conversation, err)
 						continue

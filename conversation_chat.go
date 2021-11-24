@@ -33,8 +33,8 @@ type ConversationChat struct {
 	RecordingID       string          `json:"recordingId"`
 	AvatarImageURL    *url.URL        `json:"-"`
 	JourneyContext    *JourneyContext `json:"journeyContext"`
-	Client            *Client         `json:"-"`
-	Logger            *logger.Logger  `json:"-"`
+	client            *Client         `json:"-"`
+	logger            *logger.Logger  `json:"-"`
 }
 
 // JourneyContext  describes a Journey Context
@@ -56,22 +56,24 @@ type JourneyContext struct {
 	} `json:"triggeringAction"`
 }
 
-// Initialize initializes this from the given Client
-//   implements Initializable
-func (conversation *ConversationChat) Initialize(parameters ...interface{}) error {
-	context, client, logger, id, err := parseParameters(conversation, parameters...)
-	if err != nil {
-		return err
-	}
-	// TODO: get /conversations/chats/$id when that REST call works better
-	//  At the moment, chat participants do not have any chats even if they are connected. /conversations/$id looks fine
+// Fetch fetches a Chat Conversation
+//
+// implements Fetchable
+func (conversation *ConversationChat) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, _, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
+
 	if id != uuid.Nil {
-		if err := conversation.Client.Get(context, NewURI("/conversations/%s", id), &conversation); err != nil {
+		if err := client.Get(ctx, NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
+		conversation.logger = log.Record("media", "chat")
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &conversation); err != nil {
+			return err
+		}
+		conversation.logger = log.Record("id", conversation.ID).Record("media", "chat")
 	}
-	conversation.Client = client
-	conversation.Logger = logger.Topic("conversation").Scope("conversation").Record("media", "chat")
+	conversation.client = client
 	return nil
 }
 
@@ -96,8 +98,8 @@ func (conversation ConversationChat) String() string {
 // Disconnect disconnect an Identifiable from this
 //   implements Disconnecter
 func (conversation ConversationChat) Disconnect(context context.Context, identifiable Identifiable) error {
-	return conversation.Client.Patch(
-		context,
+	return conversation.client.Patch(
+		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: "disconnected"},
 		nil,
@@ -107,8 +109,8 @@ func (conversation ConversationChat) Disconnect(context context.Context, identif
 // UpdateState update the state of an identifiable in this
 //   implements StateUpdater
 func (conversation ConversationChat) UpdateState(context context.Context, identifiable Identifiable, state string) error {
-	return conversation.Client.Patch(
-		context,
+	return conversation.client.Patch(
+		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
 		nil,
@@ -118,8 +120,8 @@ func (conversation ConversationChat) UpdateState(context context.Context, identi
 // Transfer transfers a participant of this Conversation to the given Queue
 //   implement Transferrer
 func (conversation ConversationChat) Transfer(context context.Context, identifiable Identifiable, queue Identifiable) error {
-	return conversation.Client.Post(
-		context,
+	return conversation.client.Post(
+		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
 		struct {
 			ID string `json:"queueId"`
@@ -130,8 +132,8 @@ func (conversation ConversationChat) Transfer(context context.Context, identifia
 
 // Post sends a text message to a chat member
 func (conversation ConversationChat) Post(context context.Context, member Identifiable, text string) error {
-	return conversation.Client.Post(
-		context,
+	return conversation.client.Post(
+		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
 		struct {
 			BodyType string `json:"bodyType"`
@@ -146,8 +148,8 @@ func (conversation ConversationChat) Post(context context.Context, member Identi
 
 // SetTyping send a typing indicator to the chat member
 func (conversation ConversationChat) SetTyping(context context.Context, member Identifiable) error {
-	return conversation.Client.Post(
-		context,
+	return conversation.client.Post(
+		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()),
 		nil,
 		nil,
@@ -156,7 +158,7 @@ func (conversation ConversationChat) SetTyping(context context.Context, member I
 
 // Wrapup wraps up a Participant of this Conversation
 func (conversation ConversationChat) Wrapup(context context.Context, identifiable Identifiable, wrapup *Wrapup) error {
-	return conversation.Client.Patch(
+	return conversation.client.Patch(
 		context,
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{Wrapup: wrapup},
