@@ -162,6 +162,24 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 	)
 }
 
+func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error {
+	var value OpenMessagingIntegration
+	if err := integration.client.Get(ctx, integration.SelfURI, &value); err != nil {
+		return err
+	}
+	integration.Name = value.Name
+	integration.CreateStatus = value.CreateStatus
+	integration.CreateError = value.CreateError
+	integration.WebhookURL = value.WebhookURL
+	integration.WebhookToken = value.WebhookToken
+	integration.WebhookHeaders = value.WebhookHeaders
+	integration.Recipient = value.Recipient
+	integration.SupportedContent = value.SupportedContent
+	integration.DateModified = value.DateModified
+	integration.ModifiedBy = value.ModifiedBy
+	return nil
+}
+
 // Update updates an OpenMessaging Integration
 //
 // If the integration was not created, an error is return without reaching GENESYS Cloud
