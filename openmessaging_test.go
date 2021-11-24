@@ -55,6 +55,15 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken)
 	suite.Require().Nil(err, "Failed to create integration")
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
+	for {
+		if integration.IsCreated() {
+			break
+		}
+		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
+		time.Sleep(time.Second)
+		err = integration.Refresh(context.Background())
+		suite.Require().Nil(err, "Failed to refresh integration")
+	}
 	suite.IntegrationID = integration.ID
 }
 
@@ -62,10 +71,11 @@ func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
 	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
 	integration := gcloudcx.OpenMessagingIntegration{}
 	err := suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
-	suite.Require().Nil(err, "Failed to fetch integration")
+	suite.Require().Nilf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
+	suite.Require().True(integration.IsCreated(), "Integration should be created")
 	err = integration.Delete(context.Background())
-	suite.Require().Nil(err, "Failed to delete integration")
+	suite.Require().Nilf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
 	err = suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
 	suite.Require().NotNil(err, "Integration should not exist anymore")
 	suite.IntegrationID = uuid.Nil

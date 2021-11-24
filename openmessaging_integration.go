@@ -31,7 +31,7 @@ type OpenMessagingIntegration struct {
 	CreatedBy        *DomainEntityRef      `json:"createdBy,omitempty"`
 	DateModified     time.Time             `json:"dateModified,omitempty"`
 	ModifiedBy       *DomainEntityRef      `json:"modifiedBy,omitempty"`
-	CreateStatus     string                `json:"createStatus,omitempty"`
+	CreateStatus     string                `json:"createStatus,omitempty"` // Initiated, Completed, Error
 	CreateError      *ErrorBody            `json:"createError,omitempty"`
 	SelfURI          URI                   `json:"selfUri,omitempty"`
 	client           *Client               `json:"-"`
@@ -48,6 +48,16 @@ func (integration OpenMessagingIntegration) GetID() uuid.UUID {
 //   implements Addressable
 func (integration OpenMessagingIntegration) GetURI() URI {
 	return integration.SelfURI
+}
+
+// IsCreated tells if this OpenMessagingIntegration has been created successfully
+func (integration OpenMessagingIntegration) IsCreated() bool {
+	return integration.CreateStatus == "Completed"
+}
+
+// IsCreated tells if this OpenMessagingIntegration has not been created successfully
+func (integration OpenMessagingIntegration) IsError() bool {
+	return integration.CreateStatus == "Error"
 }
 
 // Fetch fetches an OpenMessaging Integration

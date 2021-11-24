@@ -42,8 +42,8 @@ func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
 		suite.Logger.Errorf("Failed", err)
 	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Assert().Equal(suite.OrganizationID, organization.ID, "Client's Organization ID is not the same")
-	suite.Assert().Equal(suite.OrganizationName, organization.Name, "Client's Organization Name is not the same")
+	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
 	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
 	suite.T().Logf("Organization: %s", organization.Name)
 	suite.Logger.Record("org", organization).Infof("Organization Details")
@@ -56,8 +56,8 @@ func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
 		suite.Logger.Errorf("Failed", err)
 	}
 	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Assert().Equal(suite.OrganizationID, organization.ID, "Client's Organization ID is not the same")
-	suite.Assert().Equal(suite.OrganizationName, organization.Name, "Client's Organization Name is not the same")
+	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
 	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
 	suite.T().Logf("Organization: %s", organization.Name)
 	suite.Logger.Record("org", organization).Infof("Organization Details")
@@ -91,11 +91,11 @@ func (suite *OrganizationSuite) SetupSuite() {
 	secret := core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	suite.Require().NotEmpty(secret, "PURECLOUD_CLIENTSECRET is not set")
 
-	value = core.GetEnvAsString("PURECLOUD_ORGANIZATIONID", "")
-	suite.Require().NotEmpty(value, "PURECLOUD_ORGANIZATIONID is not set")
+	value = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
+	suite.Require().NotEmpty(value, "PURECLOUD_DEPLOYMENTID is not set")
 
 	deploymentID, err := uuid.Parse(value)
-	suite.Require().Nil(err, "PURECLOUD_ORGANIZATIONID is not a valid UUID")
+	suite.Require().Nil(err, "PURECLOUD_DEPLOYMENTID is not a valid UUID")
 
 	value = core.GetEnvAsString("ORGANIZATION_ID", "")
 	suite.Require().NotEmpty(value, "ORGANIZATION_ID is not set in your environment")
