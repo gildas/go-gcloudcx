@@ -76,3 +76,14 @@ type ErrorDetail struct {
 func (err ErrorBody) Error() string {
 	return err.MessageWithParams
 }
+
+// paginatedEntities describes a paginated list of entities
+type paginatedEntities struct {
+	PageSize    int `json:"pageSize"`
+	PageNumber  int `json:"pageNumber"`
+	PageCount   int `json:"pageCount"`
+	EntityCount int `json:"total"`
+	FirstURI    URI `json:"firstUri"`
+	SelfURI     URI `json:"selfUri"`
+	LastURI     URI `json:"lastUri"`
+}
