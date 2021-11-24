@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"time"
 
 	"github.com/gildas/go-logger"
@@ -11,7 +12,7 @@ import (
 //   See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
 	ID              uuid.UUID      `json:"id"`
-	SelfURI         string         `json:"selfUri,omitempty"`
+	SelfURI         URI            `json:"selfUri,omitempty"`
 	Name            string         `json:"name"`
 	StartTime       time.Time      `json:"startTime"`
 	EndTime         time.Time      `json:"endTime"`
@@ -25,9 +26,8 @@ type Conversation struct {
 		Division DomainEntityRef   `json:"division"`
 		Entities []DomainEntityRef `json:"entities"`
 	} `json:"divisions"`
-
-	Client *Client        `json:"-"`
-	Logger *logger.Logger `json:"-"`
+	client *Client        `json:"-"`
+	logger *logger.Logger `json:"-"`
 }
 
 // ConversationRoutingData  defines routing details of a Conversation
@@ -76,20 +76,24 @@ type Voicemail struct {
 	UploadStatus string `json:"uploadStatus"`
 }
 
-// Initialize initializes this from the given Client
-//   implements Initializable
-func (conversation *Conversation) Initialize(parameters ...interface{}) error {
-	context, client, logger, id, err := parseParameters(conversation, parameters...)
-	if err != nil {
-		return err
-	}
+// Fetch fetches the conversation
+//
+// implements Fetchable
+func (conversation *Conversation) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, _, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
+
 	if id != uuid.Nil {
-		if err := conversation.Client.Get(context, NewURI("/conversations/%s", id), &conversation); err != nil {
+		if err := client.Get(ctx, NewURI("/conversations/%s", id), &conversation); err != nil {
 			return err
 		}
+		conversation.logger = log
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &conversation); err != nil {
+			return err
+		}
+		conversation.logger = log.Record("id", conversation.ID)
 	}
-	conversation.Client = client
-	conversation.Logger = logger.Topic("conversation").Scope("conversation").Record("media", "chat")
+	conversation.client = client
 	return nil
 }
 
@@ -97,6 +101,12 @@ func (conversation *Conversation) Initialize(parameters ...interface{}) error {
 //   implements Identifiable
 func (conversation Conversation) GetID() uuid.UUID {
 	return conversation.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (conversation Conversation) GetURI() URI {
+	return conversation.SelfURI
 }
 
 // String gets a string version

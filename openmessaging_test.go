@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
-	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -26,50 +25,60 @@ type OpenMessagingSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *gcloudcx.Client
+	IntegrationID uuid.UUID
+	Client        *gcloudcx.Client
 }
 
 func TestOpenMessagingSuite(t *testing.T) {
 	suite.Run(t, new(OpenMessagingSuite))
 }
 
-func (suite *OpenMessagingSuite) TestCanInitialize() {
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err := integration.Initialize(suite.Client)
-	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
-	err = integration.Initialize(gcloudcx.Client{}, suite.Logger)
-	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
-	err = integration.Initialize(context.Background(), gcloudcx.Client{}, suite.Logger)
-	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
-	err = integration.Initialize(suite.Logger.ToContext(context.Background()), gcloudcx.Client{})
-	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
+func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
+	integrations, err := suite.Client.FetchOpenMessagingIntegrations(context.Background())
+	suite.Require().Nil(err, "Failed to fetch OpenMessaging Integrations")
+	suite.T().Logf("Found %d integrations", len(integrations))
+	if len(integrations) > 0 {
+		for _, integration := range integrations {
+			suite.Logger.Record("integration", integration).Infof("Got a integration")
+			suite.Assert().NotEmpty(integration.ID)
+			suite.Assert().NotEmpty(integration.Name)
+			suite.Assert().NotNil(integration.WebhookURL, "WebhookURL should not be nil (%s)", integration.Name)
+			suite.T().Logf("  Integration: %s (%s)", integration.Name, integration.ID)
+		}
+	}
 }
 
-func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutClient() {
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err := integration.Initialize()
-	suite.Require().NotNil(err, "Should not initialize without a client")
-	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
-	var details errors.Error
-	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
-	suite.Assert().Equal("Client", details.What)
+func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
+	name := "TEST-GO-PURECLOUD"
+	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
+	webhookToken := "DEADBEEF"
+	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken)
+	suite.Require().Nil(err, "Failed to create integration")
+	suite.Logger.Record("integration", integration).Infof("Created a integration")
+	for {
+		if integration.IsCreated() {
+			break
+		}
+		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
+		time.Sleep(time.Second)
+		err = integration.Refresh(context.Background())
+		suite.Require().Nil(err, "Failed to refresh integration")
+	}
+	suite.IntegrationID = integration.ID
 }
 
-func (suite *OpenMessagingSuite) TestShouldNotInitializeWithoutLogger() {
-	client := &gcloudcx.Client{}
+func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
+	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
 	integration := gcloudcx.OpenMessagingIntegration{}
-	err := integration.Initialize(client)
-	suite.Require().NotNil(err, "Should not initialize without a client Logger")
-	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
-	var details errors.Error
-	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
-	suite.Assert().Equal("Client Logger", details.What)
-
-	err = integration.Initialize(context.Background(), client)
-	suite.Require().NotNil(err, "Should not initialize without a client Logger")
-	suite.Assert().ErrorIs(err, errors.ArgumentMissing)
-	suite.Require().True(errors.As(err, &details), "err should contain an errors.Error")
-	suite.Assert().Equal("Client Logger", details.What)
+	err := suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
+	suite.Require().Nilf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
+	suite.Logger.Record("integration", integration).Infof("Got a integration")
+	suite.Require().True(integration.IsCreated(), "Integration should be created")
+	err = integration.Delete(context.Background())
+	suite.Require().Nilf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
+	err = suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
+	suite.Require().NotNil(err, "Integration should not exist anymore")
+	suite.IntegrationID = uuid.Nil
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
@@ -175,11 +184,10 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 }
 
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
-	message := gcloudcx.OpenMessage{
+	message := gcloudcx.OpenMessageText{
 		ID:        "12345678",
 		Direction: "inbound",
-		Type:      "text",
-		Text:       "text message",
+		Text:      "text message",
 	}
 	message.Channel = gcloudcx.NewOpenMessageChannel(
 		"gmAy9zNkhf4ermFvHH9mB5",
@@ -241,24 +249,21 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
-	var err error
-
-	message := gcloudcx.OpenMessage{}
-	err = json.Unmarshal([]byte(`{"Direction": 6}`), &message)
+	_, err := gcloudcx.UnmarshalOpenMessage([]byte(`{"Direction": 6}`))
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err := integration.Initialize(context.Background(), suite.Client)
-	suite.Require().Nilf(err, "Failed to initialize OpenMessagingIntegration. %s", err)
 	id := uuid.New()
-	integration.Name = "Hello"
-	integration.ID = id
+	integration := gcloudcx.OpenMessagingIntegration{
+		ID:   id,
+		Name: "Hello",
+	}
 	suite.Assert().Equal("Hello", integration.String())
 	integration.Name = ""
 	suite.Assert().Equal(id.String(), integration.String())
 }
+
 // Suite Tools
 
 func (suite *OpenMessagingSuite) SetupSuite() {

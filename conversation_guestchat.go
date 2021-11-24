@@ -18,7 +18,7 @@ import (
 // ConversationGuestChat describes a Guest Chat
 type ConversationGuestChat struct {
 	ID            uuid.UUID                 `json:"id"`
-	SelfURI       string                    `json:"selfUri,omitempty"`
+	SelfURI       URI                       `json:"selfUri,omitempty"`
 	Target        *RoutingTarget            `json:"-"`
 	Guest         *ChatMember               `json:"member,omitempty"`
 	Members       map[uuid.UUID]*ChatMember `json:"-"`
@@ -27,17 +27,35 @@ type ConversationGuestChat struct {
 	Socket        *websocket.Conn           `json:"-"`
 	TopicReceived chan NotificationTopic    `json:"-"`
 	LogHeartbeat  bool                      `json:"logHeartbeat"`
-	Client        *Client                   `json:"-"`
-	Logger        *logger.Logger            `json:"-"`
+	client        *Client                   `json:"-"`
+	logger        *logger.Logger            `json:"-"`
 }
 
-// Initialize initializes this from the given Client
-//   implements Initializable
-func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) (err error) {
-	context, client, logger, _, err := parseParameters(conversation, parameters...)
-	if err != nil {
-		return err
+// Fetch fetches a Conversation Guest Chat
+//
+// implements Fetchable
+func (conversation *ConversationGuestChat) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, name, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
+
+	if id != uuid.Nil {
+		if err := client.Get(ctx, NewURI("/organizations/%s", id), &conversation); err != nil {
+			return err
+		}
+		conversation.logger = log
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &conversation); err != nil {
+			return err
+		}
+		conversation.logger = log.Record("id", conversation.ID)
+	} else if len(name) > 0 {
+		return errors.NotImplemented.WithStack()
+	} else {
+		if err := client.Get(ctx, NewURI("/organizations/me"), &conversation); err != nil {
+			return err
+		}
+		conversation.logger = log.Record("id", conversation.ID)
 	}
+
 	guest := conversation.Guest
 	target := conversation.Target
 	for _, parameter := range parameters {
@@ -61,7 +79,7 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 		return errors.ArgumentMissing.With("DeploymentID")
 	}
 
-	if err = client.Post(context, "/webchat/guest/conversations",
+	if err := client.Post(ctx, "/webchat/guest/conversations",
 		struct {
 			OrganizationID string         `json:"organizationId"`
 			DeploymentID   string         `json:"deploymentId"`
@@ -77,9 +95,8 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	); err != nil {
 		return err
 	}
-	conversation.Client = client
-	conversation.Logger = logger.Child("conversation", "conversation", "media", "chat", "conversation", conversation.ID)
-	// We get the guest's ID from Gcloud, the other fields should be from Initialize
+
+	conversation.client = client
 	conversation.Guest.DisplayName = guest.DisplayName
 	conversation.Guest.AvatarURL = guest.AvatarURL
 	conversation.Guest.Role = guest.Role
@@ -89,13 +106,19 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 	conversation.Members[conversation.Guest.ID] = conversation.Guest
 	conversation.TopicReceived = make(chan NotificationTopic)
 	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
-	return
+	return nil
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
 func (conversation ConversationGuestChat) GetID() uuid.UUID {
 	return conversation.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (conversation ConversationGuestChat) GetURI() URI {
+	return conversation.SelfURI
 }
 
 // String gets a string version
@@ -123,7 +146,7 @@ func (conversation *ConversationGuestChat) Connect(context context.Context) (err
 
 // Close disconnects the websocket and the guest
 func (conversation *ConversationGuestChat) Close(context context.Context) (err error) {
-	log := conversation.Logger.Scope("close")
+	log := conversation.logger.Scope("close")
 
 	if conversation.Socket != nil {
 		log.Debugf("Disconnecting websocket")
@@ -135,7 +158,7 @@ func (conversation *ConversationGuestChat) Close(context context.Context) (err e
 	}
 	if conversation.Guest != nil {
 		log.Debugf("Disconnecting Guest Member")
-		if err = conversation.Client.Delete(context, NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
+		if err = conversation.client.Delete(context, NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, conversation.Guest.ID), nil); err != nil {
 			log.Errorf("Failed while disconnecting Guest Member", err)
 			return err
 		}
@@ -145,7 +168,7 @@ func (conversation *ConversationGuestChat) Close(context context.Context) (err e
 }
 
 func (conversation *ConversationGuestChat) messageLoop() {
-	log := conversation.Logger.Scope("receive")
+	log := conversation.logger.Scope("receive")
 
 	for {
 		// get a message body and decode it. (ReadJSON is nice, but in case of unknown message, I cannot get the original string)
@@ -180,8 +203,8 @@ func (conversation *ConversationGuestChat) messageLoop() {
 		topic.Send(&NotificationChannel{
 			ID:            conversation.ID,
 			LogHeartbeat:  conversation.LogHeartbeat,
-			Logger:        conversation.Logger,
-			Client:        conversation.Client,
+			Logger:        conversation.logger,
+			Client:        conversation.client,
 			Socket:        conversation.Socket,
 			TopicReceived: conversation.TopicReceived,
 		})
@@ -226,7 +249,7 @@ func (conversation *ConversationGuestChat) GetMember(context context.Context, id
 		return member, nil
 	}
 	member := &ChatMember{}
-	err := conversation.Client.SendRequest(
+	err := conversation.client.SendRequest(
 		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s", conversation.ID, identifiable.GetID()),
 		&request.Options{
@@ -237,7 +260,7 @@ func (conversation *ConversationGuestChat) GetMember(context context.Context, id
 	if err != nil {
 		return nil, err
 	}
-	conversation.Logger.Scope("getmember").Debugf("Response: %+v", member)
+	conversation.logger.Scope("getmember").Debugf("Response: %+v", member)
 	conversation.Members[member.ID] = member
 	return member, nil
 }
@@ -251,7 +274,7 @@ func (conversation *ConversationGuestChat) SendTyping(context context.Context, )
 		Sender       *ChatMember  `json:"sender,omitempty"`
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
 	}{}
-	if err = conversation.Client.SendRequest(
+	if err = conversation.client.SendRequest(
 		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s/typing", conversation.ID, conversation.Guest.ID),
 		&request.Options{
@@ -260,7 +283,7 @@ func (conversation *ConversationGuestChat) SendTyping(context context.Context, )
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendtyping").Infof("Sent successfully. Response: %+v", response)
+		conversation.client.Logger.Record("scope", "sendtyping").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }
@@ -285,9 +308,9 @@ func (conversation *ConversationGuestChat) sendBody(context context.Context, bod
 		Body         string       `json:"body,omitempty"`
 		BodyType     string       `json:"bodyType,omitempty"`
 		Timestamp    time.Time    `json:"timestamp,omitempty"`
-		SelfURI      string       `json:"selfUri,omitempty"`
+		SelfURI      URI          `json:"selfUri,omitempty"`
 	}{}
-	if err = conversation.Client.SendRequest(
+	if err = conversation.client.SendRequest(
 		context,
 		NewURI("/webchat/guest/conversations/%s/members/%s/messages", conversation.ID, conversation.Guest.ID),
 		&request.Options{
@@ -302,7 +325,7 @@ func (conversation *ConversationGuestChat) sendBody(context context.Context, bod
 		},
 		&response,
 	); err == nil {
-		conversation.Client.Logger.Record("scope", "sendbody").Infof("Sent successfully. Response: %+v", response)
+		conversation.client.Logger.Record("scope", "sendbody").Infof("Sent successfully. Response: %+v", response)
 	}
 	return
 }

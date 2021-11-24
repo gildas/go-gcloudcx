@@ -11,11 +11,6 @@ import (
 // URI represents the Path of a URL (used in SelfURI, for example)
 type URI string
 
-// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
-type Addressable interface {
-	GetURI() URI
-}
-
 // NewURI creates a new URI with eventually some parameters
 //
 // path should be a formatter string

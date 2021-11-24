@@ -24,48 +24,6 @@ type Evaluation struct {
 	ChangedDate    time.Time             `json:"changedDate"`
 }
 
-// EvaluationForm describes an Evaluation Form
-type EvaluationForm struct {
-	ID      uuid.UUID `json:"id"`
-	Name    string    `json:"name"`
-	SelfURI string    `json:"selfUri"`
-
-	ModifiedDate time.Time `json:"modifiedDate"`
-	Published    bool      `json:"published"`
-	ContextID    string    `json:"contextId"`
-
-	QuestionGroups    []EvaluationQuestionGroup         `json:"questionGroups"`
-	PublishedVersions DomainEntityListingEvaluationForm `json:"publishedVersions"`
-}
-
-// EvaluationQuestionGroup describes a Group of Evaluation Questions
-type EvaluationQuestionGroup struct {
-	ID                      uuid.UUID             `json:"id"`
-	Name                    string                `json:"name"`
-	Type                    string                `json:"type"`
-	DefaultAnswersToHighest bool                  `json:"defaultAnswersToHighest"`
-	DefaultAnswersToNA      bool                  `json:"defaultAnswersToNA"`
-	NAEnabled               bool                  `json:"naEnabled"`
-	Weight                  float64               `json:"weight"`
-	ManualWeight            bool                  `json:"manualWeight"`
-	Questions               []*EvaluationQuestion `json:"questions"`
-	VisibilityCondition     *VisibilityCondition  `json:"visibilityCondition"`
-}
-
-// EvaluationQuestion describe an Evaluation Question
-type EvaluationQuestion struct {
-	ID                  uuid.UUID            `json:"id"`
-	Type                string               `json:"type"`
-	Text                string               `json:"text"`
-	HelpText            string               `json:"helpText"`
-	NAEnabled           bool                 `json:"naEnabled"`
-	CommentsRequired    bool                 `json:"commentsRequired"`
-	IsKill              bool                 `json:"isKill"`
-	IsCritical          bool                 `json:"isCritical"`
-	VisibilityCondition *VisibilityCondition `json:"visibilityCondition"`
-	AnswerOptions       []*AnswerOption      `json:"answerOptions"`
-}
-
 // VisibilityCondition  describes visibility conditions
 type VisibilityCondition struct {
 	CombiningOperation string        `json:"combiningOperation"`
@@ -75,8 +33,8 @@ type VisibilityCondition struct {
 // AnswerOption describes an Answer Option
 type AnswerOption struct {
 	ID    uuid.UUID `json:"id"`
-	Text  string `json:"text"`
-	Value int    `json:"value"`
+	Text  string    `json:"text"`
+	Value int       `json:"value"`
 }
 
 // DomainEntityListingEvaluationForm describes ...
@@ -97,7 +55,7 @@ type DomainEntityListingEvaluationForm struct {
 type Calibration struct {
 	ID              uuid.UUID       `json:"id"`
 	Name            string          `json:"name"`
-	SelfUri         string          `json:"selfUri"`
+	SelfURI         URI             `json:"selfUri"`
 	Calibrator      *User           `json:"calibrator"`
 	Agent           *User           `json:"agent"`
 	Conversation    *Conversation   `json:"conversation"`

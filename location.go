@@ -11,7 +11,7 @@ import (
 // LocationDefinition describes a location (office, etc)
 type LocationDefinition struct {
 	ID              string                   `json:"id"`
-	SelfURI         string                   `json:"selfUri"`
+	SelfURI         URI                      `json:"selfUri"`
 	Name            string                   `json:"name"`
 	ContactUser     *AddressableEntityRef    `json:"contactUser"`
 	EmergencyNumber *LocationEmergencyNumber `json:"emergencyNumber"`
@@ -52,7 +52,7 @@ type LocationImage struct {
 // GeoLocation describes a location with coordinates
 type GeoLocation struct {
 	ID        string                `json:"id"`
-	SelfURI   string                `json:"selfUri"`
+	SelfURI   URI                   `json:"selfUri"`
 	Name      string                `json:"name"`
 	Locations []*LocationDefinition `json:"locations"`
 }
@@ -98,6 +98,12 @@ func (locationImage *LocationImage) UnmarshalJSON(payload []byte) (err error) {
 //   implements Identifiable
 func (location LocationDefinition) GetID() string {
 	return location.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (location LocationDefinition) GetURI() URI {
+	return location.SelfURI
 }
 
 // String gets a string version

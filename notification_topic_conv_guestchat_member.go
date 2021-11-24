@@ -19,7 +19,7 @@ type ConversationGuestChatMemberTopic struct {
 	Type          string // member-change
 	TimeStamp     time.Time
 	CorrelationID string
-	Client        *Client
+	client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -29,7 +29,7 @@ func (topic ConversationGuestChatMemberTopic) Match(topicName string) bool {
 
 // GetClient gets the GCloud Client associated with this
 func (topic *ConversationGuestChatMemberTopic) GetClient() *Client {
-	return topic.Client
+	return topic.client
 }
 
 // TopicFor builds the topicName for the given identifiables
@@ -44,8 +44,8 @@ func (topic ConversationGuestChatMemberTopic) TopicFor(identifiables ...Identifi
 func (topic *ConversationGuestChatMemberTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("conversation_chat_member", "send", "member", topic.Member)
 	log.Debugf("Conversation: %s, Type: %s, Member: %s, State: %s", topic.Conversation, topic.Type, topic.Member, topic.Member.State)
-	topic.Client = channel.Client
-	topic.Conversation.Client = channel.Client
+	topic.client = channel.Client
+	topic.Conversation.client = channel.Client
 	channel.TopicReceived <- topic
 }
 

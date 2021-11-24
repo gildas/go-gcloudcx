@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -12,14 +13,14 @@ import (
 // User describes a GCloud User
 type User struct {
 	ID                  uuid.UUID                `json:"id"`
-	SelfURI             string                   `json:"selfUri"`
+	SelfURI             URI                      `json:"selfUri"`
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
 	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title"`
 	Division            *Division                `json:"division"`
 	Mail                string                   `json:"email"`
-	Images              []*UserImage              `json:"images"`
+	Images              []*UserImage             `json:"images"`
 	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
 	Addresses           []*Contact               `json:"addresses"`
 	State               string                   `json:"state"`
@@ -43,34 +44,40 @@ type User struct {
 	GeoLocation         *GeoLocation             `json:"geolocation,omitempty"`
 	Chat                *Jabber                  `json:"chat,omitempty"`
 	Version             int                      `json:"version"`
-
-	Client  *Client        `json:"-"`
-	Logger  *logger.Logger `json:"-"`
+	client              *Client                  `json:"-"`
+	logger              *logger.Logger           `json:"-"`
 }
 
 // Jabber describe a Jabber ID for chats
 type Jabber struct {
 	ID string `json:"jabberId"`
 }
-// Initialize initializes this from the given Client
-//   implements Initializable
-//   if the user ID is not given, /users/me is fetched (if grant allows)
-func (user *User) Initialize(parameters ...interface{}) error {
-	context, client, logger, id, err := parseParameters(user, parameters...)
-	if err != nil {
-		return err
-	}
+
+// Fetch fetches a user
+//
+// implements Fetchable
+func (user *User) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, name, selfURI, log := client.ParseParameters(ctx, user, parameters...)
+
 	if id != uuid.Nil {
-		if err := client.Get(context, NewURI("/users/%s", id), &user); err != nil {
+		if err := client.Get(ctx, NewURI("/users/%s", id), &user); err != nil {
 			return err
 		}
+		user.logger = log
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &user); err != nil {
+			return err
+		}
+		user.logger = log.Record("id", user.ID)
+	} else if len(name) > 0 {
+		return errors.NotImplemented.WithStack()
 	} else if _, ok := client.Grant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
-		if err := client.Get(context, "/users/me", &user); err != nil {
+		if err := client.Get(ctx, "/users/me", &user); err != nil {
 			return err
 		}
+		user.logger = log.Record("id", user.ID)
 	}
-	user.Client = client
-	user.Logger = logger.Child("user", "user", "user", user.ID)
+	user.client = client
 	return nil
 }
 
@@ -86,7 +93,8 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 	if err := client.Get(context, NewURI("/users/me?%s", query.Encode()), &user); err != nil {
 		return nil, err
 	}
-	user.Client = client
+	user.client = client
+	user.logger = client.Logger.Child("user", "user", "id", user.ID)
 	return user, nil
 }
 
@@ -94,6 +102,12 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 //   implements Identifiable
 func (user User) GetID() uuid.UUID {
 	return user.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (user User) GetURI() URI {
+	return user.SelfURI
 }
 
 // String gets a string version

@@ -8,7 +8,7 @@ import (
 type OutOfOffice struct {
 	ID           string    `json:"id"`
 	Name         string    `json:"name"`
-	SelfURI      string    `json:"selfUri"`
+	SelfURI      URI       `json:"selfUri"`
 	User         *User     `json:"user"`
 	Active       bool      `json:"active"`
 	Indefinite   bool      `json:"indefinite"`

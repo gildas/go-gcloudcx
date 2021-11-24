@@ -16,7 +16,7 @@ type UserConversationChatTopic struct {
 	Conversation  *ConversationChat
 	Participants  []*Participant
 	CorrelationID string
-	Client        *Client
+	client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -26,7 +26,7 @@ func (topic UserConversationChatTopic) Match(topicName string) bool {
 
 // GetClient gets the GCloud Client associated with this
 func (topic *UserConversationChatTopic) GetClient() *Client {
-	return topic.Client
+	return topic.client
 }
 
 // TopicFor builds the topicName for the given identifiables
@@ -41,9 +41,9 @@ func (topic UserConversationChatTopic) TopicFor(identifiables ...Identifiable) s
 func (topic *UserConversationChatTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("user_conversation_chat", "send")
 	log.Debugf("User: %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
-	topic.Client = channel.Client
-	topic.User.Client = channel.Client
-	topic.Conversation.Client = channel.Client
+	topic.client = channel.Client
+	topic.User.client = channel.Client
+	topic.Conversation.client = channel.Client
 
 	channel.TopicReceived <- topic
 }

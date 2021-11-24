@@ -15,7 +15,7 @@ type UserPresenceTopic struct {
 	User          *User
 	Presence      UserPresence
 	CorrelationID string
-	Client        *Client
+	client        *Client
 }
 
 // Match tells if the given topicName matches this topic
@@ -25,7 +25,7 @@ func (topic UserPresenceTopic) Match(topicName string) bool {
 
 // GetClient gets the GCloud Client associated with this
 func (topic *UserPresenceTopic) GetClient() *Client {
-	return topic.Client
+	return topic.client
 }
 
 // TopicFor builds the topicName for the given identifiables
@@ -40,8 +40,8 @@ func (topic UserPresenceTopic) TopicFor(identifiables ...Identifiable) string {
 func (topic *UserPresenceTopic) Send(channel *NotificationChannel) {
 	log := channel.Logger.Child("user_presence", "send")
 	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
-	topic.Client = channel.Client
-	topic.User.Client = channel.Client
+	topic.client = channel.Client
+	topic.User.client = channel.Client
 	channel.TopicReceived <- topic
 }
 

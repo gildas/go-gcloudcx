@@ -1,7 +1,8 @@
 package gcloudcx
 
 type OpenMessageTo struct {
-	ID string `json:"id"`
+	ID   string `json:"id"`
+	Type string `json:"idType,omitempty"`
 }
 
 type OpenMessageFrom struct {

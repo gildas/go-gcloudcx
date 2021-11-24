@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -47,25 +46,32 @@ func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := &gcloudcx.OpenMessage{}
-	if err = json.Unmarshal(body, &message); err != nil {
+	message, err := gcloudcx.UnmarshalOpenMessage(body)
+	if err != nil {
 		log.Errorf("Failed to unmarshal message", err)
 		core.RespondWithError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	log.Record("message", message).Infof("Received From GCloud: %s", message.Text)
+	log.Record("message", message).Infof("Received From GCloud")
 
-	// Sending message to Chat Server
-	chat, err := config.ChatServer.FindChatByUserID(message.Channel.To.ID)
-	if err != nil {
-		log.Warnf("Failed to find chat for user %s (Error: %s)", message.Channel.To.ID, err)
-		core.RespondWithError(w, http.StatusNotFound, errors.HTTPNotFound.With("user", message.Channel.To.ID))
-		return
+	switch actual := message.(type) {
+	case *gcloudcx.OpenMessageText:
+		// Sending message to Chat Server
+		log.Record("message", message).Infof("Received From GCloud: %s", actual.Text)
+		chat, err := config.ChatServer.FindChatByUserID(actual.Channel.To.ID)
+		if err != nil {
+			log.Warnf("Failed to find chat for user %s (Error: %s)", actual.Channel.To.ID, err)
+			core.RespondWithError(w, http.StatusNotFound, errors.HTTPNotFound.With("user", actual.Channel.To.ID))
+			return
+		}
+		chat.Logger.Infof("Sending message to chat")
+		chat.send <- body
+		core.RespondWithJSON(w, http.StatusOK, struct{}{})
+	default:
+		log.Warnf("Unsupported message type")
+		core.RespondWithJSON(w, http.StatusOK, struct{}{})
 	}
-	chat.Logger.Infof("Sending message to chat")
-	chat.send <- body
-	core.RespondWithJSON(w, http.StatusOK, struct{}{})
 }
 
 // NotFoundHandler is called when all other routes did not match

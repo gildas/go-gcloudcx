@@ -5,31 +5,38 @@ import (
 	"time"
 
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 // UserPresence  describes the Presence of a User
 type UserPresence struct {
-	ID           string              `json:"id"`
+	ID           uuid.UUID           `json:"id"`
 	Name         string              `json:"name"`
 	Source       string              `json:"source"`
 	Primary      bool                `json:"primary"`
 	Definition   *PresenceDefinition `json:"presenceDefinition"`
 	Message      string              `json:"message"`
 	ModifiedDate time.Time           `json:"modifiedDate"`
-	SelfURI      string              `json:"selfUri"`
+	SelfURI      URI                 `json:"selfUri"`
 }
 
 // PresenceDefinition  defines Presence
 type PresenceDefinition struct {
-	ID             string `json:"id"`
-	SystemPresence string `json:"systemPresence"`
-	SelfURI        string `json:"selfUri"`
+	ID             uuid.UUID `json:"id"`
+	SystemPresence string    `json:"systemPresence"`
+	SelfURI        URI       `json:"selfUri"`
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (definition PresenceDefinition) GetID() string {
+func (definition PresenceDefinition) GetID() uuid.UUID {
 	return definition.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (definition PresenceDefinition) GetURI() URI {
+	return definition.SelfURI
 }
 
 // String gets a string version
@@ -38,13 +45,19 @@ func (definition PresenceDefinition) String() string {
 	if len(definition.SystemPresence) > 0 {
 		return definition.SystemPresence
 	}
-	return definition.ID
+	return definition.ID.String()
 }
 
 // GetID gets the identifier of this
 //   implements Identifiable
-func (presence UserPresence) GetID() string {
+func (presence UserPresence) GetID() uuid.UUID {
 	return presence.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (presence UserPresence) GetURI() URI {
+	return presence.SelfURI
 }
 
 // String gets a string version

@@ -116,7 +116,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 	log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
 
 	// Call the Gcloud Notification Topic loop
-	go MessageLoop(config)
+	go MessageLoop(config, client)
 
 	return nil
 }

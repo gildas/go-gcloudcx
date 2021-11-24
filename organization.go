@@ -3,6 +3,7 @@ package gcloudcx
 import (
 	"context"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -19,32 +20,38 @@ type Organization struct {
 	DefaultSiteID              string          `json:"defaultSiteId"`
 	SupportURI                 string          `json:"supportURI"`
 	VoicemailEnabled           bool            `json:"voicemailEnabled"`
-	SelfURI                    string          `json:"selfURI"`
+	SelfURI                    URI             `json:"selfURI"`
 	Features                   map[string]bool `json:"features"`
 	Version                    uint32          `json:"version"`
-	Client                     *Client         `json:"-"`
-	Logger                     *logger.Logger  `json:"-"`
+	client                     *Client         `json:"-"`
+	logger                     *logger.Logger  `json:"-"`
 }
 
-// Initialize initializes this from the given Client
-//   implements Initializable
-//   If the organzation ID is not given, /organizations/me is fetched
-func (organization *Organization) Initialize(parameters ...interface{}) error {
-	context, client, logger, id, err := parseParameters(organization, parameters...)
-	if err != nil {
-		return err
-	}
+// Fetch fetches an Organization
+//
+// implements Fetchable
+func (organization *Organization) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
+	id, name, selfURI, log := client.ParseParameters(ctx, organization, parameters...)
+
 	if id != uuid.Nil {
-		if err := client.Get(context, NewURI("/organizations/%s", id), &organization); err != nil {
+		if err := client.Get(ctx, NewURI("/organizations/%s", id), &organization); err != nil {
 			return err
 		}
+		organization.logger = log
+	} else if len(selfURI) > 0 {
+		if err := client.Get(ctx, selfURI, &organization); err != nil {
+			return err
+		}
+		organization.logger = log.Record("id", organization.ID)
+	} else if len(name) > 0 {
+		return errors.NotImplemented.WithStack()
 	} else {
-		if err := client.Get(context, NewURI("/organizations/me"), &organization); err != nil {
+		if err := client.Get(ctx, NewURI("/organizations/me"), &organization); err != nil {
 			return err
 		}
+		organization.logger = log.Record("id", organization.ID)
 	}
-	organization.Client = client
-	organization.Logger = logger.Child("organization", "organization", "organization", organization.ID)
+	organization.client = client
 	return nil
 }
 
@@ -54,8 +61,8 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 	if err := client.Get(context, "/organizations/me", &organization); err != nil {
 		return nil, err
 	}
-	organization.Client = client
-	organization.Logger = client.Logger.Child("organization", "organization", "organization", organization.ID)
+	organization.client = client
+	organization.logger = client.Logger.Child("organization", "organization", "id", organization.ID)
 	return organization, nil
 }
 
@@ -63,6 +70,12 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 //   implements Identifiable
 func (organization Organization) GetID() uuid.UUID {
 	return organization.ID
+}
+
+// GetURI gets the URI of this
+//   implements Addressable
+func (organization Organization) GetURI() URI {
+	return organization.SelfURI
 }
 
 // String gets a string version

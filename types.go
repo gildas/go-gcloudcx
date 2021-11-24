@@ -11,9 +11,19 @@ type Identifiable interface {
 	core.Identifiable
 }
 
+// Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
+type Addressable interface {
+	GetURI() URI
+}
+
 // Initializable describes things that can be initialized
 type Initializable interface {
 	Initialize(parameters ...interface{}) error
+}
+
+// Fetchable describes things that can be fetched from the Genesys Cloud API
+type Fetchable interface {
+	Fetch(context context.Context, client *Client, parameters ...interface{}) error
 }
 
 // StateUpdater describes objects than can update the state of an Identifiable
@@ -65,4 +75,15 @@ type ErrorDetail struct {
 // Error returns a string representation of this error
 func (err ErrorBody) Error() string {
 	return err.MessageWithParams
+}
+
+// paginatedEntities describes a paginated list of entities
+type paginatedEntities struct {
+	PageSize    int `json:"pageSize"`
+	PageNumber  int `json:"pageNumber"`
+	PageCount   int `json:"pageCount"`
+	EntityCount int `json:"total"`
+	FirstURI    URI `json:"firstUri"`
+	SelfURI     URI `json:"selfUri"`
+	LastURI     URI `json:"lastUri"`
 }

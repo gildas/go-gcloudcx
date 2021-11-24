@@ -13,7 +13,7 @@ import (
 // Participant describes a Chat Participant
 type Participant struct {
 	ID              uuid.UUID `json:"id"`
-	SelfURI         string    `json:"selfUri"`
+	SelfURI         URI       `json:"selfUri"`
 	Name            string    `json:"name"`
 	ParticipantType string    `json:"participantType"`
 	State           string    `json:"state"`
@@ -148,6 +148,12 @@ func (participant Participant) GetID() uuid.UUID {
 	return participant.ID
 }
 
+// GetURI gets the URI of this
+//   implements Addressable
+func (participant Participant) GetURI() URI {
+	return participant.SelfURI
+}
+
 // String gets a string version
 //   implements the fmt.Stringer interface
 func (participant Participant) String() string {
@@ -165,7 +171,7 @@ func (participant *Participant) UpdateState(context context.Context, target Stat
 // MarshalJSON marshals this into JSON
 func (participant Participant) MarshalJSON() ([]byte, error) {
 	userID := uuid.Nil
-	userURI := ""
+	userURI := URI("")
 	if participant.User != nil {
 		userID = participant.User.ID
 		userURI = participant.User.SelfURI
@@ -174,7 +180,7 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
 	data, err := json.Marshal(struct {
 		surrogate
 		UserID            uuid.UUID `json:"userId"`
-		UserURI           string    `json:"userUri"`
+		UserURI           URI       `json:"userUri"`
 		AlertingTimeoutMs int64     `json:"alertingTimeoutMs"`
 		WrapupTimeoutMs   int64     `json:"wrapupTimeoutMs"`
 	}{
@@ -193,7 +199,7 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
 	var inner struct {
 		surrogate
 		UserID            uuid.UUID `json:"userId"`
-		UserURI           string    `json:"userUri"`
+		UserURI           URI       `json:"userUri"`
 		AlertingTimeoutMs int64     `json:"alertingTimeoutMs"`
 		WrapupTimeoutMs   int64     `json:"wrapupTimeoutMs"`
 	}
