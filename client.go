@@ -156,7 +156,10 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 		log = client.Logger
 	}
 	if typed, ok := object.(core.TypeCarrier); ok {
-		log = log.Child(typed.GetType(), typed.GetType(), "id", id.String())
+		log = log.Child(typed.GetType(), typed.GetType())
+	}
+	if id != uuid.Nil {
+		log = log.Record("id", id.String())
 	}
 	return id, name, uri, log
 }
