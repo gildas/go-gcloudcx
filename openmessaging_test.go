@@ -174,11 +174,10 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 }
 
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
-	message := gcloudcx.OpenMessage{
+	message := gcloudcx.OpenMessageText{
 		ID:        "12345678",
 		Direction: "inbound",
-		Type:      "text",
-		Text:       "text message",
+		Text:      "text message",
 	}
 	message.Channel = gcloudcx.NewOpenMessageChannel(
 		"gmAy9zNkhf4ermFvHH9mB5",
@@ -240,10 +239,7 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
-	var err error
-
-	message := gcloudcx.OpenMessage{}
-	err = json.Unmarshal([]byte(`{"Direction": 6}`), &message)
+	_, err := gcloudcx.UnmarshalOpenMessage([]byte(`{"Direction": 6}`))
 	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
 }
 

@@ -201,14 +201,13 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 	err := integration.client.Post(
 		integration.logger.ToContext(context),
 		"/conversations/messages/inbound/open",
-		&OpenMessage{
+		&OpenMessageText{
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
 				messageID,
 				&OpenMessageTo{ ID: integration.ID.String() },
 				from,
 			),
-			Type: "Text",
 			Text: text,
 		},
 		&result,
@@ -256,14 +255,13 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 	err := integration.client.Post(
 		integration.logger.ToContext(context),
 		"/conversations/messages/inbound/open",
-		&OpenMessage{
+		&OpenMessageText{
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
 				messageID,
 				&OpenMessageTo{ ID: integration.ID.String() },
 				from,
 			),
-			Type: "Text",
 			Text: text,
 			Content: []*OpenMessageContent{
 				{

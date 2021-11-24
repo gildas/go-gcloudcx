@@ -1,43 +1,35 @@
 package gcloudcx
 
-type OpenMessage struct {
-	ID              string                `json:"id,omitempty"`
-	Channel         *OpenMessageChannel   `json:"channel"`
-	Direction       string                `json:"direction"`
-	Type            string                `json:"type"` // Text, Structured, Receipt
-	Text            string                `json:"text"`
-	Content         []*OpenMessageContent `json:"content,omitempty"`
-	RelatedMessages []*OpenMessage        `json:"relatedMessages,omitempty"`
-	Reasons         []*StatusReason       `json:"reasons,omitempty"`
-}
+import (
+	"strings"
 
-// Redact redacts sensitive data
-//
-// implements logger.Redactable
-func (message OpenMessage) Redact() interface{} {
-	redacted := message
-	if message.Channel != nil {
-		redacted.Channel = message.Channel.Redact().(*OpenMessageChannel)
-	}
-	return &redacted
+	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
+)
+
+type OpenMessage interface {
+	core.TypeCarrier
 }
 
 type OpenMessageResult struct {
 	OpenMessage
 }
 
-// Redact redacts sensitive data
-//
-// implements logger.Redactable
-func (result OpenMessageResult) Redact() interface{} {
-	redacted := result
-	if result.Channel != nil {
-		redacted.Channel = result.Channel.Redact().(*OpenMessageChannel)
-	}
-	return &redacted
-}
+var openMessageRegistry = core.TypeRegistry{}
 
-type StatusReason struct {
-	Code    string `json:"code,omitempty"`
-	Message string `json:"message"`
+func UnmarshalOpenMessage(payload []byte) (OpenMessage, error) {
+	message, err := openMessageRegistry.UnmarshalJSON(payload)
+	if err == nil {
+		return message.(OpenMessage), nil
+	}
+	if strings.HasPrefix(err.Error(), "Missing JSON Property") {
+		return nil, errors.JSONUnmarshalError.Wrap(errors.ArgumentMissing.With("type"))
+	}
+	if strings.HasPrefix(err.Error(), "Unsupported Type") {
+		return nil, errors.JSONUnmarshalError.Wrap(errors.InvalidType.With(strings.TrimSuffix(strings.TrimPrefix(err.Error(), `Unsupported Type "`), `"`)))
+	}
+	if errors.Is(err, errors.JSONUnmarshalError) {
+		return nil, err
+	}
+	return nil, errors.JSONUnmarshalError.Wrap(err)
 }
