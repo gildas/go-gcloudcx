@@ -36,6 +36,12 @@ func (message OpenMessageReceipt) GetType() string {
 	return "Receipt"
 }
 
+// GetID gets the identifier of this
+//   implements OpenMessage
+func (message OpenMessageReceipt) GetID() string {
+	return message.ID
+}
+
 // IsFailed tells if the receipt is failed
 func (message OpenMessageReceipt) IsFailed() bool {
 	return message.Status == "Failed"

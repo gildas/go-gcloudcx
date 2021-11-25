@@ -8,6 +8,7 @@ import (
 )
 
 type OpenMessage interface {
+	GetID() string
 	core.TypeCarrier
 }
 

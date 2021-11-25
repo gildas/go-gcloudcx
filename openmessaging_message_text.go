@@ -30,6 +30,12 @@ func (message OpenMessageText) GetType() string {
 	return "Text"
 }
 
+// GetID gets the identifier of this
+//   implements OpenMessage
+func (message OpenMessageText) GetID() string {
+	return message.ID
+}
+
 // Redact redacts sensitive data
 //
 // implements logger.Redactable
