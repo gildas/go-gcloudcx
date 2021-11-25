@@ -17,7 +17,7 @@ type OpenMessageText struct {
 
 // init initializes this type
 func init() {
-	openMessageRegistry.Add(OpenMessageReceipt{})
+	openMessageRegistry.Add(OpenMessageText{})
 }
 
 // GetType tells the type of this OpenMessage
@@ -62,7 +62,7 @@ func (message *OpenMessageText) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	if inner.Type != (OpenMessageReceipt{}).GetType() {
+	if inner.Type != (OpenMessageText{}).GetType() {
 		return errors.JSONUnmarshalError.Wrap(errors.InvalidType.With(inner.Type))
 	}
 	*message = OpenMessageText(inner.surrogate)
