@@ -33,6 +33,7 @@ type OpenMessagingIntegration struct {
 	ModifiedBy       *DomainEntityRef      `json:"modifiedBy,omitempty"`
 	CreateStatus     string                `json:"createStatus,omitempty"` // Initiated, Completed, Error
 	CreateError      *ErrorBody            `json:"createError,omitempty"`
+	Status           string                `json:"status,omitempty"` // Active, Inactive
 	SelfURI          URI                   `json:"selfUri,omitempty"`
 	client           *Client               `json:"-"`
 	logger           *logger.Logger        `json:"-"`

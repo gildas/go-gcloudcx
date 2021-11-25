@@ -6,13 +6,16 @@ import (
 	"github.com/gildas/go-errors"
 )
 
+// OpenMessageText is a text message sent or received by the Open Messaging API
+//
+// See: https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
 type OpenMessageText struct {
-	ID              string                `json:"id,omitempty"` // Can be anything
-	Channel         *OpenMessageChannel   `json:"channel"`
-	Direction       string                `json:"direction"`
-	Text            string                `json:"text"`
-	Content         []*OpenMessageContent `json:"content,omitempty"`
-	RelatedMessages []*OpenMessageText    `json:"relatedMessages,omitempty"`
+	ID        string                `json:"id,omitempty"` // Can be anything
+	Channel   *OpenMessageChannel   `json:"channel"`
+	Direction string                `json:"direction"`
+	Text      string                `json:"text"`
+	Content   []*OpenMessageContent `json:"content,omitempty"`
+	Metadata  map[string]string     `json:"metadata,omitempty"`
 }
 
 // init initializes this type

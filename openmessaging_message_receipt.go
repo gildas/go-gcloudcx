@@ -10,12 +10,13 @@ import (
 //
 // See: https://developer.genesys.cloud/api/digital/openmessaging/receipts
 type OpenMessageReceipt struct {
-	ID          string              `json:"id,omitempty"`      // Can be anything
-	Channel     *OpenMessageChannel `json:"channel"`
-	Direction   string              `json:"direction"`         // Can be "Inbound" or "Outbound"
-	Status      string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Failed"
-	Reasons     []*StatusReason     `json:"reasons,omitempty"` // Contains the reason for the failure
-	FinalReceipt bool               `json:"isFinalReceipt"`
+	ID           string              `json:"id,omitempty"`      // Can be anything, message ID this receipt relates to
+	Channel      *OpenMessageChannel `json:"channel"`
+	Direction    string              `json:"direction"`         // Can be "Inbound" or "Outbound"
+	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Failed"
+	Reasons      []*StatusReason     `json:"reasons,omitempty"` // Contains the reason for the failure
+	FinalReceipt bool                `json:"isFinalReceipt"`    // True if this is the last receipt about this message ID
+	Metadata     map[string]string   `json:"metadata,omitempty"`
 }
 
 type StatusReason struct {
