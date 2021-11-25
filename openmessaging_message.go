@@ -8,11 +8,8 @@ import (
 )
 
 type OpenMessage interface {
+	GetID() string
 	core.TypeCarrier
-}
-
-type OpenMessageResult struct {
-	OpenMessage
 }
 
 var openMessageRegistry = core.TypeRegistry{}

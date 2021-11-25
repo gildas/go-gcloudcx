@@ -6,18 +6,21 @@ import (
 	"github.com/gildas/go-errors"
 )
 
+// OpenMessageText is a text message sent or received by the Open Messaging API
+//
+// See: https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
 type OpenMessageText struct {
-	ID              string                `json:"id,omitempty"` // Can be anything
-	Channel         *OpenMessageChannel   `json:"channel"`
-	Direction       string                `json:"direction"`
-	Text            string                `json:"text"`
-	Content         []*OpenMessageContent `json:"content,omitempty"`
-	RelatedMessages []*OpenMessageText    `json:"relatedMessages,omitempty"`
+	ID        string                `json:"id,omitempty"` // Can be anything
+	Channel   *OpenMessageChannel   `json:"channel"`
+	Direction string                `json:"direction"`
+	Text      string                `json:"text"`
+	Content   []*OpenMessageContent `json:"content,omitempty"`
+	Metadata  map[string]string     `json:"metadata,omitempty"`
 }
 
 // init initializes this type
 func init() {
-	openMessageRegistry.Add(OpenMessageReceipt{})
+	openMessageRegistry.Add(OpenMessageText{})
 }
 
 // GetType tells the type of this OpenMessage
@@ -25,6 +28,12 @@ func init() {
 // implements core.TypeCarrier
 func (message OpenMessageText) GetType() string {
 	return "Text"
+}
+
+// GetID gets the identifier of this
+//   implements OpenMessage
+func (message OpenMessageText) GetID() string {
+	return message.ID
 }
 
 // Redact redacts sensitive data
@@ -62,7 +71,7 @@ func (message *OpenMessageText) UnmarshalJSON(data []byte) (err error) {
 	if err = json.Unmarshal(data, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	if inner.Type != (OpenMessageReceipt{}).GetType() {
+	if inner.Type != (OpenMessageText{}).GetType() {
 		return errors.JSONUnmarshalError.Wrap(errors.InvalidType.With(inner.Type))
 	}
 	*message = OpenMessageText(inner.surrogate)
