@@ -222,12 +222,15 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 // SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string) (*OpenMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string) (id string, err error) {
 	if integration.ID == uuid.Nil {
-		return nil, errors.ArgumentMissing.With("ID")
+		return "", errors.ArgumentMissing.With("ID")
 	}
-	result := &OpenMessageResult{}
-	err := integration.client.Post(
+	if len(messageID) == 0 {
+		return "", errors.ArgumentMissing.With("messageID")
+	}
+	result := OpenMessageText{}
+	err = integration.client.Post(
 		integration.logger.ToContext(context),
 		"/conversations/messages/inbound/open",
 		&OpenMessageText{
@@ -241,19 +244,22 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 		},
 		&result,
 	)
-	return result, err
+	return result.ID, err
 }
 
 // SendInboundAudioMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
 // See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
-func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (*OpenMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (id string, err error) {
 	if integration.ID == uuid.Nil {
-		return nil, errors.ArgumentMissing.With("ID")
+		return "", errors.ArgumentMissing.With("ID")
+	}
+	if len(messageID) == 0 {
+		return "", errors.ArgumentMissing.With("messageID")
 	}
 	if attachmentURL == nil {
-		return nil, errors.ArgumentMissing.With("url")
+		return "", errors.ArgumentMissing.With("url")
 	}
 
 	var attachmentType string
@@ -280,8 +286,8 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 		attachmentFilename = strings.ToLower(attachmentType) + "-" + fileID + fileExtension
 	}
 
-	result := &OpenMessageResult{}
-	err := integration.client.Post(
+	result := OpenMessageText{}
+	err = integration.client.Post(
 		integration.logger.ToContext(context),
 		"/conversations/messages/inbound/open",
 		&OpenMessageText{
@@ -307,7 +313,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 		},
 		&result,
 	)
-	return result, err
+	return result.ID, err
 }
 
 // SendOutboundMessage sends a message from GENESYS Cloud to the middleware

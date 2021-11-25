@@ -11,10 +11,6 @@ type OpenMessage interface {
 	core.TypeCarrier
 }
 
-type OpenMessageResult struct {
-	OpenMessage
-}
-
 var openMessageRegistry = core.TypeRegistry{}
 
 func UnmarshalOpenMessage(payload []byte) (OpenMessage, error) {
