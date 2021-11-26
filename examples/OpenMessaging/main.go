@@ -91,7 +91,7 @@ func main() {
 
 	if errors.Is(err, errors.NotFound) {
 		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		config.Integration, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken)
+		config.Integration, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken, nil)
 		if err != nil {
 			Log.Fatalf("Failed creating integration", err)
 			os.Exit(1)

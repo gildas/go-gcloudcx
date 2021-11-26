@@ -52,7 +52,7 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	name := "TEST-GO-PURECLOUD"
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
-	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken)
+	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken, nil)
 	suite.Require().Nil(err, "Failed to create integration")
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
