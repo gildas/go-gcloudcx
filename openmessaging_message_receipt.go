@@ -14,7 +14,7 @@ type OpenMessageReceipt struct {
 	Channel      *OpenMessageChannel `json:"channel"`
 	Direction    string              `json:"direction"`         // Can be "Inbound" or "Outbound"
 	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Failed"
-	Reasons      []*StatusReason     `json:"reasons,omitempty"` // Contains the reason for the failure
+	Reasons      []StatusReason      `json:"reasons,omitempty"` // Contains the reason for the failure
 	FinalReceipt bool                `json:"isFinalReceipt"`    // True if this is the last receipt about this message ID
 	Metadata     map[string]string   `json:"metadata,omitempty"`
 }

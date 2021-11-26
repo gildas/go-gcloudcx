@@ -110,6 +110,7 @@ func (server *ChatServer) Start(config *Config) {
 					},
 					message.ID,
 					message.Content,
+					nil,
 				)
 				if err != nil {
 					Log.Errorf("Failed to send inbound", err)

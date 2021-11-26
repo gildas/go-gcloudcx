@@ -135,19 +135,21 @@ func (client *Client) FetchOpenMessagingIntegrations(ctx context.Context, parame
 }
 
 // Create creates a new OpenMessaging Integration
-func (client *Client) CreateOpenMessagingIntegration(context context.Context, name string, webhookURL *url.URL, token string) (*OpenMessagingIntegration, error) {
+func (client *Client) CreateOpenMessagingIntegration(context context.Context, name string, webhookURL *url.URL, token string, headers map[string]string) (*OpenMessagingIntegration, error) {
 	integration := OpenMessagingIntegration{}
 	err := client.Post(
 		context,
 		"/conversations/messaging/integrations/open",
 		struct {
-			Name    string `json:"name"`
-			Webhook string `json:"outboundNotificationWebhookUrl"`
-			Token   string `json:"outboundNotificationWebhookSignatureSecretToken"`
+			Name    string            `json:"name"`
+			Webhook string            `json:"outboundNotificationWebhookUrl"`
+			Token   string            `json:"outboundNotificationWebhookSignatureSecretToken"`
+			Headers map[string]string `json:"webhookHeaders,omitempty"`
 		}{
 			Name:    name,
 			Webhook: webhookURL.String(),
 			Token:   token,
+			Headers: headers,
 		},
 		&integration,
 	)
@@ -223,7 +225,7 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 // SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
@@ -242,6 +244,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 				from,
 			),
 			Text: text,
+			Metadata: metadata,
 		},
 		&result,
 	)
@@ -252,7 +255,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
 // See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
-func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
@@ -311,6 +314,37 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 					},
 				},
 			},
+			Metadata: metadata,
+		},
+		&result,
+	)
+	return result.ID, err
+}
+
+// SendInboundTextMessage sends a text message from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, from *OpenMessageFrom, messageID, status string, reasons []StatusReason, metadata map[string]string) (id string, err error) {
+	if integration.ID == uuid.Nil {
+		return "", errors.ArgumentMissing.With("ID")
+	}
+	if len(messageID) == 0 {
+		return "", errors.ArgumentMissing.With("messageID")
+	}
+	result := OpenMessageText{}
+	err = integration.client.Post(
+		integration.logger.ToContext(context),
+		"/conversations/messages/inbound/open",
+		&OpenMessageReceipt{
+			Direction: "Inbound",
+			Channel: NewOpenMessageChannel(
+				messageID,
+				&OpenMessageTo{ ID: integration.ID.String() },
+				from,
+			),
+			Status: status,
+			Reasons: reasons,
+			Metadata: metadata,
 		},
 		&result,
 	)
