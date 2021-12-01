@@ -117,3 +117,25 @@ func (conversation Conversation) String() string {
 	}
 	return conversation.ID.String()
 }
+
+/*
+func (conversation *Conversation) GetParticipants(context context.Context) []*Participant {
+	log := conversation.logger.Child(nil, "participants")
+	data := struct {
+		ID             uuid.UUID      `json:"id"`
+		Participants   []*Participant `json:"participants"`
+		OtherMediaURIs []URI          `json:"otherMediaUris"`
+		SelfURI        URI            `json:"selfUri"`
+	}{}
+	err := conversation.client.Get(
+		context,
+		NewURI("/conversations/messages/%s", conversation.ID),
+		&data,
+)
+	if err != nil {
+		log.Errorf("Failed to get participants", err)
+	return []*Participant{}
+	}
+	return data.Participants
+}
+*/
