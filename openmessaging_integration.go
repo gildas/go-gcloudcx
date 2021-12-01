@@ -380,6 +380,28 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(context context
 	return result, nil
 }
 
+// GetMessageData gets the details ofa message
+func (integration *OpenMessagingIntegration) GetMessageData(context context.Context, message OpenMessage) (*OpenMessageData, error) {
+	if integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID")
+	}
+	if len(message.GetID()) == 0 {
+		return nil, errors.ArgumentMissing.With("messageID")
+	}
+	data := &OpenMessageData{}
+	err := integration.client.Get(
+		integration.logger.ToContext(context),
+		NewURI("/conversations/messages/%s/details", message.GetID()),
+		data,
+	)
+	if err != nil {
+		return nil, err
+	}
+	data.Conversation.client = integration.client
+	data.Conversation.logger = integration.logger.Child("conversation", "conversation", "id", data.Conversation.ID)
+	return data, nil
+}
+
 // String gets a string version
 //
 //   implements the fmt.Stringer interface

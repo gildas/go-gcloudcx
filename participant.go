@@ -12,65 +12,69 @@ import (
 
 // Participant describes a Chat Participant
 type Participant struct {
-	ID              uuid.UUID `json:"id"`
-	SelfURI         URI       `json:"selfUri"`
-	Name            string    `json:"name"`
-	ParticipantType string    `json:"participantType"`
-	State           string    `json:"state"`
-	Held            bool      `json:"held"`
-	Direction       string    `json:"direction"`
-	StartTime      time.Time  `json:"startTime"`
-	ConnectedTime  time.Time  `json:"connectedTime"`
-	EndTime        time.Time  `json:"endTime"`
-	StartHoldTime  time.Time  `json:"startHoldTime"`
-	Purpose        string     `json:"purpose"`
-	DisconnectType string     `json:"disconnectType"`
+	ID              uuid.UUID  `json:"id"`
+	SelfURI         URI        `json:"selfUri"`
+	Type            string     `json:"type"`
+	Provider        string     `json:"provider"`
+	Name            string     `json:"name"`
+	ParticipantType string     `json:"participantType,omitempty"`
+	State           string     `json:"state,omitempty"`
+	Held            bool       `json:"held,omitempty"`
+	Direction       string     `json:"direction,omitempty"`
+	StartTime       time.Time  `json:"startTime,omitempty"`
+	ConnectedTime   time.Time  `json:"connectedTime,omitempty"`
+	EndTime         time.Time  `json:"endTime,omitempty"`
+	StartHoldTime   time.Time  `json:"startHoldTime,omitempty"`
+	Purpose         string     `json:"purpose"`
+	DisconnectType  string     `json:"disconnectType,omitempty"`
 
-	User                   *User            `json:"user"`
-	ExternalContact        *DomainEntityRef `json:"externalContact"`
-	ExternalContactID      string           `json:"externalContactId"`
-	ExternalOrganization   *DomainEntityRef `json:"externalOrganization"`
-	ExternalOrganizationID string           `json:"externalOrganizationId"`
+	User                   *User            `json:"user,omitempty"`
+	ExternalContact        *DomainEntityRef `json:"externalContact,omitempty"`
+	ExternalContactID      string           `json:"externalContactId,omitempty"`
+	ExternalOrganization   *DomainEntityRef `json:"externalOrganization,omitempty"`
+	ExternalOrganizationID string           `json:"externalOrganizationId,omitempty"`
 
-	Queue                  *Queue           `json:"queue"`
-	QueueID                string           `json:"queueId"`
-	GroupID                string           `json:"groupId"`
-	QueueName              string           `json:"queueName"`
-	ConsultParticipantID   string           `json:"consultParticipantId"`
-	MonitoredParticipantID string           `json:"monitoredParticipantId"`
-	Script                 *DomainEntityRef `json:"script"`
+	Queue                  *Queue           `json:"queue,omitempty"`
+	QueueID                string           `json:"queueId,omitempty"`
+	GroupID                string           `json:"groupId,omitempty"`
+	QueueName              string           `json:"queueName,omitempty"`
+	ConsultParticipantID   string           `json:"consultParticipantId,omitempty"`
+	MonitoredParticipantID string           `json:"monitoredParticipantId,omitempty"`
+	Script                 *DomainEntityRef `json:"script,omitempty"`
 
-	Address string `json:"address"`
-	ANI     string `json:"ani"`
-	ANIName string `json:"aniName"`
-	DNIS    string `json:"dnis"`
-	Locale  string `json:"locale"`
+	Address string  `json:"address,omitempty"`
+	ANI     string  `json:"ani,omitempty"`
+	ANIName string  `json:"aniName,omitempty"`
+	DNIS    string  `json:"dnis,omitempty"`
+	Locale  string  `json:"locale,omitempty"`
+	From    Address `json:"fromAddress,omitempty"`
+	To      Address `json:"toAddress,omitempty"`
 
-	Attributes        map[string]string       `json:"attributes"`
-	Calls             []*ConversationCall     `json:"calls"`
-	Callbacks         []*ConversationCallback `json:"callbacks"`
-	Chats             []*ConversationChat     `json:"chats"`
-	CobrowseSessions  []*CobrowseSession      `json:"cobrowseSession"`
-	Emails            []*ConversationEmail    `json:"emails"`
-	Messages          []*ConversationMessage  `json:"messages"`
-	ScreenShares      []*ScreenShare          `json:"screenShares"`
-	SocialExpressions []*SocialExpression     `json:"socialExpressions"`
-	Videos            []*ConversationVideo    `json:"videos"`
-	Evaluations       []*Evaluation           `json:"evaluations"`
+	Attributes        map[string]string       `json:"attributes,omitempty"`
+	Calls             []*ConversationCall     `json:"calls,omitempty"`
+	Callbacks         []*ConversationCallback `json:"callbacks,omitempty"`
+	Chats             []*ConversationChat     `json:"chats,omitempty"`
+	CobrowseSessions  []*CobrowseSession      `json:"cobrowseSession,omitempty"`
+	Emails            []*ConversationEmail    `json:"emails,omitempty"`
+	Messages          []*ConversationMessage  `json:"messages,omitempty"`
+	ScreenShares      []*ScreenShare          `json:"screenShares,omitempty"`
+	SocialExpressions []*SocialExpression     `json:"socialExpressions,omitempty"`
+	Videos            []*ConversationVideo    `json:"videos,omitempty"`
+	Evaluations       []*Evaluation           `json:"evaluations,omitempty"`
 
 	WrapupRequired bool          `json:"wrapupRequired"`
-	WrapupPrompt   string        `json:"wrapupPrompt"`
+	WrapupPrompt   string        `json:"wrapupPrompt,omitempty"`
 	WrapupTimeout  time.Duration `json:"-"`
-	WrapupSkipped  bool          `json:"wrapupSkipped"`
-	Wrapup         *Wrapup       `json:"wrapup"`
+	WrapupSkipped  bool          `json:"wrapupSkipped,omitempty"`
+	Wrapup         *Wrapup       `json:"wrapup,omitempty"`
 
 	AlertingTimeout      time.Duration           `json:"-"`
-	ScreenRecordingState string                  `json:"screenRecordingState"`
-	FlaggedReason        string                  `json:"flaggedReason"`
-	Peer                 string                  `json:"peer"`
-	RoutingData          ConversationRoutingData `json:"conversationRoutingData"`
-	JourneyContext       *JourneyContext         `json:"journeyContext"`
-	ErrorInfo            *ErrorBody              `json:"errorInfo"`
+	ScreenRecordingState string                  `json:"screenRecordingState,omitempty"`
+	FlaggedReason        string                  `json:"flaggedReason,omitempty"`
+	Peer                 string                  `json:"peer,omitempty"`
+	RoutingData          ConversationRoutingData `json:"conversationRoutingData,omitempty"`
+	JourneyContext       *JourneyContext         `json:"journeyContext,omitempty"`
+	ErrorInfo            *ErrorBody              `json:"errorInfo,omitempty"`
 }
 
 // IsMember tells if the Participant is a memmber of the Conversation (Identifiable)
