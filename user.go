@@ -17,13 +17,13 @@ type User struct {
 	Name                string                   `json:"name"`
 	UserName            string                   `json:"username"`
 	Department          string                   `json:"department,omitempty"`
-	Title               string                   `json:"title"`
-	Division            *Division                `json:"division"`
-	Mail                string                   `json:"email"`
-	Images              []*UserImage             `json:"images"`
-	PrimaryContact      []*Contact               `json:"primaryContactInfo"`
-	Addresses           []*Contact               `json:"addresses"`
-	State               string                   `json:"state"`
+	Title               string                   `json:"title,omitempty"`
+	Division            *Division                `json:"division,omitempty"`
+	Mail                string                   `json:"email,omitempty"`
+	Images              []*UserImage             `json:"images,omitempty"`
+	PrimaryContact      []*Contact               `json:"primaryContactInfo,omitempty"`
+	Addresses           []*Contact               `json:"addresses,omitempty"`
+	State               string                   `json:"state,omitempty"`
 	Presence            *UserPresence            `json:"presence,omitempty"`
 	OutOfOffice         *OutOfOffice             `json:"outOfOffice,omitempty"`
 	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`

@@ -6,9 +6,11 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/google/uuid"
 )
 
 type OpenMessageChannel struct {
+	ID        uuid.UUID                   `json:"id"`
 	Platform  string                      `json:"platform"` // Open
 	Type      string                      `json:"type"` // Private, Public
 	MessageID string                      `json:"messageId"`
