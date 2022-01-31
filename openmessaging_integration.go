@@ -94,7 +94,7 @@ func (integration *OpenMessagingIntegration) Fetch(ctx context.Context, client *
 		nameLowercase := strings.ToLower(name)
 		for _, item := range response.Integrations {
 			if strings.Compare(strings.ToLower(item.Name), nameLowercase) == 0 {
-				integration = item
+				*integration = *item
 				break
 			}
 		}
