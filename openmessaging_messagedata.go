@@ -10,29 +10,25 @@ import (
 )
 
 type OpenMessageData struct {
-	ID                string      `json:"id,omitempty"` // Can be anything
-	Name              string      `json:"name,omitempty"`
-	ProviderMessageID string      `json:"providerMessageId,omitempty"`
-	Timestamp         time.Time   `json:"-"`
-	From              string      `json:"fromAddress,omitempty"`
-	To                string      `json:"toAddress,omitempty"`
-	Direction         string      `json:"direction"`   // inbound or outbound
-	MessengerType     string      `json:"messengerType"` // sms, facebook, twitter, etc
-	Text              string      `json:"textBody"`
-	NormalizedMessage OpenMessage `json:"-"`
-	Status            string      `json:"status"` // sent, received, delivered, undelivered, etc
-	CreatedBy         *User       `json:"createdBy"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
-	Conversation			*Conversation `json:"-"`
-	SelfURI           URI         `json:"selfUri"`
+	ID                string       `json:"id,omitempty"` // Can be anything
+	Name              string       `json:"name,omitempty"`
+	ProviderMessageID string       `json:"providerMessageId,omitempty"`
+	Timestamp         time.Time    `json:"-"`
+	From              string       `json:"fromAddress,omitempty"`
+	To                string       `json:"toAddress,omitempty"`
+	Direction         string       `json:"direction"`   // inbound or outbound
+	MessengerType     string       `json:"messengerType"` // sms, facebook, twitter, etc
+	Text              string       `json:"textBody"`
+	NormalizedMessage OpenMessage  `json:"-"`
+	Status            string       `json:"status"` // sent, received, delivered, undelivered, etc
+	CreatedBy         *User        `json:"createdBy"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
+	Conversation			Conversation `json:"-"`
+	SelfURI           URI          `json:"selfUri"`
 }
 
 // MarshalJSON marshals this into JSON
 func (messageData OpenMessageData) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessageData
-	conversationID := uuid.Nil
-	if messageData.Conversation != nil {
-		conversationID = messageData.Conversation.ID
-	}
 	data, err := json.Marshal(struct {
 		surrogate
 		Timestamp         core.Time   `json:"timestamp"`
@@ -42,7 +38,7 @@ func (messageData OpenMessageData) MarshalJSON() ([]byte, error) {
 		surrogate:         surrogate(messageData),
 		Timestamp:         core.Time(messageData.Timestamp),
 		NormalizedMessage: messageData.NormalizedMessage,
-		ConversationID:    conversationID,
+		ConversationID:    messageData.Conversation.ID,
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
 }
@@ -62,7 +58,7 @@ func (messageData *OpenMessageData) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*messageData = OpenMessageData(inner.surrogate)
 	messageData.Timestamp = inner.Timestamp.AsTime()
-	messageData.Conversation = &Conversation{ID: inner.ConversationID, SelfURI: NewURI("/conversations/%s", inner.ConversationID)}
+	messageData.Conversation = Conversation{ID: inner.ConversationID, SelfURI: NewURI("/conversations/%s", inner.ConversationID)}
 	messageData.NormalizedMessage, err = UnmarshalOpenMessage(inner.NormalizedMessage)
 	return
 }
