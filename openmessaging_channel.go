@@ -10,7 +10,7 @@ import (
 )
 
 type OpenMessageChannel struct {
-	ID        uuid.UUID                   `json:"id"`
+	ID        uuid.UUID                   `json:"id,omitempty"`
 	Platform  string                      `json:"platform"` // Open
 	Type      string                      `json:"type"` // Private, Public
 	MessageID string                      `json:"messageId"`
@@ -49,10 +49,16 @@ func (channel OpenMessageChannel) Redact() interface{} {
 // MarshalJSON marshals this into JSON
 func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessageChannel
+	var id string
+	if channel.ID != uuid.Nil {
+		id = channel.ID.String()
+	}
 	data, err := json.Marshal(struct{
+		ID        string `json:"id,omitempty"`
 		surrogate
 		Time core.Time `json:"time"`
 	}{
+		ID:        id,
 		surrogate: surrogate(channel),
 		Time:      (core.Time)(channel.Time),
 	})
@@ -63,6 +69,7 @@ func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 func (channel *OpenMessageChannel) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageChannel
 	var inner struct {
+		ID        string `json:"id"`
 		surrogate
 		Time core.Time `json:"time"`
 	}
@@ -71,5 +78,6 @@ func (channel *OpenMessageChannel) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*channel = OpenMessageChannel(inner.surrogate)
 	channel.Time = inner.Time.AsTime()
+	channel.ID, err = uuid.Parse(inner.ID)
 	return
 }
