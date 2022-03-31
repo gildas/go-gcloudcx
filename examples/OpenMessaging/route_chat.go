@@ -65,7 +65,7 @@ func chatSocketHandler(w http.ResponseWriter, r *http.Request) {
 	value, found := params["chatid"]
 	if !found {
 		log.Errorf("Request parameter chatid is missing")
-		core.RespondWithError(w, http.StatusBadRequest, errors.Errorf("Missing Chat Id"))
+		core.RespondWithError(w, http.StatusBadRequest, errors.ArgumentMissing.With("chatid"))
 		return
 	}
 	chatid, err := uuid.Parse(value)
