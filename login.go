@@ -73,7 +73,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			grant, ok := client.Grant.(*AuthorizationCodeGrant)
 			if !ok {
 				log.Errorf("Client's Grant is not an Authorization Code Grant, we cannot continue")
-				core.RespondWithError(w, http.StatusUnauthorized, errors.New("Invalid GCloud OAUTH Grant"))
+				core.RespondWithError(w, http.StatusUnauthorized, errors.ArgumentInvalid.With("grant", "Authorization Code Grant"))
 				return
 			}
 

@@ -81,7 +81,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 		}
 	}
 	if config.BotQueue == nil {
-		return errors.New("Bot Queue is nil")
+		return errors.ArgumentMissing.With("Bot Queue")
 	}
 	if len(config.BotQueue.ID) == 0 {
 		queueName := config.BotQueue.Name

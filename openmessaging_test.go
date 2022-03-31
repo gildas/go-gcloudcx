@@ -36,14 +36,12 @@ func TestOpenMessagingSuite(t *testing.T) {
 func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
 	integrations, err := suite.Client.FetchOpenMessagingIntegrations(context.Background())
 	suite.Require().Nil(err, "Failed to fetch OpenMessaging Integrations")
-	suite.T().Logf("Found %d integrations", len(integrations))
 	if len(integrations) > 0 {
 		for _, integration := range integrations {
 			suite.Logger.Record("integration", integration).Infof("Got a integration")
 			suite.Assert().NotEmpty(integration.ID)
 			suite.Assert().NotEmpty(integration.Name)
 			suite.Assert().NotNil(integration.WebhookURL, "WebhookURL should not be nil (%s)", integration.Name)
-			suite.T().Logf("  Integration: %s (%s)", integration.Name, integration.ID)
 		}
 	}
 }
