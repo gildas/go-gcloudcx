@@ -78,6 +78,8 @@ func (channel *OpenMessageChannel) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*channel = OpenMessageChannel(inner.surrogate)
 	channel.Time = inner.Time.AsTime()
-	channel.ID, err = uuid.Parse(inner.ID)
+	if len(inner.ID) > 0 {
+		channel.ID, err = uuid.Parse(inner.ID)
+	}
 	return
 }
