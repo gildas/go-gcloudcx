@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"

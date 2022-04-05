@@ -9,13 +9,13 @@ import (
 )
 
 type OpenMessageAttachment struct {
-	ID        string   `json:"id"`
-	Type      string   `json:"mediaType"`
-	URL       *url.URL `json:"-"`
-	Mime      string   `json:"mime,omitempty"`
-	Filename  string   `json:"filename,omitempty"`
-	Text      string   `json:"text,omitempty"`
-	Hash      string   `json:"sha256,omitempty"`
+	ID       string   `json:"id"`
+	Type     string   `json:"mediaType"`
+	URL      *url.URL `json:"-"`
+	Mime     string   `json:"mime,omitempty"`
+	Filename string   `json:"filename,omitempty"`
+	Text     string   `json:"text,omitempty"`
+	Hash     string   `json:"sha256,omitempty"`
 }
 
 // MarshalJSON marshals this into JSON

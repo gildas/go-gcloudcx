@@ -240,7 +240,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
 				messageID,
-				&OpenMessageTo{ ID: integration.ID.String() },
+				&OpenMessageTo{ID: integration.ID.String()},
 				from,
 			),
 			Text: text,
@@ -298,7 +298,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
 				messageID,
-				&OpenMessageTo{ ID: integration.ID.String() },
+				&OpenMessageTo{ID: integration.ID.String()},
 				from,
 			),
 			Text: text,
@@ -339,7 +339,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
 				messageID,
-				&OpenMessageTo{ ID: integration.ID.String() },
+				&OpenMessageTo{ID: integration.ID.String()},
 				from,
 			),
 			Status: status,

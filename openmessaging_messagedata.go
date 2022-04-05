@@ -16,13 +16,13 @@ type OpenMessageData struct {
 	Timestamp         time.Time    `json:"-"`
 	From              string       `json:"fromAddress,omitempty"`
 	To                string       `json:"toAddress,omitempty"`
-	Direction         string       `json:"direction"`   // inbound or outbound
+	Direction         string       `json:"direction"`     // inbound or outbound
 	MessengerType     string       `json:"messengerType"` // sms, facebook, twitter, etc
 	Text              string       `json:"textBody"`
 	NormalizedMessage OpenMessage  `json:"-"`
-	Status            string       `json:"status"` // sent, received, delivered, undelivered, etc
+	Status            string       `json:"status"`    // sent, received, delivered, undelivered, etc
 	CreatedBy         *User        `json:"createdBy"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
-	Conversation			Conversation `json:"-"`
+	Conversation      Conversation `json:"-"`
 	SelfURI           URI          `json:"selfUri"`
 }
 

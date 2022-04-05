@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-
 type URISuite struct {
 	suite.Suite
 	Name string

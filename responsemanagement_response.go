@@ -33,9 +33,9 @@ type ResponseManagementContent struct {
 }
 
 type ResponseManagementQuery struct {
-	Query   string                          `json:"queryPhrase,omitempty"`
-	PageSize int                            `json:"pageSize,omitempty"`
-	Filters []ResponseManagementQueryFilter `json:"filters,omitempty"`
+	Query    string                          `json:"queryPhrase,omitempty"`
+	PageSize int                             `json:"pageSize,omitempty"`
+	Filters  []ResponseManagementQueryFilter `json:"filters,omitempty"`
 }
 
 type ResponseManagementQueryFilter struct {
@@ -68,7 +68,7 @@ func (response *ResponseManagementResponse) Fetch(ctx context.Context, client *C
 	if len(name) > 0 {
 		nameLowercase := strings.ToLower(name)
 		results := struct {
-			Results   struct {
+			Results struct {
 				Responses []ResponseManagementResponse `json:"entities"`
 				paginatedEntities
 			} `json:"results"`

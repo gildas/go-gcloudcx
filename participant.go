@@ -12,21 +12,21 @@ import (
 
 // Participant describes a Chat Participant
 type Participant struct {
-	ID              uuid.UUID  `json:"id"`
-	SelfURI         URI        `json:"selfUri"`
-	Type            string     `json:"type"`
-	Provider        string     `json:"provider"`
-	Name            string     `json:"name"`
-	ParticipantType string     `json:"participantType,omitempty"`
-	State           string     `json:"state,omitempty"`
-	Held            bool       `json:"held,omitempty"`
-	Direction       string     `json:"direction,omitempty"`
-	StartTime       time.Time  `json:"startTime,omitempty"`
-	ConnectedTime   time.Time  `json:"connectedTime,omitempty"`
-	EndTime         time.Time  `json:"endTime,omitempty"`
-	StartHoldTime   time.Time  `json:"startHoldTime,omitempty"`
-	Purpose         string     `json:"purpose"`
-	DisconnectType  string     `json:"disconnectType,omitempty"`
+	ID              uuid.UUID `json:"id"`
+	SelfURI         URI       `json:"selfUri"`
+	Type            string    `json:"type"`
+	Provider        string    `json:"provider"`
+	Name            string    `json:"name"`
+	ParticipantType string    `json:"participantType,omitempty"`
+	State           string    `json:"state,omitempty"`
+	Held            bool      `json:"held,omitempty"`
+	Direction       string    `json:"direction,omitempty"`
+	StartTime       time.Time `json:"startTime,omitempty"`
+	ConnectedTime   time.Time `json:"connectedTime,omitempty"`
+	EndTime         time.Time `json:"endTime,omitempty"`
+	StartHoldTime   time.Time `json:"startHoldTime,omitempty"`
+	Purpose         string    `json:"purpose"`
+	DisconnectType  string    `json:"disconnectType,omitempty"`
 
 	User                   *User            `json:"user,omitempty"`
 	ExternalContact        *DomainEntityRef `json:"externalContact,omitempty"`
