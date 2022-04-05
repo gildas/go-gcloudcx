@@ -172,7 +172,7 @@ func (client *Client) CheckPermissions(context context.Context, permissions ...s
 		return []string{}, permissions
 	}
 	permitted = []string{}
-	missing   = []string{}
+	missing = []string{}
 	for _, desired := range permissions {
 		elements := strings.Split(desired, ":")
 		if len(elements) < 3 {

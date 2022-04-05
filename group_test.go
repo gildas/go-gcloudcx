@@ -18,7 +18,7 @@ import (
 
 type GroupSuite struct {
 	suite.Suite
-	Name string
+	Name   string
 	Logger *logger.Logger
 	Start  time.Time
 

@@ -10,8 +10,8 @@ import (
 // Authorizer describes what a grants should do
 type Authorizer interface {
 	Authorize(context context.Context, client *Client) error // Authorize a client with Gcloud
-	AccessToken() *AccessToken      // Get the Access Token obtained by the Authorizer
-	core.Identifiable               // Implements core.Identifiable
+	AccessToken() *AccessToken                               // Get the Access Token obtained by the Authorizer
+	core.Identifiable                                        // Implements core.Identifiable
 }
 
 // AuthorizationSubject describes the roles and permissions of a Subject
@@ -24,10 +24,10 @@ type AuthorizationSubject struct {
 }
 
 type AuthorizationGrant struct {
-	SubjectID      uuid.UUID              `json:"subjectId"`
-	Division       AuthorizationDivision  `json:"division"`
-	Role           AuthorizationGrantRole `json:"role"`
-	CreatedAt      string                 `json:"grantMadeAt"` // TODO: this is an ISO8601 date
+	SubjectID uuid.UUID              `json:"subjectId"`
+	Division  AuthorizationDivision  `json:"division"`
+	Role      AuthorizationGrantRole `json:"role"`
+	CreatedAt string                 `json:"grantMadeAt"` // TODO: this is an ISO8601 date
 }
 
 type AuthorizationDivision struct {

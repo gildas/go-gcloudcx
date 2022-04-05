@@ -78,7 +78,7 @@ func (topic *UserActivityTopic) UnmarshalJSON(payload []byte) (err error) {
 	}
 	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".activity"))
 	if err != nil {
-		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id",inner.TopicName))
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
 	}
 	topic.Name = inner.TopicName
 	topic.User = &User{ID: userID}

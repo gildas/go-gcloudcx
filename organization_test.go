@@ -81,7 +81,7 @@ func (suite *OrganizationSuite) SetupSuite() {
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	region := core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com")
-	
+
 	value = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
 	suite.Require().NotEmpty(value, "PURECLOUD_CLIENTID is not set")
 

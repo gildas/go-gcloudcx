@@ -10,9 +10,9 @@ import (
 //
 // See: https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
 type OpenMessageText struct {
-	ID               string                `json:"id,omitempty"` // Can be anything
-	Channel          *OpenMessageChannel   `json:"channel"`
-	Direction         string                `json:"direction"`   // inbound or outbound
+	ID                string                `json:"id,omitempty"` // Can be anything
+	Channel           *OpenMessageChannel   `json:"channel"`
+	Direction         string                `json:"direction"` // inbound or outbound
 	Text              string                `json:"text"`
 	Content           []*OpenMessageContent `json:"content,omitempty"`
 	OriginatingEntity string                `json:"originatingEntity,omitempty"` // Bot or Human

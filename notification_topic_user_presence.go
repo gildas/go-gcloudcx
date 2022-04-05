@@ -60,7 +60,7 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	}
 	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence"))
 	if err != nil {
-		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id",inner.TopicName))
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
 	}
 	topic.Name = inner.TopicName
 	topic.Presence = inner.Presence

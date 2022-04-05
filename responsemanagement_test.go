@@ -35,7 +35,7 @@ func TestResponseManagementSuite(t *testing.T) {
 	suite.Run(t, new(ResponseManagementSuite))
 }
 
-func (suite *ResponseManagementSuite) TestCanFetchLibraryByID(){
+func (suite *ResponseManagementSuite) TestCanFetchLibraryByID() {
 	library := gcloudcx.ResponseManagementLibrary{}
 	err := suite.Client.Fetch(context.Background(), &library, suite.LibraryID)
 	if err != nil {
@@ -47,7 +47,7 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByID(){
 	suite.Logger.Record("library", library).Infof("Library Details")
 }
 
-func (suite *ResponseManagementSuite) TestCanFetchLibraryByName(){
+func (suite *ResponseManagementSuite) TestCanFetchLibraryByName() {
 	library := gcloudcx.ResponseManagementLibrary{}
 	err := suite.Client.Fetch(context.Background(), &library, suite.LibraryName)
 	if err != nil {
@@ -59,7 +59,7 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByName(){
 	suite.Logger.Record("library", library).Infof("Library Details")
 }
 
-func (suite *ResponseManagementSuite) TestCanFetchResponseByID(){
+func (suite *ResponseManagementSuite) TestCanFetchResponseByID() {
 	response := gcloudcx.ResponseManagementResponse{}
 	err := suite.Client.Fetch(context.Background(), &response, suite.ResponseID)
 	if err != nil {
@@ -71,7 +71,7 @@ func (suite *ResponseManagementSuite) TestCanFetchResponseByID(){
 	suite.Logger.Record("response", response).Infof("Response Details")
 }
 
-func (suite *ResponseManagementSuite) TestCanFetchResponseByName(){
+func (suite *ResponseManagementSuite) TestCanFetchResponseByName() {
 	response := gcloudcx.ResponseManagementResponse{}
 	err := suite.Client.Fetch(context.Background(), &response, suite.ResponseName)
 	if err != nil {
@@ -117,7 +117,7 @@ func (suite *ResponseManagementSuite) SetupSuite() {
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	region := core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com")
-	
+
 	value = core.GetEnvAsString("PURECLOUD_CLIENTID", "")
 	suite.Require().NotEmpty(value, "PURECLOUD_CLIENTID is not set")
 

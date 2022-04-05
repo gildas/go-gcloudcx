@@ -266,7 +266,7 @@ func (conversation *ConversationGuestChat) GetMember(context context.Context, id
 }
 
 // SendTyping sends a typing indicator to Gcloud as the chat guest
-func (conversation *ConversationGuestChat) SendTyping(context context.Context, ) (err error) {
+func (conversation *ConversationGuestChat) SendTyping(context context.Context) (err error) {
 	response := &struct {
 		ID           string       `json:"id,omitempty"`
 		Name         string       `json:"name,omitempty"`

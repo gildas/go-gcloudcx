@@ -10,7 +10,7 @@ import (
 //
 // See: https://developer.genesys.cloud/api/digital/openmessaging/receipts
 type OpenMessageReceipt struct {
-	ID           string              `json:"id,omitempty"`      // Can be anything, message ID this receipt relates to
+	ID           string              `json:"id,omitempty"` // Can be anything, message ID this receipt relates to
 	Channel      *OpenMessageChannel `json:"channel"`
 	Direction    string              `json:"direction"`         // Can be "Inbound" or "Outbound"
 	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Failed"

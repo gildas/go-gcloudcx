@@ -60,7 +60,7 @@ func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *
 		context,
 		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
-			Method: http.MethodPost,
+			Method:        http.MethodPost,
 			Authorization: request.BasicAuthorization(grant.ClientID.String(), grant.Secret),
 			Payload: map[string]string{
 				"grant_type":   "authorization_code",

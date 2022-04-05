@@ -142,7 +142,6 @@ func (suite *ClientSuite) TestShouldNotSendRequestWithNoAPI() {
 	suite.Assert().Equal("Client API", details.What)
 }
 
-
 // Tool Stuff
 
 func CreateTestServer(expectedMethod, expectedURL string, t *testing.T) *httptest.Server {

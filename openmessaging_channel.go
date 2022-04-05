@@ -12,7 +12,7 @@ import (
 type OpenMessageChannel struct {
 	ID        uuid.UUID                   `json:"id,omitempty"`
 	Platform  string                      `json:"platform"` // Open
-	Type      string                      `json:"type"` // Private, Public
+	Type      string                      `json:"type"`     // Private, Public
 	MessageID string                      `json:"messageId"`
 	Time      time.Time                   `json:"-"`
 	To        *OpenMessageTo              `json:"to"`
@@ -35,6 +35,19 @@ func NewOpenMessageChannel(messageID string, to *OpenMessageTo, from *OpenMessag
 	}
 }
 
+func (channel OpenMessageChannel) WithAttributes(attributes map[string]string) *OpenMessageChannel {
+	if channel.Metadata == nil {
+		channel.Metadata = &OpenMessageChannelMetadata{Attributes: map[string]string{}}
+	}
+	if channel.Metadata.Attributes == nil {
+		channel.Metadata.Attributes = map[string]string{}
+	}
+	for key, value := range attributes {
+		channel.Metadata.Attributes[key] = value
+	}
+	return &channel
+}
+
 // Redact redacts sensitive data
 //
 // implements logger.Redactable
@@ -53,8 +66,8 @@ func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 	if channel.ID != uuid.Nil {
 		id = channel.ID.String()
 	}
-	data, err := json.Marshal(struct{
-		ID        string `json:"id,omitempty"`
+	data, err := json.Marshal(struct {
+		ID string `json:"id,omitempty"`
 		surrogate
 		Time core.Time `json:"time"`
 	}{
@@ -69,7 +82,7 @@ func (channel OpenMessageChannel) MarshalJSON() ([]byte, error) {
 func (channel *OpenMessageChannel) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageChannel
 	var inner struct {
-		ID        string `json:"id"`
+		ID string `json:"id"`
 		surrogate
 		Time core.Time `json:"time"`
 	}

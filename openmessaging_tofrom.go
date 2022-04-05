@@ -6,11 +6,11 @@ type OpenMessageTo struct {
 }
 
 type OpenMessageFrom struct {
-	ID        string   `json:"id"`
-	Type      string   `json:"idType"`
-	Firstname string   `json:"firstName"`
-	Lastname  string   `json:"lastName"`
-	Nickname  string   `json:"nickname"`
+	ID        string `json:"id"`
+	Type      string `json:"idType"`
+	Firstname string `json:"firstName"`
+	Lastname  string `json:"lastName"`
+	Nickname  string `json:"nickname"`
 }
 
 // Redact redacts sensitive data
