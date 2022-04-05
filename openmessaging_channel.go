@@ -35,6 +35,19 @@ func NewOpenMessageChannel(messageID string, to *OpenMessageTo, from *OpenMessag
 	}
 }
 
+func (channel OpenMessageChannel) WithAttributes(attributes map[string]string) *OpenMessageChannel {
+	if channel.Metadata == nil {
+		channel.Metadata = &OpenMessageChannelMetadata{Attributes: map[string]string{}}
+	}
+	if channel.Metadata.Attributes == nil {
+		channel.Metadata.Attributes = map[string]string{}
+	}
+	for key, value := range attributes {
+		channel.Metadata.Attributes[key] = value
+	}
+	return &channel
+}
+
 // Redact redacts sensitive data
 //
 // implements logger.Redactable
