@@ -102,8 +102,10 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 		var details *errors.Error
 		if errors.As(err, &details) {
 			apiError := APIError{}
-			if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
-				return errors.Wrap(err, "Failed to extract an error from the response")
+			if res != nil {
+				if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
+					return errors.Wrap(err, "Failed to extract an error from the response")
+				}
 			}
 			apiError.Status = details.Code
 			apiError.Code = details.ID
