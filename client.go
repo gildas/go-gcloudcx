@@ -166,8 +166,13 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 
 // CheckPermissions checks if the current client has the given permissions
 func (client *Client) CheckPermissions(context context.Context, permissions ...string) (permitted []string, missing []string) {
+	return client.CheckPermissionsOfGrant(context, client.Grant, permissions...)
+}
+
+// CheckPermissionsOfGrant checks if the given grant has the given permissions
+func (client *Client) CheckPermissionsOfGrant(context context.Context, grant Authorizable, permissions ...string) (permitted []string, missing []string) {
 	log := client.GetLogger(context).Child(nil, "checkpermissions")
-	subject, err := client.FetchRolesAndPermissions(context)
+	subject, err := client.FetchRolesAndPermissionsOfGrant(context, grant)
 	if err != nil {
 		return []string{}, permissions
 	}
@@ -214,11 +219,11 @@ func (client *Client) CheckPermissions(context context.Context, permissions ...s
 
 // FetchRolesAndPermissions fetches roles and permissions for the current client
 func (client *Client) FetchRolesAndPermissions(context context.Context) (*AuthorizationSubject, error) {
-	return client.FetchRolesAndPermissionsOf(context, client.Grant)
+	return client.FetchRolesAndPermissionsOfGrant(context, client.Grant)
 }
 
 // FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissionsOf(context context.Context, grant Authorizable) (*AuthorizationSubject, error) {
+func (client *Client) FetchRolesAndPermissionsOfGrant(context context.Context, grant Authorizable) (*AuthorizationSubject, error) {
 	log := client.GetLogger(context).Child(nil, "fetch_roles_permissions")
 	subject := AuthorizationSubject{}
 
