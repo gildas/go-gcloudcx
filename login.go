@@ -27,7 +27,7 @@ func (client *Client) Login(context context.Context) error {
 }
 
 // LoginWithAuthorizationGrant logs in a Client to Gcloud with given authorization Grant
-func (client *Client) LoginWithAuthorizationGrant(context context.Context, grant Authorizer) (err error) {
+func (client *Client) LoginWithAuthorizationGrant(context context.Context, grant Authorizable) (err error) {
 	if grant == nil {
 		return errors.ArgumentMissing.With("Authorization Grant")
 	}

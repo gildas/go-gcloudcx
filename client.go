@@ -20,7 +20,7 @@ type Client struct {
 	API            *url.URL       `json:"apiUrl,omitempty"`
 	LoginURL       *url.URL       `json:"loginUrl,omitempty"`
 	Proxy          *url.URL       `json:"proxyUrl,omitempty"`
-	Grant          Authorizer     `json:"-"`
+	Grant          Authorizable     `json:"-"`
 	RequestTimeout time.Duration  `json:"requestTimout"`
 	Logger         *logger.Logger `json:"-"`
 }
@@ -31,7 +31,7 @@ type ClientOptions struct {
 	OrganizationID uuid.UUID
 	DeploymentID   uuid.UUID
 	Proxy          *url.URL
-	Grant          Authorizer
+	Grant          Authorizable
 	RequestTimeout time.Duration
 	Logger         *logger.Logger
 }
@@ -72,7 +72,7 @@ func (client *Client) SetRegion(region string) *Client {
 }
 
 // SetAuthorizationGrant sets the Authorization Grant
-func (client *Client) SetAuthorizationGrant(grant Authorizer) *Client {
+func (client *Client) SetAuthorizationGrant(grant Authorizable) *Client {
 	client.Grant = grant
 	return client
 }
@@ -218,12 +218,12 @@ func (client *Client) FetchRolesAndPermissions(context context.Context) (*Author
 }
 
 // FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissionsOf(context context.Context, id core.Identifiable) (*AuthorizationSubject, error) {
+func (client *Client) FetchRolesAndPermissionsOf(context context.Context, grant Authorizable) (*AuthorizationSubject, error) {
 	log := client.GetLogger(context).Child(nil, "fetch_roles_permissions")
 	subject := AuthorizationSubject{}
 
-	log.Debugf("Fetching roles and permissions for %s", id.GetID())
-	if err := client.Get(context, NewURI("/authorization/subjects/%s", id.GetID().String()), &subject); err != nil {
+	log.Debugf("Fetching roles and permissions for %s", grant.GetID())
+	if err := client.Get(context, NewURI("/authorization/subjects/%s", grant.GetID().String()), &subject); err != nil {
 		return nil, err
 	}
 	return &subject, nil

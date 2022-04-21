@@ -31,6 +31,8 @@ func (grant *AuthorizationCodeGrant) GetID() uuid.UUID {
 }
 
 // Authorize this Grant with Gcloud
+//
+// Implements Authorizable
 func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *Client) (err error) {
 	log := client.GetLogger(context).Child(nil, "authorize", "grant", "authorization_code")
 
@@ -91,6 +93,8 @@ func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *
 }
 
 // AccessToken gives the access Token carried by this Grant
+//
+// Implements Authorizable
 func (grant *AuthorizationCodeGrant) AccessToken() *AccessToken {
 	return &grant.Token
 }

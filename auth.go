@@ -8,7 +8,7 @@ import (
 )
 
 // Authorizer describes what a grants should do
-type Authorizer interface {
+type Authorizable interface {
 	Authorize(context context.Context, client *Client) error // Authorize a client with Gcloud
 	AccessToken() *AccessToken                               // Get the Access Token obtained by the Authorizer
 	core.Identifiable                                        // Implements core.Identifiable
