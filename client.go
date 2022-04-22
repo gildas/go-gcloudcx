@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -142,6 +143,10 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 			name = parameter
 		case URI:
 			uri = parameter
+		default:
+			if identifiable, ok := parameter.(Identifiable); ok {
+				id = identifiable.GetID()
+			}
 		}
 	}
 	if identifiable, ok := object.(Identifiable); id == uuid.Nil && ok {
@@ -166,18 +171,22 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 // CheckScopes checks if the current client allows/denies the given scopes
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
-func (client *Client) CheckScopes(context context.Context, scopes ...string) (permitted []string, denied []string) {
+func (client *Client) CheckScopes(context context.Context, scopes ...string) (permitted []string, denied []string, err error) {
 	return client.CheckScopesWithID(context, client.Grant, scopes...)
 }
 
 // CheckScopesWithID checks if the given grant allows/denies the given scopes
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
-func (client *Client) CheckScopesWithID(context context.Context, id core.Identifiable, scopes ...string) (permitted []string, denied []string) {
+func (client *Client) CheckScopesWithID(context context.Context, id core.Identifiable, scopes ...string) (permitted []string, denied []string, err error) {
 	var subject AuthorizationSubject
 
-	if err := client.Fetch(context, &subject, id); err != nil {
-		return []string{}, scopes
+	if id.GetID() == uuid.Nil {
+		return nil, nil, errors.ArgumentMissing.With("id")
 	}
-	return subject.CheckScopes(scopes...)
+	if err := client.Fetch(context, &subject, id); err != nil {
+		return []string{}, scopes, err
+	}
+	permitted, denied = subject.CheckScopes(scopes...)
+	return permitted, denied, nil
 }

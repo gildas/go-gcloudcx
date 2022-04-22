@@ -27,3 +27,13 @@ func (role AuthorizationGrantRole) CheckScope(scope AuthorizationScope) bool {
 	}
 	return false
 }
+
+// String returns a string representation of the AuthorizationDivision
+//
+// implements fmt.Stringer
+func (role AuthorizationGrantRole) String() string {
+	if len(role.Name) > 0 {
+		return role.Name
+	}
+	return role.ID.String()
+}
