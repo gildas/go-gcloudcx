@@ -58,9 +58,9 @@ func main() {
 	defer UpdateEnvFile(config)
 
 	log.Infof("Permissions: %d", len(flag.Args()))
-	if permitted, missing := config.Client.CheckPermissions(context.Background(), flag.Args()...); len(missing) == 0 {
+	if permitted, denied := config.Client.CheckScopes(context.Background(), flag.Args()...); len(denied) == 0 {
 		log.Infof("You can do %s", strings.Join(permitted, ", "))
 	} else {
-		log.Errorf("You are missing %s", strings.Join(missing, ", "))
+		log.Errorf("You are missing %s", strings.Join(denied, ", "))
 	}
 }
