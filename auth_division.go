@@ -23,6 +23,16 @@ func (division AuthorizationDivision) GetID() uuid.UUID {
 	return division.ID
 }
 
+// String returns a string representation of the AuthorizationDivision
+//
+// implements fmt.Stringer
+func (division AuthorizationDivision) String() string {
+	if len(division.Name) > 0 {
+		return division.Name
+	}
+	return division.ID.String()
+}
+
 func (division AuthorizationDivision) MarshalJSON() ([]byte, error) {
 	type surrogate AuthorizationDivision
 	inner := struct {

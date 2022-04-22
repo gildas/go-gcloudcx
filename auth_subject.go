@@ -73,5 +73,8 @@ func (subject AuthorizationSubject) CheckScopes(scopes ...string) (permitted []s
 //
 // implements fmt.Stringer
 func (subject AuthorizationSubject) String() string {
-	return subject.Name
+	if len(subject.Name) > 0 {
+		return subject.Name
+	}
+	return subject.ID.String()
 }

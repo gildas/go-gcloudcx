@@ -13,3 +13,7 @@ type AuthorizationGrant struct {
 func (grant AuthorizationGrant) CheckScope(scope AuthorizationScope) bool {
 	return grant.Role.CheckScope(scope)
 }
+
+func (grant AuthorizationGrant) String() string {
+	return grant.Role.String() + "@" + grant.Division.String()
+}
