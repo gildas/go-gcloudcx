@@ -142,6 +142,10 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 			name = parameter
 		case URI:
 			uri = parameter
+		default:
+			if identifiable, ok := parameter.(Identifiable); ok {
+				id = identifiable.GetID()
+			}
 		}
 	}
 	if identifiable, ok := object.(Identifiable); id == uuid.Nil && ok {
