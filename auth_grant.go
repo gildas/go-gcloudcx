@@ -8,3 +8,8 @@ type AuthorizationGrant struct {
 	Role      AuthorizationGrantRole `json:"role"`
 	CreatedAt string                 `json:"grantMadeAt"` // TODO: this is an ISO8601 date
 }
+
+// CheckScope checks if the grant allows or denies the given scope
+func (grant AuthorizationGrant) CheckScope(scope AuthorizationScope) bool {
+	return grant.Role.CheckScope(scope)
+}

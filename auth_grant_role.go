@@ -17,3 +17,13 @@ type AuthorizationGrantRole struct {
 func (role AuthorizationGrantRole) GetID() uuid.UUID {
 	return role.ID
 }
+
+// CheckScope checks if the grant role allows or denies the given scope
+func (role AuthorizationGrantRole) CheckScope(scope AuthorizationScope) bool {
+	for _, policy := range role.Policies {
+		if policy.CheckScope(scope) {
+			return true
+		}
+	}
+	return false
+}

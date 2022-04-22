@@ -1,0 +1,940 @@
+{
+  "id": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+  "grants": [
+    {
+      "subjectId": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+      "division": {
+        "id": "7e70416d-9053-4527-b7e8-42d8974d2ceb",
+        "name": "Home",
+        "description": "Default Division",
+        "homeDivision": true,
+        "selfUri": "/api/v2/authorization/divisions/7e70416d-9053-4527-b7e8-42d8974d2ceb"
+      },
+      "role": {
+        "id": "0d302196-482f-4007-8051-5b296222a8eb",
+        "name": "queueAdmin",
+        "description": "Directory - queueAdmin",
+        "policies": [],
+        "default": false,
+        "selfUri": "/api/v2/authorization/roles/0d302196-482f-4007-8051-5b296222a8eb"
+      }
+    },
+    {
+      "subjectId": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+      "division": {
+        "id": "7e70416d-9053-4527-b7e8-42d8974d2ceb",
+        "name": "Home",
+        "description": "Default Division",
+        "homeDivision": true,
+        "selfUri": "/api/v2/authorization/divisions/7e70416d-9053-4527-b7e8-42d8974d2ceb"
+      },
+      "role": {
+        "id": "c35255ed-a1bd-4053-b36e-c0bbed57964e",
+        "name": "Engage Supervisor",
+        "description": "Engage role for basic viewing and calling functions",
+        "policies": [
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorStatusControl"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorDashboard"
+          },
+          {
+            "actions": [
+              "assign"
+            ],
+            "domain": "routing",
+            "entityName": "skill"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "evaluationAggregate"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "queueObservation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorPerformance"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "routing",
+            "entityName": "wrapupCode"
+          },
+          {
+            "actions": [
+              "view",
+              "edit"
+            ],
+            "domain": "recording",
+            "entityName": "encryptionKey"
+          },
+          {
+            "actions": [
+              "wrapup"
+            ],
+            "domain": "conversation",
+            "entityName": "participant"
+          },
+          {
+            "actions": [
+              "index"
+            ],
+            "domain": "analytics",
+            "entityName": "conversationProperties"
+          },
+          {
+            "actions": [
+              "participate"
+            ],
+            "domain": "recording",
+            "entityName": "screenRecording"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "dashboardConfigurations"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "reporting",
+            "entityName": "acd"
+          },
+          {
+            "actions": [
+              "associate"
+            ],
+            "domain": "externalContacts",
+            "entityName": "conversation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "insightConfigurations"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "userAggregate"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorQueueDetails"
+          },
+          {
+            "actions": [
+              "disconnect",
+              "view",
+              "transfer"
+            ],
+            "domain": "conversation",
+            "entityName": "communication"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "userObservation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorWrapUpPerformance"
+          },
+          {
+            "actions": [
+              "participate"
+            ],
+            "domain": "quality",
+            "entityName": "evaluation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "agentQueueActivity"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "directory",
+            "entityName": "user"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "acdvideo",
+            "entityName": "session"
+          },
+          {
+            "actions": [
+              "view",
+              "search",
+              "edit",
+              "join"
+            ],
+            "domain": "routing",
+            "entityName": "queue"
+          },
+          {
+            "actions": [
+              "accept"
+            ],
+            "domain": "conversation",
+            "entityName": "webchat"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "audits",
+            "entityName": "interactionDetails"
+          },
+          {
+            "actions": [
+              "add",
+              "view",
+              "edit",
+              "delete"
+            ],
+            "domain": "recording",
+            "entityName": "annotation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "conversationDetail"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "recording",
+            "entityName": "recording"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "conversationAggregate"
+          },
+          {
+            "actions": [
+              "manage"
+            ],
+            "domain": "routing",
+            "entityName": "email"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "reporting",
+            "entityName": "interactions"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "tabConfigurations"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorScheduledCallbacks"
+          },
+          {
+            "actions": [
+              "participate"
+            ],
+            "domain": "quality",
+            "entityName": "survey"
+          },
+          {
+            "actions": [
+              "add",
+              "view",
+              "edit",
+              "delete"
+            ],
+            "domain": "alerting",
+            "entityName": "rule"
+          },
+          {
+            "actions": [
+              "view",
+              "manage"
+            ],
+            "domain": "routing",
+            "entityName": "utilization"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "flowAggregate"
+          },
+          {
+            "actions": [
+              "add",
+              "record",
+              "monitor",
+              "accept"
+            ],
+            "domain": "conversation",
+            "entityName": "call"
+          },
+          {
+            "actions": [
+              "add"
+            ],
+            "domain": "conversation",
+            "entityName": "conference"
+          },
+          {
+            "actions": [
+              "add",
+              "view",
+              "edit",
+              "delete"
+            ],
+            "domain": "alerting",
+            "entityName": "alert"
+          },
+          {
+            "actions": [
+              "assign"
+            ],
+            "domain": "routing",
+            "entityName": "language"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "reporting",
+            "entityName": "quality"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "userDetail"
+          },
+          {
+            "actions": [
+              "onqueue"
+            ],
+            "domain": "routing",
+            "entityName": "agent"
+          },
+          {
+            "actions": [
+              "monitor",
+              "replay"
+            ],
+            "domain": "cobrowse",
+            "entityName": "session"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "viewConfigurations"
+          },
+          {
+            "actions": [
+              "view",
+              "delete"
+            ],
+            "domain": "voicemail",
+            "entityName": "acdVoicemail"
+          },
+          {
+            "actions": [
+              "view",
+              "accept"
+            ],
+            "domain": "conversation",
+            "entityName": "message"
+          },
+          {
+            "actions": [
+              "accept"
+            ],
+            "domain": "conversation",
+            "entityName": "email"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorAgentDetails"
+          },
+          {
+            "actions": [
+              "accept"
+            ],
+            "domain": "conversation",
+            "entityName": "callback"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "mobile",
+            "entityName": "supervisor"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "ui",
+            "entityName": "supervisorDnisPerformance"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "reporting",
+            "entityName": "outbound"
+          },
+          {
+            "actions": [
+              "add",
+              "view",
+              "edit",
+              "delete"
+            ],
+            "domain": "analytics",
+            "entityName": "dataExport"
+          }
+        ],
+        "default": true,
+        "selfUri": "/api/v2/authorization/roles/c35255ed-a1bd-4053-b36e-c0bbed57964e"
+      }
+    },
+    {
+      "subjectId": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+      "division": {
+        "id": "7e70416d-9053-4527-b7e8-42d8974d2ceb",
+        "name": "Home",
+        "description": "Default Division",
+        "homeDivision": true,
+        "selfUri": "/api/v2/authorization/divisions/7e70416d-9053-4527-b7e8-42d8974d2ceb"
+      },
+      "role": {
+        "id": "83826f22-af16-4af8-86bd-0245cad8c994",
+        "name": "Master Admin",
+        "description": "Engage Administrator",
+        "policies": [
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "quality",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "architect",
+            "entityName": "datatable"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "journey",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "conversation",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "scripter",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "routing",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "email"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "authorization",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "learning",
+            "entityName": "rule"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "outbound",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "speechAndTextAnalytics",
+            "entityName": "settings"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "message"
+          },
+          {
+            "actions": [
+              "associate"
+            ],
+            "domain": "externalContacts",
+            "entityName": "conversation"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "surveyAggregate"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "speechAndTextAnalyticsAggregates"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "coaching",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "speechAndTextAnalytics",
+            "entityName": "feedback"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "architect",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "oauth",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "dashboardConfigurations"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "gamification",
+            "entityName": "leaderboard"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "architect",
+            "entityName": "flowOutcome"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "sms"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "learning",
+            "entityName": "module"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "recording",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "routing",
+            "entityName": "scheduleGroup"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "routing",
+            "entityName": "message"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "speechAndTextAnalytics",
+            "entityName": "program"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "whatsappIntegration"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "bridge",
+            "entityName": "actions"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "dataExport"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "documents",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "responses",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "viewConfigurations"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "insightConfigurations"
+          },
+          {
+            "actions": [
+              "view",
+              "delete"
+            ],
+            "domain": "voicemail",
+            "entityName": "acdVoicemail"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "sms",
+            "entityName": "phoneNumber"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "analytics",
+            "entityName": "tabConfigurations"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "speechAndTextAnalytics",
+            "entityName": "topic"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "facebookIntegration"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "conversationDetail"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "journeyAggregate"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "conversationAggregate"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "integration"
+          },
+          {
+            "actions": [
+              "add",
+              "view",
+              "edit",
+              "delete"
+            ],
+            "domain": "sso",
+            "entityName": "provider"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "ui",
+            "entityName": "networkPerformanceIndicators"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "audits",
+            "entityName": "interactionDetails"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "lineIntegration"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "botAggregate"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "flowAggregate"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "whatsAppIntegration"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "learning",
+            "entityName": "assignment"
+          },
+          {
+            "actions": [
+              "view"
+            ],
+            "domain": "analytics",
+            "entityName": "evaluationAggregate"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "wfm",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "reporting",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "integrations",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "routing",
+            "entityName": "schedule"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "messaging",
+            "entityName": "twitterIntegration"
+          },
+          {
+            "actions": [
+              "view",
+              "viewAll"
+            ],
+            "domain": "gamification",
+            "entityName": "scorecard"
+          },
+          {
+            "actions": [
+              "*"
+            ],
+            "domain": "gdpr",
+            "entityName": "*"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "routing",
+            "entityName": "emergencyGroup"
+          },
+          {
+            "actions": [
+              "search"
+            ],
+            "domain": "routing",
+            "entityName": "callRoute"
+          },
+          {
+            "actions": [
+              "download"
+            ],
+            "domain": "recording",
+            "entityName": "screenRecording"
+          },
+          {
+            "actions": [
+              "readonly"
+            ],
+            "domain": "routing",
+            "entityName": "queue"
+          }
+        ],
+        "default": true,
+        "selfUri": "/api/v2/authorization/roles/83826f22-af16-4af8-86bd-0245cad8c994"
+      }
+    }
+  ],
+  "version": 1,
+  "selfUri": "/api/v2/authorization/subjects/3e23b1b3-325f-4fbd-8fe0-e88416850c0e"
+}
