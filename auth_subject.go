@@ -32,20 +32,16 @@ func (subject *AuthorizationSubject) Fetch(context context.Context, client *Clie
 		if err := client.Get(context, NewURI("/authorization/subjects/%s", id), &subject); err != nil {
 			return err
 		}
-		subject.Logger = log
 	} else if len(selfURI) > 0 {
 		if err := client.Get(context, selfURI, &subject); err != nil {
 			return err
 		}
-		subject.Logger = log.Record("id", subject.ID)
 	} else if len(name) > 0 {
 		return errors.NotImplemented.WithStack()
-	} else if _, ok := client.Grant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
-		if err := client.Get(context, "/users/me", &subject); err != nil {
-			return err
-		}
-		subject.Logger = log.Record("id", subject.ID)
+	} else {
+		return errors.CreationFailed.With("AuthorizationSubject")
 	}
+	subject.Logger = log.Child("authorization_subject", "authorization_subject", "id", subject.ID)
 	return nil
 }
 
@@ -53,16 +49,21 @@ func (subject *AuthorizationSubject) Fetch(context context.Context, client *Clie
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
 func (subject AuthorizationSubject) CheckScopes(scopes ...string) (permitted []string, denied []string) {
+	log := subject.Logger.Child(nil, "check_scopes")
+
 	for _, scope := range scopes {
 		authScope := AuthorizationScope{}.With(scope)
 		granted := false
 		for _, grant := range subject.Grants {
+			log.Tracef("Checking against grant %s", grant)
 			if granted = grant.CheckScope(authScope); granted {
+				log.Debugf("Scope %s permitted by Authorization Grant %s", authScope, grant)
 				permitted = append(permitted, scope)
 				break
 			}
 		}
 		if !granted {
+			log.Tracef("Scope %s is denied", authScope)
 			denied = append(denied, scope)
 		}
 	}
