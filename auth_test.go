@@ -96,7 +96,7 @@ func (suite *AuthSuite) AfterTest(suiteName, testName string) {
 
 func (suite *AuthSuite) TestCanCreateAuthScopeFromString() {
 	var scope gcloudcx.AuthorizationScope
-	
+
 	suite.Assert().Equal("domain:entity:action", scope.With("domain", "entity", "action").String())
 	suite.Assert().Equal("domain:entity:action", scope.With("domain:entity", "action").String())
 	suite.Assert().Equal("domain:entity:action", scope.With("domain:entity:action").String())
