@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gildas/go-core"
@@ -20,7 +19,7 @@ type Client struct {
 	API            *url.URL       `json:"apiUrl,omitempty"`
 	LoginURL       *url.URL       `json:"loginUrl,omitempty"`
 	Proxy          *url.URL       `json:"proxyUrl,omitempty"`
-	Grant          Authorizer     `json:"-"`
+	Grant          Authorizable   `json:"-"`
 	RequestTimeout time.Duration  `json:"requestTimout"`
 	Logger         *logger.Logger `json:"-"`
 }
@@ -31,7 +30,7 @@ type ClientOptions struct {
 	OrganizationID uuid.UUID
 	DeploymentID   uuid.UUID
 	Proxy          *url.URL
-	Grant          Authorizer
+	Grant          Authorizable
 	RequestTimeout time.Duration
 	Logger         *logger.Logger
 }
@@ -72,7 +71,7 @@ func (client *Client) SetRegion(region string) *Client {
 }
 
 // SetAuthorizationGrant sets the Authorization Grant
-func (client *Client) SetAuthorizationGrant(grant Authorizer) *Client {
+func (client *Client) SetAuthorizationGrant(grant Authorizable) *Client {
 	client.Grant = grant
 	return client
 }
@@ -164,67 +163,21 @@ func (client *Client) ParseParameters(ctx context.Context, object interface{}, p
 	return id, name, uri, log
 }
 
-// CheckPermissions checks if the current client has the given permissions
-func (client *Client) CheckPermissions(context context.Context, permissions ...string) (permitted []string, missing []string) {
-	log := client.GetLogger(context).Child(nil, "checkpermissions")
-	subject, err := client.FetchRolesAndPermissions(context)
-	if err != nil {
-		return []string{}, permissions
-	}
-	permitted = []string{}
-	missing = []string{}
-	for _, desired := range permissions {
-		elements := strings.Split(desired, ":")
-		if len(elements) < 3 {
-			log.Warnf("This permission is invalid: %s (%d elements)", desired, len(elements))
-			missing = append(missing, desired)
-			break
-		}
-		desiredDomain := elements[0]
-		desiredEntity := elements[1]
-		desiredAction := elements[2]
-		found := false
-		log.Tracef("Checking Domain: %s, Entity: %s, Action: %s", desiredDomain, desiredEntity, desiredAction)
-		for _, grant := range subject.Grants {
-			for _, policy := range grant.Role.Policies {
-				if policy.Domain == desiredDomain && (policy.EntityName == "*" || desiredEntity == policy.EntityName) {
-					for _, action := range policy.Actions {
-						if action == "*" || action == desiredAction {
-							log.Tracef("  OK: %s:%s:%s", policy.Domain, policy.EntityName, action)
-							permitted = append(permitted, desired)
-							found = true
-							break
-						}
-					}
-				}
-				if found {
-					break
-				}
-			}
-			if found {
-				break
-			}
-		}
-		if !found {
-			missing = append(missing, desired)
-		}
-	}
-	return
+// CheckScopes checks if the current client allows/denies the given scopes
+//
+// See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
+func (client *Client) CheckScopes(context context.Context, scopes ...string) (permitted []string, denied []string) {
+	return client.CheckScopesWithID(context, client.Grant, scopes...)
 }
 
-// FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissions(context context.Context) (*AuthorizationSubject, error) {
-	return client.FetchRolesAndPermissionsOf(context, client.Grant)
-}
+// CheckScopesWithID checks if the given grant allows/denies the given scopes
+//
+// See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
+func (client *Client) CheckScopesWithID(context context.Context, id core.Identifiable, scopes ...string) (permitted []string, denied []string) {
+	var subject AuthorizationSubject
 
-// FetchRolesAndPermissions fetches roles and permissions for the current client
-func (client *Client) FetchRolesAndPermissionsOf(context context.Context, id core.Identifiable) (*AuthorizationSubject, error) {
-	log := client.GetLogger(context).Child(nil, "fetch_roles_permissions")
-	subject := AuthorizationSubject{}
-
-	log.Debugf("Fetching roles and permissions for %s", id.GetID())
-	if err := client.Get(context, NewURI("/authorization/subjects/%s", id.GetID().String()), &subject); err != nil {
-		return nil, err
+	if err := client.Fetch(context, &subject, id); err != nil {
+		return []string{}, scopes
 	}
-	return &subject, nil
+	return subject.CheckScopes(scopes...)
 }
