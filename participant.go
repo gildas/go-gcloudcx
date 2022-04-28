@@ -37,6 +37,7 @@ type Participant struct {
 	Queue                  *Queue           `json:"queue,omitempty"`
 	QueueID                string           `json:"queueId,omitempty"`
 	GroupID                string           `json:"groupId,omitempty"`
+	TeamID                 string           `json:"teamId,omitempty"`
 	QueueName              string           `json:"queueName,omitempty"`
 	ConsultParticipantID   string           `json:"consultParticipantId,omitempty"`
 	MonitoredParticipantID string           `json:"monitoredParticipantId,omitempty"`
@@ -167,6 +168,11 @@ func (participant Participant) String() string {
 	return participant.ID.String()
 }
 
+// Disconnect disconnects the Participant from the target
+func (participant *Participant) Disconnect(context context.Context, target Disconnecter) error {
+	return target.Disconnect(context, participant)
+}
+
 // UpdateState updates the state of the Participant in target
 func (participant *Participant) UpdateState(context context.Context, target StateUpdater, state string) error {
 	return target.UpdateState(context, participant, state)
@@ -202,6 +208,8 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate Participant
 	var inner struct {
 		surrogate
+		QueueID           uuid.UUID `json:"queueId"`
+		QueueName         string    `json:"queueName"`
 		UserID            uuid.UUID `json:"userId"`
 		UserURI           URI       `json:"userUri"`
 		AlertingTimeoutMs int64     `json:"alertingTimeoutMs"`
