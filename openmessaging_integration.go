@@ -3,9 +3,7 @@ package gcloudcx
 import (
 	"context"
 	"encoding/json"
-	"mime"
 	"net/url"
-	"path"
 	"strings"
 	"time"
 
@@ -13,7 +11,6 @@ import (
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
-	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
 // OpenMessagingIntegration  describes an GCloud OpenMessaging Integration
@@ -255,39 +252,15 @@ func (integration *OpenMessagingIntegration) SendInboundMessage(context context.
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
 // See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
-func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachmentURL *url.URL, attachmentMimeType, attachmentID string, attributes map[string]string, metadata map[string]string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachment *OpenMessageAttachment, attributes map[string]string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
 	if len(messageID) == 0 {
 		return "", errors.ArgumentMissing.With("messageID")
 	}
-	if attachmentURL == nil {
+	if attachment.URL == nil {
 		return "", errors.ArgumentMissing.With("url")
-	}
-
-	var attachmentType string
-	switch {
-	case len(attachmentMimeType) == 0:
-		attachmentType = "Link"
-	case strings.HasPrefix(attachmentMimeType, "audio"):
-		attachmentType = "Audio"
-	case strings.HasPrefix(attachmentMimeType, "image"):
-		attachmentType = "Image"
-	case strings.HasPrefix(attachmentMimeType, "video"):
-		attachmentType = "Video"
-	default:
-		attachmentType = "File"
-	}
-
-	var attachmentFilename string
-	if attachmentType != "Link" {
-		fileExtension := path.Ext(attachmentURL.Path)
-		if fileExtensions, err := mime.ExtensionsByType(attachmentMimeType); err == nil && len(fileExtensions) > 0 {
-			fileExtension = fileExtensions[0]
-		}
-		fileID, _ := nanoid.New()
-		attachmentFilename = strings.ToLower(attachmentType) + "-" + fileID + fileExtension
 	}
 
 	result := OpenMessageText{}
@@ -304,14 +277,8 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 			Text: text,
 			Content: []*OpenMessageContent{
 				{
-					Type: "Attachment",
-					Attachment: &OpenMessageAttachment{
-						Type:     attachmentType,
-						ID:       attachmentID,
-						Mime:     attachmentMimeType,
-						URL:      attachmentURL,
-						Filename: attachmentFilename,
-					},
+					Type:       "Attachment",
+					Attachment: attachment,
 				},
 			},
 			Metadata: metadata,

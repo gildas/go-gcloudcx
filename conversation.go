@@ -14,6 +14,7 @@ type Conversation struct {
 	ID              uuid.UUID      `json:"id"`
 	SelfURI         URI            `json:"selfUri,omitempty"`
 	Name            string         `json:"name"`
+	ExternalTag     string         `json:"externalTag,omitempty"`
 	StartTime       time.Time      `json:"startTime"`
 	EndTime         time.Time      `json:"endTime"`
 	Address         string         `json:"address"`
@@ -116,6 +117,28 @@ func (conversation Conversation) String() string {
 		return conversation.Name
 	}
 	return conversation.ID.String()
+}
+
+// Disconnect disconnect an Identifiable from this
+//   implements Disconnecter
+func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) error {
+	return conversation.client.Patch(
+		conversation.logger.ToContext(context),
+		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		MediaParticipantRequest{State: "disconnected"},
+		nil,
+	)
+}
+
+// UpdateState update the state of an identifiable in this
+//   implements StateUpdater
+func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) error {
+	return conversation.client.Patch(
+		conversation.logger.ToContext(context),
+		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
+		MediaParticipantRequest{State: state},
+		nil,
+	)
 }
 
 /*
