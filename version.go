@@ -4,7 +4,7 @@ package gcloudcx
 var commit string
 
 // VERSION is the version of this application
-var VERSION = "0.7.13" + commit
+var VERSION = "0.7.14" + commit
 
 // APP is the name of the application
 const APP string = "GCloudCX Client"
