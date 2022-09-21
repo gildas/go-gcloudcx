@@ -25,27 +25,11 @@ func TestClientSuite(t *testing.T) {
 	suite.Run(t, new(ClientSuite))
 }
 
-func (suite *ClientSuite) TestCanInitialize() {
-	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
-		Region: "mypurecloud.com",
-		Logger: suite.Logger,
-	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
-		ClientID: uuid.New(),
-		Secret:   "s3cr3t",
-	})
-	suite.Require().NotNil(client, "gcloudcx Client is nil")
-}
-
-func (suite *ClientSuite) TestCanInitializeWithoutOptions() {
-	client := gcloudcx.NewClient(nil)
-	suite.Require().NotNil(client, "GCloudCX Client is nil")
-}
-
-// Suite Tools
-
+// *****************************************************************************
+// #region: Suite Tools {{{
 func (suite *ClientSuite) SetupSuite() {
 	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
 			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
@@ -75,4 +59,23 @@ func (suite *ClientSuite) BeforeTest(suiteName, testName string) {
 func (suite *ClientSuite) AfterTest(suiteName, testName string) {
 	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
+func (suite *ClientSuite) TestCanInitialize() {
+	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
+		Region: "mypurecloud.com",
+		Logger: suite.Logger,
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+		ClientID: uuid.New(),
+		Secret:   "s3cr3t",
+	})
+	suite.Require().NotNil(client, "gcloudcx Client is nil")
+}
+
+func (suite *ClientSuite) TestCanInitializeWithoutOptions() {
+	client := gcloudcx.NewClient(nil)
+	suite.Require().NotNil(client, "GCloudCX Client is nil")
 }

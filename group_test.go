@@ -29,22 +29,11 @@ func TestGroupSuite(t *testing.T) {
 	suite.Run(t, new(GroupSuite))
 }
 
-func (suite *GroupSuite) TestCanStringify() {
-	id := uuid.New()
-	group := gcloudcx.Group{
-		ID:   id,
-		Name: "Hello",
-	}
-	suite.Assert().Equal("Hello", group.String())
-	group.Name = ""
-	suite.Assert().Equal(id.String(), group.String())
-}
-
-// Suite Tools
-
+// *****************************************************************************
+// #region: Suite Tools {{{
 func (suite *GroupSuite) SetupSuite() {
 	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
 			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
@@ -91,7 +80,7 @@ func (suite *GroupSuite) BeforeTest(suiteName, testName string) {
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
 		err := suite.Client.Login(context.Background())
-		suite.Require().Nil(err, "Failed to login")
+		suite.Require().NoError(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -101,4 +90,18 @@ func (suite *GroupSuite) BeforeTest(suiteName, testName string) {
 func (suite *GroupSuite) AfterTest(suiteName, testName string) {
 	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
+func (suite *GroupSuite) TestCanStringify() {
+	id := uuid.New()
+	group := gcloudcx.Group{
+		ID:   id,
+		Name: "Hello",
+	}
+	suite.Assert().Equal("Hello", group.String())
+	group.Name = ""
+	suite.Assert().Equal(id.String(), group.String())
 }

@@ -26,6 +26,44 @@ func TestFetchSuite(t *testing.T) {
 	suite.Run(t, new(FetchSuite))
 }
 
+// *****************************************************************************
+// #region: Suite Tools {{{
+func (suite *FetchSuite) SetupSuite() {
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
+	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
+}
+
+func (suite *FetchSuite) TearDownSuite() {
+	if suite.T().Failed() {
+		suite.Logger.Warnf("At least one test failed, we are not cleaning")
+		suite.T().Log("At least one test failed, we are not cleaning")
+	} else {
+		suite.Logger.Infof("All tests succeeded, we are cleaning")
+	}
+	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
+}
+
+func (suite *FetchSuite) BeforeTest(suiteName, testName string) {
+	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
+	suite.Start = time.Now()
+}
+
+func (suite *FetchSuite) AfterTest(suiteName, testName string) {
+	duration := time.Since(suite.Start)
+	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
 func (suite *FetchSuite) TestCanFetchObjectByID() {
 	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		DeploymentID: uuid.New(),
@@ -34,7 +72,7 @@ func (suite *FetchSuite) TestCanFetchObjectByID() {
 
 	stuff := Stuff{}
 	err := client.Fetch(context.Background(), &stuff, idFromGCloud)
-	suite.Require().Nil(err, "Failed to fetch stuff")
+	suite.Require().NoError(err, "Failed to fetch stuff")
 }
 
 func (suite *FetchSuite) TestCanFetchObjectByName() {
@@ -45,7 +83,7 @@ func (suite *FetchSuite) TestCanFetchObjectByName() {
 
 	stuff := Stuff{}
 	err := client.Fetch(context.Background(), &stuff, nameFromGCloud)
-	suite.Require().Nil(err, "Failed to fetch stuff")
+	suite.Require().NoError(err, "Failed to fetch stuff")
 }
 
 func (suite *FetchSuite) TestShouldFailFetchingObjectWithUnknownID() {
@@ -56,7 +94,7 @@ func (suite *FetchSuite) TestShouldFailFetchingObjectWithUnknownID() {
 
 	stuff := Stuff{}
 	err := client.Fetch(context.Background(), &stuff, uuid.New())
-	suite.Require().NotNil(err, "Failed to fetch stuff")
+	suite.Require().Error(err, "Failed to fetch stuff")
 	suite.Assert().ErrorIs(err, errors.NotFound)
 	// TODO: Check error has the unknown ID
 }
@@ -69,7 +107,7 @@ func (suite *FetchSuite) TestShouldFailFetchingObjectWithUnknownName() {
 
 	stuff := Stuff{}
 	err := client.Fetch(context.Background(), &stuff, "unknown")
-	suite.Require().NotNil(err, "Failed to fetch stuff")
+	suite.Require().Error(err, "Failed to fetch stuff")
 	suite.Assert().ErrorIs(err, errors.NotFound)
 	// TODO: Check error has the unknown name
 }
@@ -137,39 +175,4 @@ func (stuff *Stuff) Fetch(ctx context.Context, client *gcloudcx.Client, paramete
 		return nil
 	}
 	return errors.NotFound.WithStack()
-}
-
-// Suite Tools
-
-func (suite *FetchSuite) SetupSuite() {
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
-	suite.Logger = logger.Create("test",
-		&logger.FileStream{
-			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
-			Unbuffered:  true,
-			FilterLevel: logger.TRACE,
-		},
-	).Child("test", "test")
-	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
-}
-
-func (suite *FetchSuite) TearDownSuite() {
-	if suite.T().Failed() {
-		suite.Logger.Warnf("At least one test failed, we are not cleaning")
-		suite.T().Log("At least one test failed, we are not cleaning")
-	} else {
-		suite.Logger.Infof("All tests succeeded, we are cleaning")
-	}
-	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
-	suite.Logger.Close()
-}
-
-func (suite *FetchSuite) BeforeTest(suiteName, testName string) {
-	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
-	suite.Start = time.Now()
-}
-
-func (suite *FetchSuite) AfterTest(suiteName, testName string) {
-	duration := time.Since(suite.Start)
-	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }

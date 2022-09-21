@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -33,9 +35,92 @@ func TestOpenMessagingSuite(t *testing.T) {
 	suite.Run(t, new(OpenMessagingSuite))
 }
 
+// *****************************************************************************
+// #region: Suite Tools {{{
+func (suite *OpenMessagingSuite) SetupSuite() {
+	_ = godotenv.Load()
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
+	suite.Logger = logger.Create("test",
+		&logger.FileStream{
+			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:  true,
+			FilterLevel: logger.TRACE,
+		},
+	).Child("test", "test")
+	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
+
+	var (
+		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
+		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
+		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
+		token        = core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", "")
+		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
+	)
+	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
+		Region:       region,
+		DeploymentID: deploymentID,
+		Logger:       suite.Logger,
+	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+		ClientID: clientID,
+		Secret:   secret,
+		Token: gcloudcx.AccessToken{
+			Type:  "bearer",
+			Token: token,
+		},
+	})
+	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
+}
+
+func (suite *OpenMessagingSuite) TearDownSuite() {
+	if suite.T().Failed() {
+		suite.Logger.Warnf("At least one test failed, we are not cleaning")
+		suite.T().Log("At least one test failed, we are not cleaning")
+	} else {
+		suite.Logger.Infof("All tests succeeded, we are cleaning")
+	}
+	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
+	suite.Logger.Close()
+}
+
+func (suite *OpenMessagingSuite) BeforeTest(suiteName, testName string) {
+	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
+
+	suite.Start = time.Now()
+
+	// Reuse tokens as much as we can
+	if !suite.Client.IsAuthorized() {
+		suite.Logger.Infof("Client is not logged in...")
+		err := suite.Client.Login(context.Background())
+		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Client is now logged in...")
+	} else {
+		suite.Logger.Infof("Client is already logged in...")
+	}
+}
+
+func (suite *OpenMessagingSuite) AfterTest(suiteName, testName string) {
+	duration := time.Since(suite.Start)
+	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+func (suite *OpenMessagingSuite) LoadTestData(filename string) []byte {
+	data, err := os.ReadFile(filepath.Join(".", "testdata", filename))
+	suite.Require().NoErrorf(err, "Failed to Load Data. %s", err)
+	return data
+}
+
+func (suite *OpenMessagingSuite) UnmarshalData(filename string, v interface{}) error {
+	data := suite.LoadTestData(filename)
+	suite.Logger.Infof("Loaded %s: %s", filename, string(data))
+	return json.Unmarshal(data, v)
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
 func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
 	integrations, err := suite.Client.FetchOpenMessagingIntegrations(context.Background())
-	suite.Require().Nil(err, "Failed to fetch OpenMessaging Integrations")
+	suite.Require().NoError(err, "Failed to fetch OpenMessaging Integrations")
 	if len(integrations) > 0 {
 		for _, integration := range integrations {
 			suite.Logger.Record("integration", integration).Infof("Got a integration")
@@ -51,7 +136,7 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
 	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken, nil)
-	suite.Require().Nil(err, "Failed to create integration")
+	suite.Require().NoError(err, "Failed to create integration")
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
 		if integration.IsCreated() {
@@ -60,7 +145,7 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
 		time.Sleep(time.Second)
 		err = integration.Refresh(context.Background())
-		suite.Require().Nil(err, "Failed to refresh integration")
+		suite.Require().NoError(err, "Failed to refresh integration")
 	}
 	suite.IntegrationID = integration.ID
 }
@@ -69,23 +154,23 @@ func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
 	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
 	integration := gcloudcx.OpenMessagingIntegration{}
 	err := suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
-	suite.Require().Nilf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
+	suite.Require().NoErrorf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	suite.Require().True(integration.IsCreated(), "Integration should be created")
 	err = integration.Delete(context.Background())
-	suite.Require().Nilf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
+	suite.Require().NoErrorf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
 	err = suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
-	suite.Require().NotNil(err, "Integration should not exist anymore")
+	suite.Require().Error(err, "Integration should not exist anymore")
 	suite.IntegrationID = uuid.Nil
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
 	integration := gcloudcx.OpenMessagingIntegration{}
-	err := LoadObject("openmessagingintegration.json", &integration)
+	err := suite.UnmarshalData("openmessagingintegration.json", &integration)
 	if err != nil {
 		suite.Logger.Errorf("Failed to Unmarshal", err)
 	}
-	suite.Require().Nilf(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	suite.Assert().Equal("34071108-1569-4cb0-9137-a326b8a9e815", integration.ID.String())
 	suite.Assert().NotEmpty(integration.CreatedBy.ID)
@@ -129,9 +214,8 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 	}
 
 	data, err := json.Marshal(integration)
-	suite.Require().Nilf(err, "Failed to marshal OpenMessagingIntegration. %s", err)
-	expected, err := LoadFile("openmessagingintegration.json")
-	suite.Require().Nilf(err, "Failed to Load Data. %s", err)
+	suite.Require().NoErrorf(err, "Failed to marshal OpenMessagingIntegration. %s", err)
+	expected := suite.LoadTestData("openmessagingintegration.json")
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
@@ -140,13 +224,13 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalIntegrationWithInvalidJSO
 
 	integration := gcloudcx.OpenMessagingIntegration{}
 	err = json.Unmarshal([]byte(`{"Name": 15}`), &integration)
-	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
 	channel := gcloudcx.OpenMessageChannel{}
-	err := LoadObject("openmessaging-channel.json", &channel)
-	suite.Require().Nilf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
+	err := suite.UnmarshalData("openmessaging-channel.json", &channel)
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
 	suite.Assert().Equal("Open", channel.Platform)
 	suite.Assert().Equal("Private", channel.Type)
 	suite.Assert().Equal("gmAy9zNkhf4ermFvHH9mB5", channel.MessageID)
@@ -174,10 +258,9 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
 
 	data, err := json.Marshal(channel)
-	suite.Require().Nilf(err, "Failed to marshal OpenMessageChannel. %s", err)
+	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageChannel. %s", err)
 	suite.Require().NotNil(data, "Marshaled data should not be nil")
-	expected, err := LoadFile("openmessaging-channel.json")
-	suite.Require().Nilf(err, "Failed to Load Data. %s", err)
+	expected := suite.LoadTestData("openmessaging-channel.json")
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
@@ -235,7 +318,7 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() 
 
 	channel := gcloudcx.OpenMessageChannel{}
 	err = json.Unmarshal([]byte(`{"Platform": 2}`), &channel)
-	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
@@ -243,12 +326,12 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 
 	from := gcloudcx.OpenMessageFrom{}
 	err = json.Unmarshal([]byte(`{"idType": 3}`), &from)
-	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
 	_, err := gcloudcx.UnmarshalOpenMessage([]byte(`{"Direction": 6}`))
-	suite.Assert().NotNil(err, "Data should not have been unmarshaled successfully")
+	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
 }
 
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
@@ -260,72 +343,4 @@ func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 	suite.Assert().Equal("Hello", integration.String())
 	integration.Name = ""
 	suite.Assert().Equal(id.String(), integration.String())
-}
-
-// Suite Tools
-
-func (suite *OpenMessagingSuite) SetupSuite() {
-	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
-	suite.Logger = logger.Create("test",
-		&logger.FileStream{
-			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
-			Unbuffered:  true,
-			FilterLevel: logger.TRACE,
-		},
-	).Child("test", "test")
-	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
-
-	var (
-		region       = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID     = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
-		secret       = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
-		token        = core.GetEnvAsString("PURECLOUD_CLIENTTOKEN", "")
-		deploymentID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", ""))
-	)
-	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
-		Region:       region,
-		DeploymentID: deploymentID,
-		Logger:       suite.Logger,
-	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
-		ClientID: clientID,
-		Secret:   secret,
-		Token: gcloudcx.AccessToken{
-			Type:  "bearer",
-			Token: token,
-		},
-	})
-	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
-}
-
-func (suite *OpenMessagingSuite) TearDownSuite() {
-	if suite.T().Failed() {
-		suite.Logger.Warnf("At least one test failed, we are not cleaning")
-		suite.T().Log("At least one test failed, we are not cleaning")
-	} else {
-		suite.Logger.Infof("All tests succeeded, we are cleaning")
-	}
-	suite.Logger.Infof("Suite End: %s %s", suite.Name, strings.Repeat("=", 80-12-len(suite.Name)))
-	suite.Logger.Close()
-}
-
-func (suite *OpenMessagingSuite) BeforeTest(suiteName, testName string) {
-	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
-
-	suite.Start = time.Now()
-
-	// Reuse tokens as much as we can
-	if !suite.Client.IsAuthorized() {
-		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
-		suite.Require().Nil(err, "Failed to login")
-		suite.Logger.Infof("Client is now logged in...")
-	} else {
-		suite.Logger.Infof("Client is already logged in...")
-	}
-}
-
-func (suite *OpenMessagingSuite) AfterTest(suiteName, testName string) {
-	duration := time.Since(suite.Start)
-	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }

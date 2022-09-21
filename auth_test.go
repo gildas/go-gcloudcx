@@ -2,7 +2,10 @@ package gcloudcx_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -29,11 +32,11 @@ func TestAuthSuite(t *testing.T) {
 	suite.Run(t, new(AuthSuite))
 }
 
-// Suite Tools
-
+// *****************************************************************************
+// #region: Suite Tools {{{
 func (suite *AuthSuite) SetupSuite() {
 	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
 			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
@@ -80,7 +83,7 @@ func (suite *AuthSuite) BeforeTest(suiteName, testName string) {
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
 		err := suite.Client.Login(context.Background())
-		suite.Require().Nil(err, "Failed to login")
+		suite.Require().NoError(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -92,7 +95,20 @@ func (suite *AuthSuite) AfterTest(suiteName, testName string) {
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }
 
-// Tests
+func (suite *AuthSuite) LoadTestData(filename string) []byte {
+	data, err := os.ReadFile(filepath.Join(".", "testdata", filename))
+	suite.Require().NoErrorf(err, "Failed to Load Data. %s", err)
+	return data
+}
+
+func (suite *AuthSuite) UnmarshalData(filename string, v interface{}) error {
+	data := suite.LoadTestData(filename)
+	suite.Logger.Infof("Loaded %s: %s", filename, string(data))
+	return json.Unmarshal(data, v)
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
 
 func (suite *AuthSuite) TestCanCreateAuthScopeFromString() {
 	var scope gcloudcx.AuthorizationScope
@@ -112,20 +128,20 @@ func (suite *AuthSuite) TestCanCreateAuthScopeFromString() {
 
 func (suite *AuthSuite) TestCanUnmarshalAuthorizationSubject() {
 	subject := gcloudcx.AuthorizationSubject{}
-	err := LoadObject("authorization-subject.json", &subject)
-	suite.Require().NoError(err, "Failed to load authorization subject, Error: %s", err)
+	err := suite.UnmarshalData("authorization-subject.json", &subject)
+	suite.Require().NoErrorf(err, "Failed to load authorization subject, Error: %s", err)
 }
 
 func (suite *AuthSuite) TestCanUnmarshalAuthorizationSubjectWithDivisions() {
 	subject := gcloudcx.AuthorizationSubject{}
-	err := LoadObject("authorization-subject-with-divisions.json", &subject)
-	suite.Require().NoError(err, "Failed to load authorization subject, Error: %s", err)
+	err := suite.UnmarshalData("authorization-subject-with-divisions.json", &subject)
+	suite.Require().NoErrorf(err, "Failed to load authorization subject, Error: %s", err)
 }
 
 func (suite *AuthSuite) TestCanCheckScopes() {
 	subject := gcloudcx.AuthorizationSubject{}
-	err := LoadObject("authorization-subject.json", &subject)
-	suite.Require().NoError(err, "Failed to load authorization subject, Error: %s", err)
+	err := suite.UnmarshalData("authorization-subject.json", &subject)
+	suite.Require().NoErrorf(err, "Failed to load authorization subject, Error: %s", err)
 	permitted, denied := subject.CheckScopes("routing:language:assign", "messaging:message", "processing:space:deploy")
 	suite.Assert().Len(permitted, 2)
 	suite.Assert().Len(denied, 1)
