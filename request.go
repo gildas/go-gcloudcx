@@ -80,8 +80,10 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 	res, err := request.Send(options, results)
 	duration := time.Since(start)
 	log = log.Record("duration", duration)
+	correlationID := ""
 	if res != nil {
-		log = log.Record("correlationId", res.Headers.Get("Inin-Correlation-Id"))
+		correlationID = res.Headers.Get("Inin-Correlation-Id")
+		log = log.Record("correlationId", correlationID)
 	}
 	if err != nil {
 		urlError := &url.Error{}
@@ -106,13 +108,13 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 				if jsonerr := res.UnmarshalContentJSON(&apiError); jsonerr != nil {
 					return errors.Wrap(err, "Failed to extract an error from the response")
 				}
+				apiError.CorrelationID = correlationID
 				return apiError.WithStack()
 			}
+			// Sometimes we do not get a response with a Gcloud error, but a generic error
 			apiError.Status = details.Code
 			apiError.Code = details.ID
-			if res != nil {
-				apiError.CorrelationID = res.Headers.Get("Inin-Correlation-Id")
-			}
+			apiError.CorrelationID = correlationID
 			if strings.HasPrefix(apiError.Message, "authentication failed") {
 				apiError.Status = errors.HTTPUnauthorized.Code
 				apiError.Code = errors.HTTPUnauthorized.ID
