@@ -121,8 +121,7 @@ func (suite *OpenMessagingSuite) UnmarshalData(filename string, v interface{}) e
 // #endregion: Suite Tools }}}
 // *****************************************************************************
 
-func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
-	name := "TEST-GO-PURECLOUD"
+func (suite *OpenMessagingSuite) TestCan00CreateIntegration() {
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
 	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), suite.IntegrationName, webhookURL, webhookToken, nil)
@@ -170,7 +169,7 @@ func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
 	}
 }
 
-func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
+func (suite *OpenMessagingSuite) TestCanZZDeleteIntegration() {
 	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
 	integration, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().NoErrorf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
