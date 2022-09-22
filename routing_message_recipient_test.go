@@ -189,5 +189,6 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchAll() {
 		suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
 		suite.Assert().NotEmpty(recipient.ID)
 		suite.Assert().NotEmpty(recipient.Name)
+		suite.T().Logf("%s => %s", recipient.Name, recipient.Flow)
 	}
 }

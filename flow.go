@@ -29,6 +29,13 @@ func (flow Flow) GetURI() URI {
 	return NewURI("/api/v2/flows/%s", flow.ID)
 }
 
+// String gets a string representation of this
+//
+// implements fmt.Stringer
+func (flow Flow) String() string {
+	return flow.Name
+}
+
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
