@@ -233,7 +233,6 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
 		},
 		CreateStatus: "Initiated",
-		SelfURI:      "/api/v2/conversations/messaging/integrations/open/34071108-1569-4cb0-9137-a326b8a9e815",
 	}
 
 	data, err := json.Marshal(integration)

@@ -121,3 +121,18 @@ func (user User) String() string {
 	}
 	return user.ID.String()
 }
+
+// MarshalJSON marshals this into JSON
+//
+// implements json.Marshaler
+func (user User) MarshalJSON() ([]byte, error) {
+	type surrogate User
+	data, err := json.Marshal(&struct {
+		surrogate
+		SelfURI URI `json:"selfUri"`
+	}{
+		surrogate: surrogate(user),
+		SelfURI:   user.GetURI(),
+	})
+	return data, errors.JSONMarshalError.Wrap(err)
+}

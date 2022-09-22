@@ -164,7 +164,6 @@ func (suite *UserSuite) TestCanMarshal() {
 		},
 		AcdAutoAnswer: false,
 		State:         "active",
-		SelfURI:       "/api/v2/users/06ffcd2e-1ada-412e-a5f5-30d7853246dd",
 		Version:       29,
 	}
 
