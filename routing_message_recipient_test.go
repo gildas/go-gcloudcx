@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -191,4 +192,32 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchAll() {
 		suite.Assert().NotEmpty(recipient.Name)
 		suite.T().Logf("%s => %s", recipient.Name, recipient.Flow)
 	}
+}
+
+func (suite *RoutingMessageRecipientSuite) TestCanFetchByIntegration() {
+	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
+	webhookToken := "DEADBEEF"
+	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
+	suite.Require().NoError(err, "Failed to create integration")
+	suite.Logger.Record("integration", integration).Infof("Created a integration")
+	for {
+		if integration.IsCreated() {
+			break
+		}
+		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
+		time.Sleep(time.Second)
+		err = integration.Refresh(context.Background())
+		suite.Require().NoError(err, "Failed to refresh integration")
+	}
+	defer func(integration *gcloudcx.OpenMessagingIntegration) {
+		if integration != nil && integration.IsCreated() {
+			err := integration.Delete(context.Background())
+			suite.Require().NoError(err, "Failed to delete integration")
+		}
+	}(integration)
+	recipient, err := integration.GetRoutingMessageRecipient(context.Background())
+	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Assert().Equal(integration.GetID(), recipient.GetID())
+	suite.Assert().Nil(recipient.Flow, "Recipient should not have a Flow")
+	suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
 }

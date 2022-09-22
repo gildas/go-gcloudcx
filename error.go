@@ -71,7 +71,7 @@ type APIError struct {
 	CorrelationID     string            `json:"correlationId,omitempty"`
 	Details           []APIErrorDetails `json:"details,omitempty"`
 	Errors            []APIError        `json:"errors,omitempty"`
-	Stack errors.StackTrace `json:"-"`
+	Stack             errors.StackTrace `json:"-"`
 }
 
 // APIErrorDetails contains the details of an APIError

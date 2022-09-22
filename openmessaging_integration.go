@@ -168,6 +168,17 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 	return nil
 }
 
+// GetRoutingMessageRecipient fetches the RoutingMessageRecipient for this OpenMessagingIntegration
+func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context context.Context) (*RoutingMessageRecipient, error) {
+	if integration == nil || integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID")
+	}
+	if !integration.IsCreated() {
+		return nil, errors.CreationFailed.With("integration", integration.ID)
+	}
+	return Fetch[RoutingMessageRecipient](context, integration.client, integration)
+}
+
 // SendInboundMessage sends a text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
