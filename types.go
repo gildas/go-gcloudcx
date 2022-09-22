@@ -18,7 +18,7 @@ type Addressable interface {
 
 // Initializable describes things that can be initialized
 type Initializable interface {
-	Initialize(parameters ...interface{}) error
+	Initialize(parameters ...interface{})
 }
 
 // Fetchable describes things that can be fetched from the Genesys Cloud API
