@@ -1,0 +1,24 @@
+{
+  "id": "34071108-1569-4cb0-9137-a326b8a9e815",
+  "name": "TEST-GO-PURECLOUD",
+  "flow": {
+    "id": "900fa1cb-427b-4ae3-9439-079ac3f07d56",
+    "name": "Gildas-TestOpenMessaging",
+    "active": false,
+    "system": false,
+    "deleted": false,
+    "selfUri": "/api/v2/flows/900fa1cb-427b-4ae3-9439-079ac3f07d56"
+  },
+  "dateCreated": "2021-04-08T03:12:07.888Z",
+  "dateModified": "2021-04-08T03:12:07.888Z",
+  "createdBy": {
+    "id": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
+    "selfUri": "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e"
+  },
+  "modifiedBy": {
+    "id": "2229bd78-a6e4-412f-b789-ef70f447e5db",
+    "selfUri": "/api/v2/users/2229bd78-a6e4-412f-b789-ef70f447e5db"
+  },
+  "messengerType": "open",
+  "selfUri": "/api/v2/routing/message/recipients/34071108-1569-4cb0-9137-a326b8a9e815"
+}
