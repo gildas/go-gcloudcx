@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gildas/go-core"
+	"github.com/google/uuid"
 )
 
 // Identifiable describes that can get their Identifier as a UUID
@@ -13,7 +14,14 @@ type Identifiable interface {
 
 // Addressable describes things that carry a URI (typically /api/v2/things/{{uuid}})
 type Addressable interface {
-	GetURI() URI
+	// GetURI gets the URI
+	//
+	// if ids are provided, they are used to replace the {{uuid}} in the URI.
+	//
+	// if no ids are provided and the Addressable has a UUID, it is used to replace the {{uuid}} in the URI.
+	//
+	// else, the pattern for the URI is returned ("/api/v2/things/%s")
+	GetURI(ids ...uuid.UUID) URI
 }
 
 // Initializable describes things that can be initialized

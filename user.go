@@ -13,9 +13,8 @@ import (
 // User describes a GCloud User
 type User struct {
 	ID                  uuid.UUID                `json:"id"`
-	SelfURI             URI                      `json:"selfUri"`
-	Name                string                   `json:"name"`
-	UserName            string                   `json:"username"`
+	Name                string                   `json:"name,omitempty"`
+	UserName            string                   `json:"username,omitempty"`
 	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title,omitempty"`
 	Division            *Division                `json:"division,omitempty"`
@@ -26,7 +25,7 @@ type User struct {
 	State               string                   `json:"state,omitempty"`
 	Presence            *UserPresence            `json:"presence,omitempty"`
 	OutOfOffice         *OutOfOffice             `json:"outOfOffice,omitempty"`
-	AcdAutoAnswer       bool                     `json:"acdAutoAnswer"`
+	AcdAutoAnswer       bool                     `json:"acdAutoAnswer,omitempty"`
 	RoutingStatus       *RoutingStatus           `json:"routingStatus,omitempty"`
 	ProfileSkills       []string                 `json:"profileSkills,omitempty"`
 	Skills              []*UserRoutingSkill      `json:"skills,omitempty"`
@@ -43,7 +42,7 @@ type User struct {
 	Locations           []*Location              `json:"locations,omitempty"`
 	GeoLocation         *GeoLocation             `json:"geolocation,omitempty"`
 	Chat                *Jabber                  `json:"chat,omitempty"`
-	Version             int                      `json:"version"`
+	Version             int                      `json:"version,omitempty"`
 	client              *Client                  `json:"-"`
 	logger              *logger.Logger           `json:"-"`
 }
@@ -99,19 +98,28 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+// implements Identifiable
 func (user User) GetID() uuid.UUID {
 	return user.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (user User) GetURI() URI {
-	return user.SelfURI
+//
+// implements Addressable
+func (user User) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/users/%s", ids[0])
+	}
+	if user.ID != uuid.Nil {
+		return NewURI("/api/v2/users/%s", user.ID)
+	}
+	return URI("/api/v2/users/")
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+// implements the fmt.Stringer interface
 func (user User) String() string {
 	if len(user.Name) > 0 {
 		return user.Name

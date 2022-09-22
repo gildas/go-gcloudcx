@@ -99,14 +99,27 @@ func (response *ResponseManagementResponse) Fetch(ctx context.Context, client *C
 
 // GetID gets the identifier of this
 //
-//   implements Identifiable
-func (response *ResponseManagementResponse) GetID() uuid.UUID {
+// implements Identifiable
+func (response ResponseManagementResponse) GetID() uuid.UUID {
 	return response.ID
+}
+
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (response ResponseManagementResponse) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/responsemanagement/responses/%s", ids[0])
+	}
+	if response.ID != uuid.Nil {
+		return NewURI("/api/v2/responsemanagement/responses/%s", response.ID)
+	}
+	return URI("/api/v2/responsemanagement/responses/")
 }
 
 // String gets a string version
 //
-//   implements the fmt.Stringer interface
+// implements the fmt.Stringer interface
 func (response ResponseManagementResponse) String() string {
 	if len(response.Name) > 0 {
 		return response.Name

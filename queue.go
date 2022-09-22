@@ -99,9 +99,16 @@ func (queue Queue) GetID() uuid.UUID {
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (queue Queue) GetURI() URI {
-	return queue.SelfURI
+//
+// implements Addressable
+func (queue Queue) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/routing/queues/%s", ids[0])
+	}
+	if queue.ID != uuid.Nil {
+		return NewURI("/api/v2/routing/queues/%s", queue.ID)
+	}
+	return URI("/api/v2/routing/queues/")
 }
 
 func (queue Queue) String() string {

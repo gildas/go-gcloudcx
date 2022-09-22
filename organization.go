@@ -67,19 +67,28 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+// implements Identifiable
 func (organization Organization) GetID() uuid.UUID {
 	return organization.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (organization Organization) GetURI() URI {
-	return organization.SelfURI
+//
+// implements Addressable
+func (organization Organization) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/organizations/%s", ids[0])
+	}
+	if organization.ID != uuid.Nil {
+		return NewURI("/api/v2/organizations/%s", organization.ID)
+	}
+	return URI("/api/v2/organizations/")
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+// implements the fmt.Stringer interface
 func (organization Organization) String() string {
 	if len(organization.Name) > 0 {
 		return organization.Name

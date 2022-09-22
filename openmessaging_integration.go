@@ -36,18 +36,6 @@ type OpenMessagingIntegration struct {
 	logger           *logger.Logger        `json:"-"`
 }
 
-// GetID gets the identifier of this
-//   implements Identifiable
-func (integration OpenMessagingIntegration) GetID() uuid.UUID {
-	return integration.ID
-}
-
-// GetURI gets the URI of this
-//   implements Addressable
-func (integration OpenMessagingIntegration) GetURI() URI {
-	return integration.SelfURI
-}
-
 // IsCreated tells if this OpenMessagingIntegration has been created successfully
 func (integration OpenMessagingIntegration) IsCreated() bool {
 	return integration.CreateStatus == "Completed"
@@ -174,7 +162,7 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 
 func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error {
 	var value OpenMessagingIntegration
-	if err := integration.client.Get(ctx, integration.SelfURI, &value); err != nil {
+	if err := integration.client.Get(ctx, integration.GetURI(), &value); err != nil {
 		return err
 	}
 	integration.Name = value.Name
@@ -386,10 +374,12 @@ func (integration OpenMessagingIntegration) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessagingIntegration
 	data, err := json.Marshal(struct {
 		surrogate
-		W *core.URL `json:"outboundNotificationWebhookUrl"`
+		WebhookURL *core.URL `json:"outboundNotificationWebhookUrl"`
+		SelfURI    URI       `json:"selfUri"`
 	}{
-		surrogate: surrogate(integration),
-		W:         (*core.URL)(integration.WebhookURL),
+		surrogate:  surrogate(integration),
+		WebhookURL: (*core.URL)(integration.WebhookURL),
+		SelfURI:    integration.GetURI(),
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
 }
@@ -399,14 +389,14 @@ func (integration *OpenMessagingIntegration) UnmarshalJSON(payload []byte) (err 
 	type surrogate OpenMessagingIntegration
 	var inner struct {
 		surrogate
-		W *core.URL `json:"outboundNotificationWebhookUrl"`
+		WebhookURL *core.URL `json:"outboundNotificationWebhookUrl"`
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*integration = OpenMessagingIntegration(inner.surrogate)
-	integration.WebhookURL = (*url.URL)(inner.W)
+	integration.WebhookURL = (*url.URL)(inner.WebhookURL)
 	return
 }
 
