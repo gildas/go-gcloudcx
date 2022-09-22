@@ -3,6 +3,8 @@ package gcloudcx
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/gildas/go-errors"
 )
 
 var (
@@ -69,6 +71,7 @@ type APIError struct {
 	CorrelationID     string            `json:"correlationId,omitempty"`
 	Details           []APIErrorDetails `json:"details,omitempty"`
 	Errors            []APIError        `json:"errors,omitempty"`
+	Stack errors.StackTrace `json:"-"`
 }
 
 // APIErrorDetails contains the details of an APIError
@@ -77,6 +80,12 @@ type APIErrorDetails struct {
 	FieldName  string `json:"fieldName,omitempty"`
 	EntityID   string `json:"entityId,omitempty"`
 	EntityName string `json:"entityName,omitempty"`
+}
+
+// Clone creates an exact copy of this Error
+func (e APIError) Clone() *APIError {
+	final := e
+	return &final
 }
 
 // Error returns a string representation of this error
@@ -88,6 +97,52 @@ func (e APIError) Error() string {
 		return e.Message
 	}
 	return e.Code
+}
+
+// Is tells if this error matches the target.
+//
+// implements errors.Is interface (package "errors").
+//
+// To check if an error is an errors.Error, simply write:
+//  if errors.Is(err, gcloudcx.APIError{}) {
+//    // do something with err
+//  }
+func (e APIError) Is(target error) bool {
+	if actual, ok := target.(APIError); ok {
+		if len(actual.Code) == 0 {
+			return true // no ID means any error is a match
+		}
+		return e.Code == actual.Code
+	}
+	return false
+}
+
+// As attempts to convert the given error into the given target
+//
+// As returns true if the conversion was successful and the target is now populated.
+//
+// Example:
+//   target := errors.ArgumentInvalid.Clone()
+//   if errors.As(err, &target) {
+//     // do something with target
+//   }
+func (e APIError) As(target interface{}) bool {
+	if actual, ok := target.(**APIError); ok {
+		if *actual != nil && (*actual).Code != e.Code {
+			return false
+		}
+		copy := e
+		*actual = &copy
+		return true
+	}
+	return false
+}
+
+// WithStack creates a new error from a given Error and records its stack.
+func (e APIError) WithStack() error {
+	final := e
+	final.Stack.Initialize()
+	return final
 }
 
 // UnmarshalJSON decodes a JSON payload into an APIError
