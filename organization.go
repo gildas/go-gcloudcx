@@ -3,7 +3,6 @@ package gcloudcx
 import (
 	"context"
 
-	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -27,34 +26,6 @@ type Organization struct {
 	logger                     *logger.Logger  `json:"-"`
 }
 
-// Fetch fetches an Organization
-//
-// implements Fetchable
-func (organization *Organization) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, organization, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/organizations/%s", id), &organization); err != nil {
-			return err
-		}
-		organization.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &organization); err != nil {
-			return err
-		}
-		organization.logger = log.Record("id", organization.ID)
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	} else {
-		if err := client.Get(ctx, NewURI("/organizations/me"), &organization); err != nil {
-			return err
-		}
-		organization.logger = log.Record("id", organization.ID)
-	}
-	organization.client = client
-	return nil
-}
-
 // GetMyOrganization retrives the current Organization
 func (client *Client) GetMyOrganization(context context.Context) (*Organization, error) {
 	organization := &Organization{}
@@ -64,6 +35,22 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 	organization.client = client
 	organization.logger = client.Logger.Child("organization", "organization", "id", organization.ID)
 	return organization, nil
+}
+
+// Initialize initializes the object
+//
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (organization *Organization) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			organization.client = parameter
+		case *logger.Logger:
+			organization.logger = parameter.Child("organization", "organization", "id", organization.ID)
+		}
+	}
 }
 
 // GetID gets the identifier of this

@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"context"
+	"encoding/json"
 	"net/url"
 	"strings"
 
@@ -52,34 +53,6 @@ type Jabber struct {
 	ID string `json:"jabberId"`
 }
 
-// Fetch fetches a user
-//
-// implements Fetchable
-func (user *User) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, user, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/users/%s", id), &user); err != nil {
-			return err
-		}
-		user.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &user); err != nil {
-			return err
-		}
-		user.logger = log.Record("id", user.ID)
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	} else if _, ok := client.Grant.(*ClientCredentialsGrant); !ok { // /users/me is not possible with ClientCredentialsGrant
-		if err := client.Get(ctx, "/users/me", &user); err != nil {
-			return err
-		}
-		user.logger = log.Record("id", user.ID)
-	}
-	user.client = client
-	return nil
-}
-
 // GetMyUser retrieves the User that authenticated with the client
 //   properties is one of more properties that should be expanded
 //   see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
@@ -95,6 +68,22 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 	user.client = client
 	user.logger = client.Logger.Child("user", "user", "id", user.ID)
 	return user, nil
+}
+
+// Initialize initializes the object
+//
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (user *User) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			user.client = parameter
+		case *logger.Logger:
+			user.logger = parameter.Child("user", "user", "id", user.ID)
+		}
+	}
 }
 
 // GetID gets the identifier of this

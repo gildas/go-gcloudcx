@@ -1,11 +1,8 @@
 package gcloudcx
 
 import (
-	"context"
-	"strings"
 	"time"
 
-	"github.com/gildas/go-errors"
 	"github.com/google/uuid"
 )
 
@@ -21,7 +18,7 @@ type ResponseManagementLibrary struct {
 	SelfURI     URI              `json:"selfUri,omitempty"`
 }
 
-// Fetch fetches this from the given Client
+// Initialize initializes the object
 //
 // implements Initializable
 func (library *ResponseManagementLibrary) Initialize(parameters ...interface{}) {

@@ -21,24 +21,24 @@ import (
 	"github.com/gildas/go-gcloudcx"
 )
 
-type UserSuite struct {
+type QueueSuite struct {
 	suite.Suite
 	Name   string
 	Logger *logger.Logger
 	Start  time.Time
 
-	UserID   uuid.UUID
-	UserName string
-	Client   *gcloudcx.Client
+	QueueID   uuid.UUID
+	QueueName string
+	Client    *gcloudcx.Client
 }
 
-func TestUserSuite(t *testing.T) {
-	suite.Run(t, new(UserSuite))
+func TestQueueSuite(t *testing.T) {
+	suite.Run(t, new(QueueSuite))
 }
 
 // *****************************************************************************
 // #region: Suite Tools {{{
-func (suite *UserSuite) SetupSuite() {
+func (suite *QueueSuite) SetupSuite() {
 	var err error
 	var value string
 
@@ -59,14 +59,14 @@ func (suite *UserSuite) SetupSuite() {
 		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	)
 
-	value = core.GetEnvAsString("USER_ID", "")
-	suite.Require().NotEmpty(value, "USER_ID is not set in your environment")
+	value = core.GetEnvAsString("QUEUE_ID", "")
+	suite.Require().NotEmpty(value, "QUEUE_ID is not set in your environment")
 
-	suite.UserID, err = uuid.Parse(value)
+	suite.QueueID, err = uuid.Parse(value)
 	suite.Require().NoError(err, "USER_ID is not a valid UUID")
 
-	suite.UserName = core.GetEnvAsString("USER_NAME", "")
-	suite.Require().NotEmpty(suite.UserName, "USER_NAME is not set in your environment")
+	suite.QueueName = core.GetEnvAsString("QUEUE_NAME", "")
+	suite.Require().NotEmpty(suite.QueueName, "QUEUE_NAME is not set in your environment")
 
 	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: region,
@@ -78,7 +78,7 @@ func (suite *UserSuite) SetupSuite() {
 	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
-func (suite *UserSuite) TearDownSuite() {
+func (suite *QueueSuite) TearDownSuite() {
 	if suite.T().Failed() {
 		suite.Logger.Warnf("At least one test failed, we are not cleaning")
 		suite.T().Log("At least one test failed, we are not cleaning")
@@ -89,7 +89,7 @@ func (suite *UserSuite) TearDownSuite() {
 	suite.Logger.Close()
 }
 
-func (suite *UserSuite) BeforeTest(suiteName, testName string) {
+func (suite *QueueSuite) BeforeTest(suiteName, testName string) {
 	suite.Logger.Infof("Test Start: %s %s", testName, strings.Repeat("-", 80-13-len(testName)))
 	suite.Start = time.Now()
 
@@ -104,18 +104,18 @@ func (suite *UserSuite) BeforeTest(suiteName, testName string) {
 	}
 }
 
-func (suite *UserSuite) AfterTest(suiteName, testName string) {
+func (suite *QueueSuite) AfterTest(suiteName, testName string) {
 	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }
 
-func (suite *UserSuite) LoadTestData(filename string) []byte {
+func (suite *QueueSuite) LoadTestData(filename string) []byte {
 	data, err := os.ReadFile(filepath.Join(".", "testdata", filename))
 	suite.Require().NoErrorf(err, "Failed to Load Data. %s", err)
 	return data
 }
 
-func (suite *UserSuite) UnmarshalData(filename string, v interface{}) error {
+func (suite *QueueSuite) UnmarshalData(filename string, v interface{}) error {
 	data := suite.LoadTestData(filename)
 	suite.Logger.Infof("Loaded %s: %s", filename, string(data))
 	return json.Unmarshal(data, v)
@@ -124,7 +124,7 @@ func (suite *UserSuite) UnmarshalData(filename string, v interface{}) error {
 // #endregion: Suite Tools }}}
 // *****************************************************************************
 
-func (suite *UserSuite) TestCanUnmarshal() {
+func (suite *QueueSuite) TestCanUnmarshal() {
 	user := gcloudcx.User{}
 	err := suite.UnmarshalData("user.json", &user)
 	suite.Require().NoErrorf(err, "Failed to unmarshal user. %s", err)
@@ -133,7 +133,7 @@ func (suite *UserSuite) TestCanUnmarshal() {
 	suite.Assert().Equal("John Doe", user.Name)
 }
 
-func (suite *UserSuite) TestCanMarshal() {
+func (suite *QueueSuite) TestCanMarshal() {
 	user := gcloudcx.User{
 		ID:       uuid.MustParse("06ffcd2e-1ada-412e-a5f5-30d7853246dd"),
 		Name:     "John Doe",
@@ -164,7 +164,6 @@ func (suite *UserSuite) TestCanMarshal() {
 		},
 		AcdAutoAnswer: false,
 		State:         "active",
-		SelfURI:       "/api/v2/users/06ffcd2e-1ada-412e-a5f5-30d7853246dd",
 		Version:       29,
 	}
 
@@ -174,19 +173,30 @@ func (suite *UserSuite) TestCanMarshal() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
-func (suite *UserSuite) TestCanFetchByID() {
-	user, err := gcloudcx.Fetch[gcloudcx.User](context.Background(), suite.Client, suite.UserID)
-	suite.Require().NoErrorf(err, "Failed to fetch User %s. %s", suite.UserID, err)
-	suite.Assert().Equal(suite.UserID, user.ID)
-	suite.Assert().Equal(suite.UserName, user.Name)
+func (suite *QueueSuite) TestCanFetchByID() {
+	queue, err := gcloudcx.Fetch[gcloudcx.Queue](context.Background(), suite.Client, suite.QueueID)
+	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueID, err)
+	suite.Assert().Equal(suite.QueueID, queue.ID)
+	suite.Assert().Equal(suite.QueueName, queue.Name)
 }
 
-func (suite *UserSuite) TestCanFetchByName() {
-	match := func(user gcloudcx.User) bool {
-		return user.Name == suite.UserName
+func (suite *QueueSuite) TestCanFetchByNameSlow() {
+	match := func(queue gcloudcx.Queue) bool {
+		return queue.Name == suite.QueueName
 	}
-	user, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
-	suite.Require().NoErrorf(err, "Failed to fetch User %s. %s", suite.UserName, err)
-	suite.Assert().Equal(suite.UserID, user.ID)
-	suite.Assert().Equal(suite.UserName, user.Name)
+	queue, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueID, err)
+	suite.Assert().Equal(suite.QueueID, queue.ID)
+	suite.Assert().Equal(suite.QueueName, queue.Name)
+}
+
+func (suite *QueueSuite) TestCanFetchByName() {
+	// Calling with a Query will speed up the search significantly
+	match := func(recipient gcloudcx.Queue) bool {
+		return true
+	}
+	queue, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"name": suite.QueueName})
+	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueName, err)
+	suite.Assert().Equal(suite.QueueID, queue.ID)
+	suite.Assert().Equal(suite.QueueName, queue.Name)
 }

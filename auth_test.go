@@ -142,6 +142,7 @@ func (suite *AuthSuite) TestCanCheckScopes() {
 	subject := gcloudcx.AuthorizationSubject{}
 	err := suite.UnmarshalData("authorization-subject.json", &subject)
 	suite.Require().NoErrorf(err, "Failed to load authorization subject, Error: %s", err)
+	subject.Initialize(suite.Logger)
 	permitted, denied := subject.CheckScopes("routing:language:assign", "messaging:message", "processing:space:deploy")
 	suite.Assert().Len(permitted, 2)
 	suite.Assert().Len(denied, 1)

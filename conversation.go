@@ -77,25 +77,20 @@ type Voicemail struct {
 	UploadStatus string `json:"uploadStatus"`
 }
 
-// Fetch fetches the conversation
+// Initialize initializes the object
 //
-// implements Fetchable
-func (conversation *Conversation) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, _, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/conversations/%s", id), &conversation); err != nil {
-			return err
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (conversation *Conversation) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			conversation.client = parameter
+		case *logger.Logger:
+			conversation.logger = parameter.Child("conversation", "conversation", "id", conversation.ID)
 		}
-		conversation.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &conversation); err != nil {
-			return err
-		}
-		conversation.logger = log.Record("id", conversation.ID)
 	}
-	conversation.client = client
-	return nil
 }
 
 // GetID gets the identifier of this

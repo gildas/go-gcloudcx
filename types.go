@@ -31,7 +31,8 @@ type Initializable interface {
 
 // Fetchable describes things that can be fetched from the Genesys Cloud API
 type Fetchable interface {
-	Fetch(context context.Context, client *Client, parameters ...interface{}) error
+	Identifiable
+	Addressable
 }
 
 // StateUpdater describes objects than can update the state of an Identifiable

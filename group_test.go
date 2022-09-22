@@ -22,7 +22,9 @@ type GroupSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	Client *gcloudcx.Client
+	GroupID   uuid.UUID
+	GroupName string
+	Client    *gcloudcx.Client
 }
 
 func TestGroupSuite(t *testing.T) {
@@ -32,6 +34,8 @@ func TestGroupSuite(t *testing.T) {
 // *****************************************************************************
 // #region: Suite Tools {{{
 func (suite *GroupSuite) SetupSuite() {
+	var err error
+	var value string
 	_ = godotenv.Load()
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
@@ -58,6 +62,16 @@ func (suite *GroupSuite) SetupSuite() {
 		ClientID: clientID,
 		Secret:   secret,
 	})
+
+	value = core.GetEnvAsString("GROUP_ID", "")
+	suite.Require().NotEmpty(value, "GROUP_ID is not set in your environment")
+
+	suite.GroupID, err = uuid.Parse(value)
+	suite.Require().NoError(err, "GROUP_ID is not a valid UUID")
+
+	suite.GroupName = core.GetEnvAsString("GROUP_NAME", "")
+	suite.Require().NotEmpty(suite.GroupName, "GROUP_NAME is not set in your environment")
+
 	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
@@ -94,6 +108,25 @@ func (suite *GroupSuite) AfterTest(suiteName, testName string) {
 
 // #endregion: Suite Tools }}}
 // *****************************************************************************
+
+func (suite *GroupSuite) TestCanFetchByID() {
+	group, err := gcloudcx.Fetch[gcloudcx.Group](context.Background(), suite.Client, suite.GroupID)
+	suite.Require().NoErrorf(err, "Failed to fetch Group %s. %s", suite.GroupID, err)
+	suite.Assert().Equal(suite.GroupID, group.ID)
+	suite.Assert().Equal(suite.GroupName, group.Name)
+	suite.Assert().Equal("public", group.Visibility)
+}
+
+func (suite *GroupSuite) TestCanFetchByName() {
+	match := func(group gcloudcx.Group) bool {
+		return group.Name == suite.GroupName
+	}
+	group, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	suite.Require().NoErrorf(err, "Failed to fetch Group %s. %s", suite.GroupName, err)
+	suite.Assert().Equal(suite.GroupID, group.ID)
+	suite.Assert().Equal(suite.GroupName, group.Name)
+	suite.Assert().Equal("public", group.Visibility)
+}
 
 func (suite *GroupSuite) TestCanStringify() {
 	id := uuid.New()

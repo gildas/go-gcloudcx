@@ -133,8 +133,7 @@ func (suite *ResponseManagementSuite) AfterTest(suiteName, testName string) {
 // *****************************************************************************
 
 func (suite *ResponseManagementSuite) TestCanFetchLibraryByID() {
-	library := gcloudcx.ResponseManagementLibrary{}
-	err := suite.Client.Fetch(context.Background(), &library, suite.LibraryID)
+	library, err := gcloudcx.Fetch[gcloudcx.ResponseManagementLibrary](context.Background(), suite.Client, suite.LibraryID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -145,8 +144,10 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByID() {
 }
 
 func (suite *ResponseManagementSuite) TestCanFetchLibraryByName() {
-	library := gcloudcx.ResponseManagementLibrary{}
-	err := suite.Client.Fetch(context.Background(), &library, suite.LibraryName)
+	match := func(library gcloudcx.ResponseManagementLibrary) bool {
+		return library.Name == suite.LibraryName
+	}
+	library, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -157,8 +158,7 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByName() {
 }
 
 func (suite *ResponseManagementSuite) TestCanFetchResponseByID() {
-	response := gcloudcx.ResponseManagementResponse{}
-	err := suite.Client.Fetch(context.Background(), &response, suite.ResponseID)
+	response, err := gcloudcx.Fetch[gcloudcx.ResponseManagementResponse](context.Background(), suite.Client, suite.ResponseID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -168,9 +168,24 @@ func (suite *ResponseManagementSuite) TestCanFetchResponseByID() {
 	suite.Logger.Record("response", response).Infof("Response Details")
 }
 
+func (suite *ResponseManagementSuite) TestCanFetchResponseByFilters() {
+	response, err := gcloudcx.ResponseManagementResponse{}.FetchByFilters(context.Background(), suite.Client, gcloudcx.ResponseManagementQueryFilter{
+		Name: "name", Operator: "EQUALS", Values: []string{suite.ResponseName},
+	})
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
+	suite.Require().NoErrorf(err, "Failed to fetch Response Management Response, Error: %s", err)
+	suite.Assert().Equal(suite.ResponseID, response.GetID(), "Response ID is not the same")
+	suite.Assert().Equal(suite.ResponseName, response.String(), "Response Name is not the same")
+	suite.Logger.Record("response", response).Infof("Response Details")
+}
+
 func (suite *ResponseManagementSuite) TestCanFetchResponseByName() {
-	response := gcloudcx.ResponseManagementResponse{}
-	err := suite.Client.Fetch(context.Background(), &response, suite.ResponseName)
+	match := func(response gcloudcx.ResponseManagementResponse) bool {
+		return response.Name == suite.ResponseName
+	}
+	response, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -181,16 +196,20 @@ func (suite *ResponseManagementSuite) TestCanFetchResponseByName() {
 }
 
 func (suite *ResponseManagementSuite) TestShouldFailFetchingLibraryWithUnknownName() {
-	library := gcloudcx.ResponseManagementLibrary{}
-	err := suite.Client.Fetch(context.Background(), &library, "unknown library")
+	match := func(library gcloudcx.ResponseManagementLibrary) bool {
+		return library.Name == "unknown library"
+	}
+	_, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().Error(err, "Should have failed to fetch Response Management Library")
 	suite.Logger.Errorf("Expected Failure", err)
 	suite.Assert().ErrorIs(err, errors.NotFound, "Should have failed to fetch Response Management Library")
 }
 
 func (suite *ResponseManagementSuite) TestShouldFailFetchingResponseWithUnknownName() {
-	response := gcloudcx.ResponseManagementLibrary{}
-	err := suite.Client.Fetch(context.Background(), &response, "unknown response")
+	match := func(response gcloudcx.ResponseManagementResponse) bool {
+		return response.Name == "unknown response"
+	}
+	_, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
 	suite.Require().Error(err, "Should have failed to fetch Response Management Response")
 	suite.Logger.Errorf("Expected Failure", err)
 	suite.Assert().ErrorIs(err, errors.NotFound, "Should have failed to fetch Response Management Response")

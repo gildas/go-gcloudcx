@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gildas/go-core"
@@ -46,77 +45,40 @@ func (integration OpenMessagingIntegration) IsError() bool {
 	return integration.CreateStatus == "Error"
 }
 
-// Fetch fetches an OpenMessaging Integration
+// Initialize initializes the object
 //
-// implements Fetchable
-func (integration *OpenMessagingIntegration) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, integration, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
-			return err
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (user *OpenMessagingIntegration) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			user.client = parameter
+		case *logger.Logger:
+			user.logger = parameter.Child("user", "user", "id", user.ID)
 		}
-		integration.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &integration); err != nil {
-			return err
-		}
-		integration.logger = log.Record("id", integration.ID)
-	} else if len(name) > 0 {
-		response := struct {
-			Integrations []*OpenMessagingIntegration `json:"entities"`
-			PageSize     int                         `json:"pageSize"`
-			PageNumber   int                         `json:"pageNumber"`
-			PageCount    int                         `json:"pageCount"`
-			PageTotal    int                         `json:"total"`
-			FirstURI     string                      `json:"firstUri"`
-			SelfURI      string                      `json:"selfUri"`
-			LastURI      string                      `json:"lastUri"`
-		}{}
-		if err := client.Get(ctx, "/conversations/messaging/integrations/open", &response); err != nil {
-			return err
-		}
-		nameLowercase := strings.ToLower(name)
-		for _, item := range response.Integrations {
-			if strings.Compare(strings.ToLower(item.Name), nameLowercase) == 0 {
-				*integration = *item
-				break
-			}
-		}
-		if integration == nil || integration.ID == uuid.Nil {
-			return errors.NotFound.With("name", name)
-		}
-		integration.logger = log.Record("id", integration.ID)
-	} else {
-		return errors.ArgumentMissing.With("idOrName")
 	}
-	integration.client = client
-	return nil
 }
 
-// FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
-func (client *Client) FetchOpenMessagingIntegrations(ctx context.Context, parameters ...interface{}) ([]*OpenMessagingIntegration, error) {
-	_, _, _, log := client.ParseParameters(ctx, nil, parameters...)
-	entities := struct {
-		Integrations []*OpenMessagingIntegration `json:"entities"`
-		PageSize     int                         `json:"pageSize"`
-		PageNumber   int                         `json:"pageNumber"`
-		PageCount    int                         `json:"pageCount"`
-		PageTotal    int                         `json:"total"`
-		FirstURI     string                      `json:"firstUri"`
-		SelfURI      string                      `json:"selfUri"`
-		LastURI      string                      `json:"lastUri"`
-	}{}
-	if err := client.Get(ctx, "/conversations/messaging/integrations/open", &entities); err != nil {
-		return nil, err
+// GetID gets the identifier of this
+//
+// implements Identifiable
+func (integration OpenMessagingIntegration) GetID() uuid.UUID {
+	return integration.ID
+}
+
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (integration OpenMessagingIntegration) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/conversations/messaging/integrations/open/%s", ids[0])
 	}
-	log.Record("response", entities).Infof("Got a response")
-	for _, integration := range entities.Integrations {
-		integration.client = client
-		integration.logger = log.Child("openmessagingintegration", "openmessagingintegration", "id", integration.ID)
+	if integration.ID != uuid.Nil {
+		return NewURI("/api/v2/conversations/messaging/integrations/open/%s", integration.ID)
 	}
-	// TODO: fetch all pages!!!
-	return entities.Integrations, nil
+	return URI("/api/v2/conversations/messaging/integrations/open/")
 }
 
 // Create creates a new OpenMessaging Integration

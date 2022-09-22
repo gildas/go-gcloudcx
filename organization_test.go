@@ -124,8 +124,7 @@ func (suite *OrganizationSuite) AfterTest(suiteName, testName string) {
 // *****************************************************************************
 
 func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
-	organization := gcloudcx.Organization{}
-	err := suite.Client.Fetch(context.Background(), &organization)
+	organization, err := suite.Client.GetMyOrganization(context.Background())
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -138,8 +137,7 @@ func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
 }
 
 func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
-	organization := gcloudcx.Organization{}
-	err := suite.Client.Fetch(context.Background(), &organization, suite.OrganizationID)
+	organization, err := gcloudcx.Fetch[gcloudcx.Organization](context.Background(), suite.Client, suite.OrganizationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}

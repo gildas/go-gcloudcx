@@ -2,7 +2,6 @@ package gcloudcx
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/gildas/go-errors"
@@ -53,48 +52,10 @@ type ResponseManagementSubstitution struct {
 	Default     string    `json:"defaultValue"`
 }
 
-// Fetch fetches this from the given Client
+// Initialize initializes the object
 //
-//  implements Fetchable
-func (response *ResponseManagementResponse) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	// TODO: Allow to filter per Library ID
-	id, name, uri, _ := client.ParseParameters(ctx, response, parameters...)
-	if len(uri) > 0 {
-		return client.Get(ctx, uri, response)
-	}
-	if id != uuid.Nil {
-		return client.Get(ctx, NewURI("/responsemanagement/responses/%s", id), response)
-	}
-	if len(name) > 0 {
-		nameLowercase := strings.ToLower(name)
-		results := struct {
-			Results struct {
-				Responses []ResponseManagementResponse `json:"entities"`
-				paginatedEntities
-			} `json:"results"`
-		}{}
-		err := client.Post(
-			ctx,
-			NewURI("/responsemanagement/responses/query"),
-			ResponseManagementQuery{
-				Filters: []ResponseManagementQueryFilter{
-					{Name: "name", Operator: "EQUALS", Values: []string{name}},
-				},
-			},
-			&results,
-		)
-		if err != nil {
-			return err
-		}
-		for _, entity := range results.Results.Responses {
-			if strings.Compare(strings.ToLower(entity.Name), nameLowercase) == 0 {
-				*response = entity
-				return nil
-			}
-		}
-		return errors.NotFound.With("ResponseManagementResponse", name)
-	}
-	return errors.NotFound.With("ResponseManagementResponse")
+// implements Initializable
+func (response *ResponseManagementResponse) Initialize(parameters ...interface{}) {
 }
 
 // GetID gets the identifier of this
@@ -125,4 +86,36 @@ func (response ResponseManagementResponse) String() string {
 		return response.Name
 	}
 	return response.ID.String()
+}
+
+func (response ResponseManagementResponse) FetchByFilters(context context.Context, client *Client, filters ...ResponseManagementQueryFilter) (*ResponseManagementResponse, error) {
+	results := struct {
+		Results struct {
+			Responses []ResponseManagementResponse `json:"entities"`
+			paginatedEntities
+		} `json:"results"`
+	}{}
+	err := client.Post(
+		context,
+		NewURI("/responsemanagement/responses/query"),
+		ResponseManagementQuery{
+			Filters: filters,
+		},
+		&results,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(results.Results.Responses) == 0 {
+		return nil, errors.NotFound.With("ResponseManagementResponse")
+	}
+	/*
+		for _, entity := range results.Results.Responses {
+			if strings.Compare(strings.ToLower(entity.Name), nameLowercase) == 0 {
+				*response = entity
+				return nil
+			}
+		}
+	*/
+	return &results.Results.Responses[0], nil
 }

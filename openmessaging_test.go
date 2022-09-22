@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -27,8 +28,9 @@ type OpenMessagingSuite struct {
 	Logger *logger.Logger
 	Start  time.Time
 
-	IntegrationID uuid.UUID
-	Client        *gcloudcx.Client
+	IntegrationID   uuid.UUID
+	IntegrationName string
+	Client          *gcloudcx.Client
 }
 
 func TestOpenMessagingSuite(t *testing.T) {
@@ -68,6 +70,7 @@ func (suite *OpenMessagingSuite) SetupSuite() {
 			Token: token,
 		},
 	})
+	suite.IntegrationName = "TEST-GO-PURECLOUD"
 	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
@@ -118,24 +121,11 @@ func (suite *OpenMessagingSuite) UnmarshalData(filename string, v interface{}) e
 // #endregion: Suite Tools }}}
 // *****************************************************************************
 
-func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
-	integrations, err := suite.Client.FetchOpenMessagingIntegrations(context.Background())
-	suite.Require().NoError(err, "Failed to fetch OpenMessaging Integrations")
-	if len(integrations) > 0 {
-		for _, integration := range integrations {
-			suite.Logger.Record("integration", integration).Infof("Got a integration")
-			suite.Assert().NotEmpty(integration.ID)
-			suite.Assert().NotEmpty(integration.Name)
-			suite.Assert().NotNil(integration.WebhookURL, "WebhookURL should not be nil (%s)", integration.Name)
-		}
-	}
-}
-
 func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	name := "TEST-GO-PURECLOUD"
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
-	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), name, webhookURL, webhookToken, nil)
+	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), suite.IntegrationName, webhookURL, webhookToken, nil)
 	suite.Require().NoError(err, "Failed to create integration")
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
@@ -150,17 +140,50 @@ func (suite *OpenMessagingSuite) TestCanCreateIntegration() {
 	suite.IntegrationID = integration.ID
 }
 
+func (suite *OpenMessagingSuite) TestCanFetchByID() {
+	integration, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
+	suite.Require().NoErrorf(err, "Failed to fetch Open Messaging Integration %s. %s", suite.IntegrationID, err)
+	suite.Assert().Equal(suite.IntegrationID, integration.ID)
+	suite.Assert().Equal(suite.IntegrationName, integration.Name)
+}
+
+func (suite *OpenMessagingSuite) TestCanFetchByName() {
+	match := func(integration gcloudcx.OpenMessagingIntegration) bool {
+		return integration.Name == suite.IntegrationName
+	}
+	integration, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	suite.Require().NoErrorf(err, "Failed to fetch Open Messaging Integration %s. %s", suite.IntegrationName, err)
+	suite.Assert().Equal(suite.IntegrationID, integration.ID)
+	suite.Assert().Equal(suite.IntegrationName, integration.Name)
+}
+
+func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
+	integrations, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client)
+	suite.Require().NoError(err, "Failed to fetch OpenMessaging Integrations")
+	if len(integrations) > 0 {
+		for _, integration := range integrations {
+			suite.Logger.Record("integration", integration).Infof("Got a integration")
+			suite.Assert().NotEmpty(integration.ID)
+			suite.Assert().NotEmpty(integration.Name)
+			suite.Assert().NotNil(integration.WebhookURL, "WebhookURL should not be nil (%s)", integration.Name)
+		}
+	}
+}
+
 func (suite *OpenMessagingSuite) TestCanDeleteIntegration() {
 	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err := suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
+	integration, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().NoErrorf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	suite.Require().True(integration.IsCreated(), "Integration should be created")
 	err = integration.Delete(context.Background())
 	suite.Require().NoErrorf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
-	err = suite.Client.Fetch(context.Background(), &integration, suite.IntegrationID)
+	integration, err = gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().Error(err, "Integration should not exist anymore")
+	suite.Assert().ErrorIsf(err, gcloudcx.NotFoundError, "Expected NotFoundError, got %s", err)
+	suite.Assert().Truef(errors.Is(err, gcloudcx.NotFoundError), "Expected NotFoundError, got %s", err)
+	details := gcloudcx.NotFoundError.Clone()
+	suite.Require().ErrorAsf(err, &details, "Expected NotFoundError but got %s", err)
 	suite.IntegrationID = uuid.Nil
 }
 
