@@ -17,6 +17,12 @@ type Flow struct {
 	IsDeleted   bool      `json:"deleted"`
 }
 
+// Initialize initializes the object
+//
+// implements Initializable
+func (flow *Flow) Initialize(parameters ...interface{}) {
+}
+
 // GetID gets the identifier of this
 //   implements Identifiable
 func (flow Flow) GetID() uuid.UUID {
@@ -24,9 +30,16 @@ func (flow Flow) GetID() uuid.UUID {
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (flow Flow) GetURI() URI {
-	return NewURI("/api/v2/flows/%s", flow.ID)
+//
+// implements Addressable
+func (flow Flow) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/flows/%s", ids[0])
+	}
+	if flow.ID != uuid.Nil {
+		return NewURI("/api/v2/flows/%s", flow.ID)
+	}
+	return URI("/api/v2/flows/")
 }
 
 // String gets a string representation of this
