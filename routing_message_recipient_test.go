@@ -215,9 +215,77 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByIntegration() {
 			suite.Require().NoError(err, "Failed to delete integration")
 		}
 	}(integration)
+	suite.Logger.Infof("Fetching Recipient for Integration %s", integration.GetID())
 	recipient, err := integration.GetRoutingMessageRecipient(context.Background())
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
 	suite.Assert().Equal(integration.GetID(), recipient.GetID())
 	suite.Assert().Nil(recipient.Flow, "Recipient should not have a Flow")
 	suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
+}
+
+func (suite *RoutingMessageRecipientSuite) TestCanUpdateFlow() {
+	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
+	webhookToken := "DEADBEEF"
+	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
+	suite.Require().NoError(err, "Failed to create integration")
+	suite.Logger.Record("integration", integration).Infof("Created a integration")
+	for {
+		if integration.IsCreated() {
+			break
+		}
+		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
+		time.Sleep(time.Second)
+		err = integration.Refresh(context.Background())
+		suite.Require().NoError(err, "Failed to refresh integration")
+	}
+	defer func(integration *gcloudcx.OpenMessagingIntegration) {
+		if integration != nil && integration.IsCreated() {
+			suite.Logger.Infof("Deleting integration %s", integration.GetID())
+			recipient, _ := integration.GetRoutingMessageRecipient(context.Background())
+			err := recipient.DeleteFlow(context.Background())
+			suite.Require().NoError(err, "Failed to delete flow")
+			err = integration.Delete(context.Background())
+			suite.Require().NoError(err, "Failed to delete integration")
+		}
+	}(integration)
+	suite.Logger.Infof("Fetching Recipient for Integration %s", integration.GetID())
+	recipient, err := integration.GetRoutingMessageRecipient(context.Background())
+	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Assert().Equal(integration.GetID(), recipient.GetID())
+	suite.Assert().Nil(recipient.Flow, "Recipient should not have a Flow")
+	suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
+
+	flow := gcloudcx.Flow{
+		ID:       uuid.MustParse(core.GetEnvAsString("FLOW1_ID", "")),
+		Name:     core.GetEnvAsString("FLOW1_NAME", "Flow1"),
+		IsActive: true,
+	}
+
+	suite.Logger.Infof("Updating Recipient %s's flow to %s", recipient.GetID(), flow.Name)
+	err = recipient.UpdateFlow(context.Background(), &flow)
+	suite.Require().NoErrorf(err, "Failed to update Routing Message Recipient %s. %s", recipient.GetID(), err)
+
+	verify, err := integration.GetRoutingMessageRecipient(context.Background())
+	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Assert().Equal(integration.GetID(), verify.GetID())
+	suite.Assert().NotNil(verify.Flow, "Recipient should have a Flow")
+	suite.Assert().Equal(flow.Name, verify.Flow.Name)
+	suite.Assert().Equal(flow.ID.String(), verify.Flow.ID.String())
+
+	flow = gcloudcx.Flow{
+		ID:       uuid.MustParse(core.GetEnvAsString("FLOW2_ID", "")),
+		Name:     core.GetEnvAsString("FLOW2_NAME", "Flow2"),
+		IsActive: true,
+	}
+
+	suite.Logger.Infof("Updating Recipient %s's flow to %s", recipient.GetID(), flow.Name)
+	err = recipient.UpdateFlow(context.Background(), &flow)
+	suite.Require().NoErrorf(err, "Failed to update Routing Message Recipient %s. %s", recipient.GetID(), err)
+
+	verify, err = integration.GetRoutingMessageRecipient(context.Background())
+	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Assert().Equal(integration.GetID(), verify.GetID())
+	suite.Assert().NotNil(verify.Flow, "Recipient should have a Flow")
+	suite.Assert().Equal(flow.Name, verify.Flow.Name)
+	suite.Assert().Equal(flow.ID.String(), verify.Flow.ID.String())
 }

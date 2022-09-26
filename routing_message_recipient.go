@@ -1,6 +1,7 @@
 package gcloudcx
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -56,6 +57,39 @@ func (recipient RoutingMessageRecipient) GetURI(ids ...uuid.UUID) URI {
 		return NewURI("/api/v2/routing/message/recipients/%s", recipient.ID)
 	}
 	return URI("/api/v2/routing/message/recipients/")
+}
+
+// UpdateFlow updates the flow of this recipient
+func (recipient *RoutingMessageRecipient) UpdateFlow(context context.Context, flow *Flow) error {
+	// Should we disconnect the current flow first?
+	type FlowRef struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+
+	recipient.Flow = flow
+	return recipient.client.Put(
+		context,
+		recipient.GetURI(),
+		struct {
+			ID            string  `json:"id"`
+			Name          string  `json:"name"`
+			MessengerType string  `json:"messengerType"`
+			Flow          FlowRef `json:"flow"`
+		}{
+			ID:            recipient.ID.String(),
+			Name:          recipient.Name,
+			MessengerType: recipient.MessengerType,
+			Flow:          FlowRef{ID: recipient.Flow.ID.String(), Name: recipient.Flow.Name},
+		},
+		nil,
+	)
+}
+
+// DeleteFlow removes the flow of this recipient
+func (recipient *RoutingMessageRecipient) DeleteFlow(context context.Context) error {
+	recipient.Flow = nil
+	return recipient.client.Put(context, recipient.GetURI(), recipient, nil)
 }
 
 // MarshalJSON marshals this into JSON
