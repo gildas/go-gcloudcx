@@ -150,6 +150,51 @@ In the logs, you will see the value of `coolId` in every line produced by client
 
 If the context does not contain a logger, the client.Logger is used.
 
+## Fetch resources
+
+The library provides a `Fetch` function that will fetch a resource from the Genesys Cloud API.
+
+```go
+// Fetch a user by its ID
+user, err := gcloudcx.Fetch[gcloud.User](context, client, userID) // userID is a uuid.UUID
+```
+
+You can use `FetchBy` to fetch a resource by a specific field:
+```go
+integration, err := gcloudcx.FetchBy(context, client, func (integration gcloudcx.OpenMessagingIntegration) bool {
+	return integration.Name == "My Integration"
+})
+```
+
+**Note:** This method can be rather slow as it fetches all the resources of the type and then filters them.
+
+You can also add query criteria to the `FetchBy` function:
+```go
+recipient, err := gcloudcx.FetchBy(
+	context,
+	client,
+	func (recipient gcloudcx.Recipient) bool {
+		return recipient.Name == "My Recipient"
+	},
+	gcloudcx.Query{
+		"messengerType": "open",
+		"pageSize":      100,
+	},
+)
+```
+
+Finally, you can use `FetchAll` to fetch all the resources of a type:
+```go
+integrations, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](context, client)
+```
+
+Again, some query criteria can be added:
+```go
+integrations, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](context, client, gcloudcx.Query{
+	"pageSize": 100,
+})
+```
+
 ## Notifications
 
 The Genesys Cloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
