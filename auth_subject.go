@@ -1,9 +1,6 @@
 package gcloudcx
 
 import (
-	"context"
-
-	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -15,7 +12,21 @@ type AuthorizationSubject struct {
 	Name    string               `json:"name"`
 	Grants  []AuthorizationGrant `json:"grants"`
 	Version int                  `json:"version"`
-	Logger  *logger.Logger       `json:"-"`
+	logger  *logger.Logger       `json:"-"`
+}
+
+// Initialize initializes the object
+//
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (subject *AuthorizationSubject) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *logger.Logger:
+			subject.logger = parameter.Child("authorization_subject", "authorization_subject", "id", subject.ID)
+		}
+	}
 }
 
 // GetID gets the identifier
@@ -25,31 +36,24 @@ func (subject AuthorizationSubject) GetID() uuid.UUID {
 	return subject.ID
 }
 
-func (subject *AuthorizationSubject) Fetch(context context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(context, subject, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(context, NewURI("/authorization/subjects/%s", id), &subject); err != nil {
-			return err
-		}
-	} else if len(selfURI) > 0 {
-		if err := client.Get(context, selfURI, &subject); err != nil {
-			return err
-		}
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	} else {
-		return errors.CreationFailed.With("AuthorizationSubject")
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (subject AuthorizationSubject) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/authorization/subjects/%s", ids[0])
 	}
-	subject.Logger = log.Child("authorization_subject", "authorization_subject", "id", subject.ID)
-	return nil
+	if subject.ID != uuid.Nil {
+		return NewURI("/api/v2/authorization/subjects/%s", subject.ID)
+	}
+	return URI("/api/v2/authorization/subjects/")
 }
 
 // CheckScopes checks if the subject allows or denies the given scopes
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
 func (subject AuthorizationSubject) CheckScopes(scopes ...string) (permitted []string, denied []string) {
-	log := subject.Logger.Child(nil, "check_scopes")
+	log := subject.logger.Child(nil, "check_scopes")
 
 	for _, scope := range scopes {
 		authScope := AuthorizationScope{}.With(scope)

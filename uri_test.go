@@ -42,3 +42,11 @@ func (suite *URISuite) TestHasProtocol() {
 	suite.Assert().True(gcloudcx.NewURI("https://www.acme.com/api/v2/users/me").HasProtocol())
 	suite.Assert().False(gcloudcx.NewURI("/users/me").HasProtocol())
 }
+
+func (suite *URISuite) TestCanAddQuery() {
+	uri := gcloudcx.NewURI("/api/v2/users/me").WithQuery(gcloudcx.Query{"expand": "profile"})
+	suite.Assert().Equal("/api/v2/users/me?expand=profile", uri.String())
+
+	newuri := uri.WithQuery(gcloudcx.Query{"pageNumber": 1})
+	suite.Assert().Equal("/api/v2/users/me?expand=profile&pageNumber=1", newuri.String())
+}

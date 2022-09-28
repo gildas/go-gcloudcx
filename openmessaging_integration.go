@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gildas/go-core"
@@ -31,21 +30,8 @@ type OpenMessagingIntegration struct {
 	CreateStatus     string                `json:"createStatus,omitempty"` // Initiated, Completed, Error
 	CreateError      *ErrorBody            `json:"createError,omitempty"`
 	Status           string                `json:"status,omitempty"` // Active, Inactive
-	SelfURI          URI                   `json:"selfUri,omitempty"`
 	client           *Client               `json:"-"`
 	logger           *logger.Logger        `json:"-"`
-}
-
-// GetID gets the identifier of this
-//   implements Identifiable
-func (integration OpenMessagingIntegration) GetID() uuid.UUID {
-	return integration.ID
-}
-
-// GetURI gets the URI of this
-//   implements Addressable
-func (integration OpenMessagingIntegration) GetURI() URI {
-	return integration.SelfURI
 }
 
 // IsCreated tells if this OpenMessagingIntegration has been created successfully
@@ -58,77 +44,40 @@ func (integration OpenMessagingIntegration) IsError() bool {
 	return integration.CreateStatus == "Error"
 }
 
-// Fetch fetches an OpenMessaging Integration
+// Initialize initializes the object
 //
-// implements Fetchable
-func (integration *OpenMessagingIntegration) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, integration, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/conversations/messaging/integrations/open/%s", id), &integration); err != nil {
-			return err
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (user *OpenMessagingIntegration) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			user.client = parameter
+		case *logger.Logger:
+			user.logger = parameter.Child("user", "user", "id", user.ID)
 		}
-		integration.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &integration); err != nil {
-			return err
-		}
-		integration.logger = log.Record("id", integration.ID)
-	} else if len(name) > 0 {
-		response := struct {
-			Integrations []*OpenMessagingIntegration `json:"entities"`
-			PageSize     int                         `json:"pageSize"`
-			PageNumber   int                         `json:"pageNumber"`
-			PageCount    int                         `json:"pageCount"`
-			PageTotal    int                         `json:"total"`
-			FirstURI     string                      `json:"firstUri"`
-			SelfURI      string                      `json:"selfUri"`
-			LastURI      string                      `json:"lastUri"`
-		}{}
-		if err := client.Get(ctx, "/conversations/messaging/integrations/open", &response); err != nil {
-			return err
-		}
-		nameLowercase := strings.ToLower(name)
-		for _, item := range response.Integrations {
-			if strings.Compare(strings.ToLower(item.Name), nameLowercase) == 0 {
-				*integration = *item
-				break
-			}
-		}
-		if integration == nil || integration.ID == uuid.Nil {
-			return errors.NotFound.With("name", name)
-		}
-		integration.logger = log.Record("id", integration.ID)
-	} else {
-		return errors.ArgumentMissing.With("idOrName")
 	}
-	integration.client = client
-	return nil
 }
 
-// FetchOpenMessagingIntegrations Fetches all OpenMessagingIntegration object
-func (client *Client) FetchOpenMessagingIntegrations(ctx context.Context, parameters ...interface{}) ([]*OpenMessagingIntegration, error) {
-	_, _, _, log := client.ParseParameters(ctx, nil, parameters...)
-	entities := struct {
-		Integrations []*OpenMessagingIntegration `json:"entities"`
-		PageSize     int                         `json:"pageSize"`
-		PageNumber   int                         `json:"pageNumber"`
-		PageCount    int                         `json:"pageCount"`
-		PageTotal    int                         `json:"total"`
-		FirstURI     string                      `json:"firstUri"`
-		SelfURI      string                      `json:"selfUri"`
-		LastURI      string                      `json:"lastUri"`
-	}{}
-	if err := client.Get(ctx, "/conversations/messaging/integrations/open", &entities); err != nil {
-		return nil, err
+// GetID gets the identifier of this
+//
+// implements Identifiable
+func (integration OpenMessagingIntegration) GetID() uuid.UUID {
+	return integration.ID
+}
+
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (integration OpenMessagingIntegration) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/conversations/messaging/integrations/open/%s", ids[0])
 	}
-	log.Record("response", entities).Infof("Got a response")
-	for _, integration := range entities.Integrations {
-		integration.client = client
-		integration.logger = log.Child("openmessagingintegration", "openmessagingintegration", "id", integration.ID)
+	if integration.ID != uuid.Nil {
+		return NewURI("/api/v2/conversations/messaging/integrations/open/%s", integration.ID)
 	}
-	// TODO: fetch all pages!!!
-	return entities.Integrations, nil
+	return URI("/api/v2/conversations/messaging/integrations/open/")
 }
 
 // Create creates a new OpenMessaging Integration
@@ -174,7 +123,7 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 
 func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error {
 	var value OpenMessagingIntegration
-	if err := integration.client.Get(ctx, integration.SelfURI, &value); err != nil {
+	if err := integration.client.Get(ctx, integration.GetURI(), &value); err != nil {
 		return err
 	}
 	integration.Name = value.Name
@@ -217,6 +166,17 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 	}
 	integration.logger.Record("response", response).Debugf("Updated integration %#v", response)
 	return nil
+}
+
+// GetRoutingMessageRecipient fetches the RoutingMessageRecipient for this OpenMessagingIntegration
+func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context context.Context) (*RoutingMessageRecipient, error) {
+	if integration == nil || integration.ID == uuid.Nil {
+		return nil, errors.ArgumentMissing.With("ID")
+	}
+	if !integration.IsCreated() {
+		return nil, errors.CreationFailed.With("integration", integration.ID)
+	}
+	return Fetch[RoutingMessageRecipient](context, integration.client, integration)
 }
 
 // SendInboundMessage sends a text message from the middleware to GENESYS Cloud
@@ -386,10 +346,12 @@ func (integration OpenMessagingIntegration) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessagingIntegration
 	data, err := json.Marshal(struct {
 		surrogate
-		W *core.URL `json:"outboundNotificationWebhookUrl"`
+		WebhookURL *core.URL `json:"outboundNotificationWebhookUrl"`
+		SelfURI    URI       `json:"selfUri"`
 	}{
-		surrogate: surrogate(integration),
-		W:         (*core.URL)(integration.WebhookURL),
+		surrogate:  surrogate(integration),
+		WebhookURL: (*core.URL)(integration.WebhookURL),
+		SelfURI:    integration.GetURI(),
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
 }
@@ -399,14 +361,14 @@ func (integration *OpenMessagingIntegration) UnmarshalJSON(payload []byte) (err 
 	type surrogate OpenMessagingIntegration
 	var inner struct {
 		surrogate
-		W *core.URL `json:"outboundNotificationWebhookUrl"`
+		WebhookURL *core.URL `json:"outboundNotificationWebhookUrl"`
 	}
 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*integration = OpenMessagingIntegration(inner.surrogate)
-	integration.WebhookURL = (*url.URL)(inner.W)
+	integration.WebhookURL = (*url.URL)(inner.WebhookURL)
 	return
 }
 

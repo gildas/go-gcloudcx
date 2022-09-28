@@ -35,42 +35,14 @@ func TestOrganizationSuite(t *testing.T) {
 	suite.Run(t, new(OrganizationSuite))
 }
 
-func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
-	organization := gcloudcx.Organization{}
-	err := suite.Client.Fetch(context.Background(), &organization)
-	if err != nil {
-		suite.Logger.Errorf("Failed", err)
-	}
-	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
-	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
-	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
-	suite.T().Logf("Organization: %s", organization.Name)
-	suite.Logger.Record("org", organization).Infof("Organization Details")
-}
-
-func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
-	organization := gcloudcx.Organization{}
-	err := suite.Client.Fetch(context.Background(), &organization, suite.OrganizationID)
-	if err != nil {
-		suite.Logger.Errorf("Failed", err)
-	}
-	suite.Require().Nil(err, "Failed to fetch my Organization")
-	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
-	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
-	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
-	suite.T().Logf("Organization: %s", organization.Name)
-	suite.Logger.Record("org", organization).Infof("Organization Details")
-}
-
-// Suite Tools
-
+// *****************************************************************************
+// #region: Suite Tools {{{
 func (suite *OrganizationSuite) SetupSuite() {
 	var err error
 	var value string
 
 	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
 			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
@@ -86,7 +58,7 @@ func (suite *OrganizationSuite) SetupSuite() {
 	suite.Require().NotEmpty(value, "PURECLOUD_CLIENTID is not set")
 
 	clientID, err := uuid.Parse(value)
-	suite.Require().Nil(err, "PURECLOUD_CLIENTID is not a valid UUID")
+	suite.Require().NoError(err, "PURECLOUD_CLIENTID is not a valid UUID")
 
 	secret := core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	suite.Require().NotEmpty(secret, "PURECLOUD_CLIENTSECRET is not set")
@@ -95,13 +67,13 @@ func (suite *OrganizationSuite) SetupSuite() {
 	suite.Require().NotEmpty(value, "PURECLOUD_DEPLOYMENTID is not set")
 
 	deploymentID, err := uuid.Parse(value)
-	suite.Require().Nil(err, "PURECLOUD_DEPLOYMENTID is not a valid UUID")
+	suite.Require().NoError(err, "PURECLOUD_DEPLOYMENTID is not a valid UUID")
 
 	value = core.GetEnvAsString("ORGANIZATION_ID", "")
 	suite.Require().NotEmpty(value, "ORGANIZATION_ID is not set in your environment")
 
 	suite.OrganizationID, err = uuid.Parse(value)
-	suite.Require().Nil(err, "ORGANIZATION_ID is not a valid UUID")
+	suite.Require().NoError(err, "ORGANIZATION_ID is not a valid UUID")
 
 	suite.OrganizationName = core.GetEnvAsString("ORGANIZATION_NAME", "")
 	suite.Require().NotEmpty(suite.OrganizationName, "ORGANIZATION_NAME is not set in your environment")
@@ -136,7 +108,7 @@ func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
 		err := suite.Client.Login(context.Background())
-		suite.Require().Nil(err, "Failed to login")
+		suite.Require().NoError(err, "Failed to login")
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -146,4 +118,33 @@ func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {
 func (suite *OrganizationSuite) AfterTest(suiteName, testName string) {
 	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
+func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
+	organization, err := suite.Client.GetMyOrganization(context.Background())
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
+	suite.Require().NoError(err, "Failed to fetch my Organization")
+	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
+	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
+	suite.T().Logf("Organization: %s", organization.Name)
+	suite.Logger.Record("org", organization).Infof("Organization Details")
+}
+
+func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
+	organization, err := gcloudcx.Fetch[gcloudcx.Organization](context.Background(), suite.Client, suite.OrganizationID)
+	if err != nil {
+		suite.Logger.Errorf("Failed", err)
+	}
+	suite.Require().NoError(err, "Failed to fetch my Organization")
+	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
+	suite.Assert().Equal(suite.OrganizationName, organization.String(), "Client's Organization Name is not the same")
+	suite.Assert().NotEmpty(organization.Features, "Client's Organization has no features")
+	suite.T().Logf("Organization: %s", organization.Name)
+	suite.Logger.Record("org", organization).Infof("Organization Details")
 }

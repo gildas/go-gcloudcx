@@ -52,6 +52,7 @@ func main() {
 
 		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
 		wait         = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
+		err error
 	)
 	flag.Parse()
 
@@ -87,7 +88,10 @@ func main() {
 
 	// Initializing the OpenMessaging Integration
 	config.Client.Logger.Infof("Fetching OpenMessaging Integration %s", *integrationName)
-	err := config.Client.Fetch(context.Background(), config.Integration, *integrationName)
+	match := func(integration gcloudcx.OpenMessagingIntegration) bool {
+		return integration.Name == *integrationName
+	}
+	config.Integration, err = gcloudcx.FetchBy(context.Background(), config.Client, match)
 
 	if errors.Is(err, errors.NotFound) {
 		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)

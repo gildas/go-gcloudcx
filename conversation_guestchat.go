@@ -31,82 +31,20 @@ type ConversationGuestChat struct {
 	logger        *logger.Logger            `json:"-"`
 }
 
-// Fetch fetches a Conversation Guest Chat
+// Initialize initializes the object
 //
-// implements Fetchable
-func (conversation *ConversationGuestChat) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/organizations/%s", id), &conversation); err != nil {
-			return err
-		}
-		conversation.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &conversation); err != nil {
-			return err
-		}
-		conversation.logger = log.Record("id", conversation.ID)
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	} else {
-		if err := client.Get(ctx, NewURI("/organizations/me"), &conversation); err != nil {
-			return err
-		}
-		conversation.logger = log.Record("id", conversation.ID)
-	}
-
-	guest := conversation.Guest
-	target := conversation.Target
-	for _, parameter := range parameters {
-		if paramGuest, ok := parameter.(*ChatMember); ok {
-			guest = paramGuest
-		}
-		if paramTarget, ok := parameter.(*RoutingTarget); ok {
-			target = paramTarget
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			conversation.client = parameter
+		case *logger.Logger:
+			conversation.logger = parameter.Child("conversation", "conversation", "id", conversation.ID, "media", "guestchat")
 		}
 	}
-	if guest == nil {
-		return errors.ArgumentMissing.With("Guest")
-	}
-	if target == nil {
-		return errors.ArgumentMissing.With("Target")
-	}
-	if client.Organization == nil {
-		return errors.ArgumentMissing.With("Organization")
-	}
-	if len(client.DeploymentID) == 0 {
-		return errors.ArgumentMissing.With("DeploymentID")
-	}
-
-	if err := client.Post(ctx, "/webchat/guest/conversations",
-		struct {
-			OrganizationID string         `json:"organizationId"`
-			DeploymentID   string         `json:"deploymentId"`
-			RoutingTarget  *RoutingTarget `json:"routingTarget"`
-			Guest          *ChatMember    `json:"memberInfo"`
-		}{
-			OrganizationID: client.Organization.ID.String(),
-			DeploymentID:   client.DeploymentID.String(),
-			RoutingTarget:  target,
-			Guest:          guest,
-		},
-		&conversation,
-	); err != nil {
-		return err
-	}
-
-	conversation.client = client
-	conversation.Guest.DisplayName = guest.DisplayName
-	conversation.Guest.AvatarURL = guest.AvatarURL
-	conversation.Guest.Role = guest.Role
-	conversation.Guest.State = guest.State
-	conversation.Guest.Custom = guest.Custom
-	conversation.Members = map[uuid.UUID]*ChatMember{}
-	conversation.Members[conversation.Guest.ID] = conversation.Guest
-	conversation.TopicReceived = make(chan NotificationTopic)
-	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
-	return nil
 }
 
 // GetID gets the identifier of this
@@ -116,9 +54,16 @@ func (conversation ConversationGuestChat) GetID() uuid.UUID {
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (conversation ConversationGuestChat) GetURI() URI {
-	return conversation.SelfURI
+//
+// implements Addressable
+func (conversation ConversationGuestChat) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/conversations/%s", ids[0])
+	}
+	if conversation.ID != uuid.Nil {
+		return NewURI("/api/v2/conversations/%s", conversation.ID)
+	}
+	return URI("/api/v2/conversations/")
 }
 
 // String gets a string version
@@ -142,6 +87,58 @@ func (conversation *ConversationGuestChat) Connect(context context.Context) (err
 	}
 	go conversation.messageLoop()
 	return
+}
+
+// Start starts a Conversation Guest Chat
+func (conversation *ConversationGuestChat) Start(ctx context.Context, guest *ChatMember, target *RoutingTarget) error {
+	if conversation == nil || conversation.client == nil || conversation.logger == nil {
+		return errors.NotInitialized.With("Conversation")
+	}
+	log := conversation.logger
+	client := conversation.client
+
+	if guest == nil {
+		return errors.ArgumentMissing.With("Guest")
+	}
+	if target == nil {
+		return errors.ArgumentMissing.With("Target")
+	}
+	if client.Organization == nil {
+		return errors.ArgumentMissing.With("Organization")
+	}
+	if len(client.DeploymentID) == 0 {
+		return errors.ArgumentMissing.With("DeploymentID")
+	}
+
+	if err := client.Post(ctx, "/webchat/guest/conversations",
+		struct {
+			OrganizationID string         `json:"organizationId"`
+			DeploymentID   string         `json:"deploymentId"`
+			RoutingTarget  *RoutingTarget `json:"routingTarget"`
+			Guest          *ChatMember    `json:"memberInfo"`
+		}{
+			OrganizationID: conversation.client.Organization.ID.String(),
+			DeploymentID:   conversation.client.DeploymentID.String(),
+			RoutingTarget:  target,
+			Guest:          guest,
+		},
+		&conversation,
+	); err != nil {
+		return err
+	}
+
+	conversation.logger = log
+	conversation.client = client
+	conversation.Guest.DisplayName = guest.DisplayName
+	conversation.Guest.AvatarURL = guest.AvatarURL
+	conversation.Guest.Role = guest.Role
+	conversation.Guest.State = guest.State
+	conversation.Guest.Custom = guest.Custom
+	conversation.Members = map[uuid.UUID]*ChatMember{}
+	conversation.Members[conversation.Guest.ID] = conversation.Guest
+	conversation.TopicReceived = make(chan NotificationTopic)
+	conversation.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
+	return nil
 }
 
 // Close disconnects the websocket and the guest

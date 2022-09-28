@@ -1,11 +1,8 @@
 package gcloudcx
 
 import (
-	"context"
-	"strings"
 	"time"
 
-	"github.com/gildas/go-errors"
 	"github.com/google/uuid"
 )
 
@@ -21,59 +18,42 @@ type ResponseManagementLibrary struct {
 	SelfURI     URI              `json:"selfUri,omitempty"`
 }
 
-// Fetch fetches this from the given Client
+// Initialize initializes the object
 //
-//  implements Fetchable
-func (library *ResponseManagementLibrary) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, uri, log := client.ParseParameters(ctx, library, parameters...)
-	if len(uri) > 0 {
-		return client.Get(ctx, uri, library)
-	}
-	if id != uuid.Nil {
-		return client.Get(ctx, NewURI("/responsemanagement/libraries/%s", id), library)
-	}
-	if len(name) > 0 {
-		nameLowercase := strings.ToLower(name)
-		entities := struct {
-			Libraries []ResponseManagementLibrary `json:"entities"`
-			paginatedEntities
-		}{}
-		for pageNumber := 1; ; pageNumber++ {
-			log.Debugf("Fetching page %d", pageNumber)
-			if err := client.Get(ctx, NewURI("/responsemanagement/libraries/?pageNumber=%d", pageNumber), &entities); err != nil {
-				return err
-			}
-			for _, entity := range entities.Libraries {
-				if strings.Compare(strings.ToLower(entity.Name), nameLowercase) == 0 {
-					*library = entity
-					return nil
-				}
-			}
-			if pageNumber >= entities.PageCount {
-				break
-			}
-		}
-	}
-	return errors.NotFound.With("ResponseManagementLibrary")
+// implements Initializable
+func (library *ResponseManagementLibrary) Initialize(parameters ...interface{}) {
 }
 
 // GetID gets the identifier of this
 //
-//   implements Identifiable
-func (library *ResponseManagementLibrary) GetID() uuid.UUID {
+// implements Identifiable
+func (library ResponseManagementLibrary) GetID() uuid.UUID {
 	return library.ID
+}
+
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (library ResponseManagementLibrary) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/responsemanagement/libraries/%s", ids[0])
+	}
+	if library.ID != uuid.Nil {
+		return NewURI("/api/v2/responsemanagement/libraries/%s", library.ID)
+	}
+	return URI("/api/v2/responsemanagement/libraries/")
 }
 
 // GetType gets the identifier of this
 //
-//   implements Identifiable
+// implements Identifiable
 func (library *ResponseManagementLibrary) GetType() string {
 	return "responsemanagement.library"
 }
 
 // String gets a string version
 //
-//   implements the fmt.Stringer interface
+// implements the fmt.Stringer interface
 func (library ResponseManagementLibrary) String() string {
 	if len(library.Name) > 0 {
 		return library.Name

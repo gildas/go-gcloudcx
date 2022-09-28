@@ -73,21 +73,24 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 	if config.AgentQueue == nil {
 		return errors.ArgumentMissing.With("Queue")
 	}
+	match := func(queuename string) func(queue gcloudcx.Queue) bool {
+		return func(queue gcloudcx.Queue) bool {
+			return strings.EqualFold(queue.Name, queuename)
+		}
+	}
 	if len(config.AgentQueue.ID) == 0 {
-		queueName := config.AgentQueue.Name
-		config.AgentQueue, err = client.FindQueueByName(context, queueName)
+		config.AgentQueue, err = gcloudcx.FetchBy(context, client, match(config.AgentQueue.Name))
 		if err != nil {
-			return errors.Wrapf(err, "Failed to retrieve the Agent Queue %s", queueName)
+			return errors.Wrapf(err, "Failed to retrieve the Agent Queue %s", config.AgentQueue.Name)
 		}
 	}
 	if config.BotQueue == nil {
 		return errors.ArgumentMissing.With("Bot Queue")
 	}
 	if len(config.BotQueue.ID) == 0 {
-		queueName := config.BotQueue.Name
-		config.BotQueue, err = client.FindQueueByName(context, queueName)
+		config.BotQueue, err = gcloudcx.FetchBy(context, client, match(config.BotQueue.Name))
 		if err != nil {
-			return errors.Wrapf(err, "Failed to retrieve the Bot Queue %s", queueName)
+			return errors.Wrapf(err, "Failed to retrieve the Bot Queue %s", config.BotQueue.Name)
 		}
 	}
 

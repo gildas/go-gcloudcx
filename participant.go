@@ -184,7 +184,7 @@ func (participant Participant) MarshalJSON() ([]byte, error) {
 	userURI := URI("")
 	if participant.User != nil {
 		userID = participant.User.ID
-		userURI = participant.User.SelfURI
+		userURI = participant.User.GetURI()
 	}
 	type surrogate Participant
 	data, err := json.Marshal(struct {
@@ -221,7 +221,7 @@ func (participant *Participant) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*participant = Participant(inner.surrogate)
 	if participant.User == nil && len(inner.UserID) > 0 {
-		participant.User = &User{ID: inner.UserID, SelfURI: inner.UserURI}
+		participant.User = &User{ID: inner.UserID}
 	}
 	participant.AlertingTimeout = time.Duration(inner.AlertingTimeoutMs) * time.Millisecond
 	participant.WrapupTimeout = time.Duration(inner.WrapupTimeoutMs) * time.Millisecond

@@ -3,7 +3,6 @@ package gcloudcx
 import (
 	"context"
 
-	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -27,34 +26,6 @@ type Organization struct {
 	logger                     *logger.Logger  `json:"-"`
 }
 
-// Fetch fetches an Organization
-//
-// implements Fetchable
-func (organization *Organization) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, organization, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/organizations/%s", id), &organization); err != nil {
-			return err
-		}
-		organization.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &organization); err != nil {
-			return err
-		}
-		organization.logger = log.Record("id", organization.ID)
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	} else {
-		if err := client.Get(ctx, NewURI("/organizations/me"), &organization); err != nil {
-			return err
-		}
-		organization.logger = log.Record("id", organization.ID)
-	}
-	organization.client = client
-	return nil
-}
-
 // GetMyOrganization retrives the current Organization
 func (client *Client) GetMyOrganization(context context.Context) (*Organization, error) {
 	organization := &Organization{}
@@ -66,20 +37,45 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 	return organization, nil
 }
 
+// Initialize initializes the object
+//
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (organization *Organization) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			organization.client = parameter
+		case *logger.Logger:
+			organization.logger = parameter.Child("organization", "organization", "id", organization.ID)
+		}
+	}
+}
+
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+// implements Identifiable
 func (organization Organization) GetID() uuid.UUID {
 	return organization.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (organization Organization) GetURI() URI {
-	return organization.SelfURI
+//
+// implements Addressable
+func (organization Organization) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/organizations/%s", ids[0])
+	}
+	if organization.ID != uuid.Nil {
+		return NewURI("/api/v2/organizations/%s", organization.ID)
+	}
+	return URI("/api/v2/organizations/")
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+// implements the fmt.Stringer interface
 func (organization Organization) String() string {
 	if len(organization.Name) > 0 {
 		return organization.Name

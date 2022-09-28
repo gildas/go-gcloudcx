@@ -2,7 +2,6 @@ package gcloudcx
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/gildas/go-errors"
@@ -53,63 +52,70 @@ type ResponseManagementSubstitution struct {
 	Default     string    `json:"defaultValue"`
 }
 
-// Fetch fetches this from the given Client
+// Initialize initializes the object
 //
-//  implements Fetchable
-func (response *ResponseManagementResponse) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	// TODO: Allow to filter per Library ID
-	id, name, uri, _ := client.ParseParameters(ctx, response, parameters...)
-	if len(uri) > 0 {
-		return client.Get(ctx, uri, response)
+// implements Initializable
+func (response *ResponseManagementResponse) Initialize(parameters ...interface{}) {
+}
+
+// GetID gets the identifier of this
+//
+// implements Identifiable
+func (response ResponseManagementResponse) GetID() uuid.UUID {
+	return response.ID
+}
+
+// GetURI gets the URI of this
+//
+// implements Addressable
+func (response ResponseManagementResponse) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/responsemanagement/responses/%s", ids[0])
 	}
-	if id != uuid.Nil {
-		return client.Get(ctx, NewURI("/responsemanagement/responses/%s", id), response)
+	if response.ID != uuid.Nil {
+		return NewURI("/api/v2/responsemanagement/responses/%s", response.ID)
 	}
-	if len(name) > 0 {
-		nameLowercase := strings.ToLower(name)
-		results := struct {
-			Results struct {
-				Responses []ResponseManagementResponse `json:"entities"`
-				paginatedEntities
-			} `json:"results"`
-		}{}
-		err := client.Post(
-			ctx,
-			NewURI("/responsemanagement/responses/query"),
-			ResponseManagementQuery{
-				Filters: []ResponseManagementQueryFilter{
-					{Name: "name", Operator: "EQUALS", Values: []string{name}},
-				},
-			},
-			&results,
-		)
-		if err != nil {
-			return err
-		}
+	return URI("/api/v2/responsemanagement/responses/")
+}
+
+// String gets a string version
+//
+// implements the fmt.Stringer interface
+func (response ResponseManagementResponse) String() string {
+	if len(response.Name) > 0 {
+		return response.Name
+	}
+	return response.ID.String()
+}
+
+func (response ResponseManagementResponse) FetchByFilters(context context.Context, client *Client, filters ...ResponseManagementQueryFilter) (*ResponseManagementResponse, error) {
+	results := struct {
+		Results struct {
+			Responses []ResponseManagementResponse `json:"entities"`
+			paginatedEntities
+		} `json:"results"`
+	}{}
+	err := client.Post(
+		context,
+		NewURI("/responsemanagement/responses/query"),
+		ResponseManagementQuery{
+			Filters: filters,
+		},
+		&results,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(results.Results.Responses) == 0 {
+		return nil, errors.NotFound.With("ResponseManagementResponse")
+	}
+	/*
 		for _, entity := range results.Results.Responses {
 			if strings.Compare(strings.ToLower(entity.Name), nameLowercase) == 0 {
 				*response = entity
 				return nil
 			}
 		}
-		return errors.NotFound.With("ResponseManagementResponse", name)
-	}
-	return errors.NotFound.With("ResponseManagementResponse")
-}
-
-// GetID gets the identifier of this
-//
-//   implements Identifiable
-func (response *ResponseManagementResponse) GetID() uuid.UUID {
-	return response.ID
-}
-
-// String gets a string version
-//
-//   implements the fmt.Stringer interface
-func (response ResponseManagementResponse) String() string {
-	if len(response.Name) > 0 {
-		return response.Name
-	}
-	return response.ID.String()
+	*/
+	return &results.Results.Responses[0], nil
 }

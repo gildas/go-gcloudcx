@@ -34,57 +34,11 @@ func TestLoginSuite(t *testing.T) {
 	suite.Run(t, new(LoginSuite))
 }
 
-func (suite *LoginSuite) TestCanLogin() {
-	err := suite.Client.SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
-		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
-		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
-	}).Login(context.Background())
-	suite.Assert().Nil(err, "Failed to login")
-}
-
-func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
-	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
-		ClientID: uuid.New(), // that UUID should not be anywhere in GCloud
-		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
-	})
-	suite.Assert().NotNil(err, "Should have failed login in")
-
-	var apierr gcloudcx.APIError
-	ok := errors.As(err, &apierr)
-	suite.Require().Truef(ok, "Error is not a gcloudcx.APIError, error: %+v", err)
-	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
-	suite.Assert().Equal(errors.HTTPBadRequest.Code, apierr.Status)
-	suite.Assert().Equal("client not found: invalid_client", apierr.Error())
-}
-
-func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
-	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
-		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
-		Secret:   "WRONGSECRET",
-	})
-	suite.Assert().NotNil(err, "Should have failed login in")
-
-	var apierr gcloudcx.APIError
-	ok := errors.As(err, &apierr)
-	suite.Require().Truef(ok, "Error is not a gcloudcx.APIError, error: %+v", err)
-	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
-	suite.Assert().Equal(errors.HTTPUnauthorized.Code, apierr.Status)
-	suite.Assert().Equal("authentication failed: invalid_client", apierr.Error())
-}
-
-func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
-	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
-		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
-		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
-	})
-	suite.Assert().Nil(err, "Failed to login")
-}
-
-// Suite Tools
-
+// *****************************************************************************
+// #region: Suite Tools {{{
 func (suite *LoginSuite) SetupSuite() {
 	_ = godotenv.Load()
-	suite.Name = strings.TrimSuffix(reflect.TypeOf(*suite).Name(), "Suite")
+	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
 			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
@@ -126,4 +80,53 @@ func (suite *LoginSuite) BeforeTest(suiteName, testName string) {
 func (suite *LoginSuite) AfterTest(suiteName, testName string) {
 	duration := time.Since(suite.Start)
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
+}
+
+// #endregion: Suite Tools }}}
+// *****************************************************************************
+
+func (suite *LoginSuite) TestCanLogin() {
+	err := suite.Client.SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+	}).Login(context.Background())
+	suite.Assert().NoError(err, "Failed to login")
+}
+
+func (suite *LoginSuite) TestFailsLoginWithInvalidClientID() {
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
+		ClientID: uuid.New(), // that UUID should not be anywhere in GCloud
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+	})
+	suite.Assert().Error(err, "Should have failed login in")
+
+	var apierr gcloudcx.APIError
+	ok := errors.As(err, &apierr)
+	suite.Require().Truef(ok, "Error is not a gcloudcx.APIError, error: %+v", err)
+	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
+	suite.Assert().Equal(errors.HTTPBadRequest.Code, apierr.Status)
+	suite.Assert().Equal("client not found: invalid_client", apierr.Error())
+}
+
+func (suite *LoginSuite) TestFailsLoginWithInvalidSecret() {
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
+		Secret:   "WRONGSECRET",
+	})
+	suite.Assert().Error(err, "Should have failed login in")
+
+	var apierr gcloudcx.APIError
+	ok := errors.As(err, &apierr)
+	suite.Require().Truef(ok, "Error is not a gcloudcx.APIError, error: %+v", err)
+	suite.Logger.Record("apierr", apierr).Errorf("API Error", err)
+	suite.Assert().Equal(errors.HTTPUnauthorized.Code, apierr.Status)
+	suite.Assert().Equal("authentication failed: invalid_client", apierr.Error())
+}
+
+func (suite *LoginSuite) TestCanLoginWithClientCredentialsGrant() {
+	err := suite.Client.LoginWithAuthorizationGrant(context.Background(), &gcloudcx.ClientCredentialsGrant{
+		ClientID: uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", "")),
+		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", ""),
+	})
+	suite.Assert().NoError(err, "Failed to login")
 }

@@ -77,41 +77,45 @@ type Voicemail struct {
 	UploadStatus string `json:"uploadStatus"`
 }
 
-// Fetch fetches the conversation
+// Initialize initializes the object
 //
-// implements Fetchable
-func (conversation *Conversation) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, _, selfURI, log := client.ParseParameters(ctx, conversation, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/conversations/%s", id), &conversation); err != nil {
-			return err
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (conversation *Conversation) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			conversation.client = parameter
+		case *logger.Logger:
+			conversation.logger = parameter.Child("conversation", "conversation", "id", conversation.ID)
 		}
-		conversation.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &conversation); err != nil {
-			return err
-		}
-		conversation.logger = log.Record("id", conversation.ID)
 	}
-	conversation.client = client
-	return nil
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+// implements Identifiable
 func (conversation Conversation) GetID() uuid.UUID {
 	return conversation.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (conversation Conversation) GetURI() URI {
-	return conversation.SelfURI
+//
+// implements Addressable
+func (conversation Conversation) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/conversations/%s", ids[0])
+	}
+	if conversation.ID != uuid.Nil {
+		return NewURI("/api/v2/conversations/%s", conversation.ID)
+	}
+	return URI("/api/v2/conversations/")
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+// implements the fmt.Stringer interface
 func (conversation Conversation) String() string {
 	if len(conversation.Name) != 0 {
 		return conversation.Name
@@ -120,7 +124,8 @@ func (conversation Conversation) String() string {
 }
 
 // Disconnect disconnect an Identifiable from this
-//   implements Disconnecter
+//
+// implements Disconnecter
 func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) error {
 	return conversation.client.Patch(
 		conversation.logger.ToContext(context),
@@ -131,7 +136,8 @@ func (conversation Conversation) Disconnect(context context.Context, identifiabl
 }
 
 // UpdateState update the state of an identifiable in this
-//   implements StateUpdater
+//
+// implements StateUpdater
 func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) error {
 	return conversation.client.Patch(
 		conversation.logger.ToContext(context),

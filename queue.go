@@ -1,9 +1,7 @@
 package gcloudcx
 
 import (
-	"context"
 	"encoding/json"
-	"net/url"
 	"time"
 
 	"github.com/gildas/go-errors"
@@ -36,60 +34,20 @@ type RoutingTarget struct {
 	Address string `json:"targetAddress,omitempty"`
 }
 
-// Fetch fetches a queue
+// Initialize initializes the object
 //
-// implements Fetchable
-func (queue *Queue) Fetch(ctx context.Context, client *Client, parameters ...interface{}) error {
-	id, name, selfURI, log := client.ParseParameters(ctx, queue, parameters...)
-
-	if id != uuid.Nil {
-		if err := client.Get(ctx, NewURI("/groups/%s", id), &queue); err != nil {
-			return err
-		}
-		queue.logger = log
-	} else if len(selfURI) > 0 {
-		if err := client.Get(ctx, selfURI, &queue); err != nil {
-			return err
-		}
-		queue.logger = log.Record("id", queue.ID)
-	} else if len(name) > 0 {
-		return errors.NotImplemented.WithStack()
-	}
-	queue.client = client
-	return nil
-}
-
-// FindQueueByName finds a Queue by its name
-func (client *Client) FindQueueByName(context context.Context, name string) (*Queue, error) {
-	response := struct {
-		Entities   []*Queue `json:"entities"`
-		PageSize   int64    `json:"pageSize"`
-		PageNumber int64    `json:"pageNumber"`
-		PageCount  int64    `json:"pageCount"`
-		PageTotal  int64    `json:"pageTotal"`
-		SelfURI    string   `json:"selfUri"`
-		FirstURI   string   `json:"firstUrl"`
-		LastURI    string   `json:"lastUri"`
-	}{}
-	query := url.Values{}
-	query.Add("name", name)
-	err := client.Get(context, NewURI("/routing/queues?%s", query.Encode()), &response)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-	for _, queue := range response.Entities {
-		if queue.Name == name {
-			queue.client = client
-			queue.logger = client.Logger.Child("queue", "queue", "id", queue.ID)
-			if queue.CreatedBy != nil {
-				queue.CreatedBy.client = client
-				queue.CreatedBy.logger = client.Logger.Child("user", "user", "id", queue.CreatedBy.ID)
-			}
-			return queue, nil
+// accepted parameters: *gcloufcx.Client, *logger.Logger
+//
+// implements Initializable
+func (queue *Queue) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case *Client:
+			queue.client = parameter
+		case *logger.Logger:
+			queue.logger = parameter.Child("queue", "queue", "id", queue.ID)
 		}
 	}
-	// TODO: read all pages!!!
-	return nil, errors.NotFound.With("queue", name)
 }
 
 // GetID gets the identifier of this
@@ -99,9 +57,16 @@ func (queue Queue) GetID() uuid.UUID {
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
-func (queue Queue) GetURI() URI {
-	return queue.SelfURI
+//
+// implements Addressable
+func (queue Queue) GetURI(ids ...uuid.UUID) URI {
+	if len(ids) > 0 {
+		return NewURI("/api/v2/routing/queues/%s", ids[0])
+	}
+	if queue.ID != uuid.Nil {
+		return NewURI("/api/v2/routing/queues/%s", queue.ID)
+	}
+	return URI("/api/v2/routing/queues/")
 }
 
 func (queue Queue) String() string {
