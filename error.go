@@ -38,7 +38,7 @@ var (
 	// AuthenticationRequiredError means the request should authenticate first
 	AuthenticationRequiredError = APIError{Status: 401, Code: "authentication.required", Message: "No authentication bearer token specified in authorization header."}
 	// BadCredentialsError means the credentials are invalid
-	BadCredentialsError = APIError{Status: 401, Code: "bad.credentials", Message: "Invalid login credentials."}
+	BadCredentialsError = APIError{Status: 401, Code: "bad.credentials", Message: "Invalid login credentials (%s)."}
 	// CredentialsExpiredError means the credentials are expired
 	CredentialsExpiredError = APIError{Status: 401, Code: "credentials.expired", Message: "The supplied credentials are expired and cannot be used."}
 
@@ -138,6 +138,16 @@ func (e APIError) As(target interface{}) bool {
 	return false
 }
 
+// With creates a new Error from a given sentinel telling "what" is wrong and eventually their value.
+//
+// With also records the stack trace at the point it was called.
+func (e APIError) With(what string, values ...interface{}) error {
+	final := e
+	final.MessageWithParams = fmt.Sprintf(final.Message, what)
+	final.Stack.Initialize()
+	return final
+}
+
 // WithStack creates a new error from a given Error and records its stack.
 func (e APIError) WithStack() error {
 	final := e
@@ -154,9 +164,20 @@ func (e *APIError) UnmarshalJSON(payload []byte) (err error) {
 	}{}
 	err = json.Unmarshal(payload, &oauthError)
 	if err == nil && len(oauthError.Error) > 0 && len(oauthError.Description) > 0 {
-		*e = APIError{
-			Code:    BadCredentialsError.Code,
-			Message: fmt.Sprintf("%s: %s", oauthError.Description, oauthError.Error),
+		switch oauthError.Error {
+		case "invalid_client":
+			*e = BadCredentialsError
+			e.Message = fmt.Sprintf(e.Message, oauthError.Description)
+			e.MessageParams = map[string]string{
+				"reason": oauthError.Error,
+				"description": oauthError.Description,
+			}
+		default:
+			*e = APIError{
+				Status:  BadCredentialsError.Status,
+				Code:    BadCredentialsError.Code,
+				Message: fmt.Sprintf("%s: %s", oauthError.Description, oauthError.Error),
+			}
 		}
 		return nil
 	}
