@@ -83,7 +83,7 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 	correlationID := ""
 	if res != nil {
 		correlationID = res.Headers.Get("Inin-Correlation-Id")
-		log = log.Record("correlationId", correlationID)
+		log = log.Record("gcloudcx-correlationId", correlationID)
 	}
 	if err != nil {
 		urlError := &url.Error{}
@@ -119,9 +119,9 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 				apiError.Status = errors.HTTPUnauthorized.Code
 				apiError.Code = errors.HTTPUnauthorized.ID
 			}
-			return errors.WithStack(apiError)
+			return apiError.WithStack()
 		}
-		return err
+		return errors.WithStack(err)
 	}
 	log.Debugf("Successfuly sent request in %s", duration)
 	return nil
