@@ -164,7 +164,7 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 	if err != nil {
 		return errors.CreationFailed.Wrap(err)
 	}
-	integration.logger.Record("response", response).Debugf("Updated integration %#v", response)
+	integration.logger.Record("response", response).Debugf("Updated integration")
 	return nil
 }
 
