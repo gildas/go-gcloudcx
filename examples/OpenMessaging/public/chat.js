@@ -31,6 +31,7 @@ const Chat = Vue.component('chat', {
           console.log("Received path: ", results.data.path, results)
           this.chatId  = results.data.path.split("/").pop()
           this.dialing = true
+          // deepcode ignore MissingClose: close is called in the else branch...
           this.socket  = new WebSocket(`ws://${document.location.host}${results.data.path}`)
 
           this.socket.onopen = function(event) {
