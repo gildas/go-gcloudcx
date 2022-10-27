@@ -55,7 +55,7 @@ func (token *AccessToken) LoadFromCookie(r *http.Request, cookieName string) *Ac
 func (token AccessToken) SaveToCookie(w http.ResponseWriter, cookieName string) {
 	jsonToken, _ := json.Marshal(token)
 	encodedID, _ := secureCookie.Encode("pcsession", string(jsonToken))
-	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: encodedID, Path: "/", HttpOnly: true})
+	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: encodedID, Path: "/", HttpOnly: true, Secure: true})
 }
 
 // IsValid tells if this AccessToken is valid

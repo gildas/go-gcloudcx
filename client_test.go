@@ -36,10 +36,10 @@ func (suite *ClientSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
-			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
-			Unbuffered:  true,
-			FilterLevel: logger.TRACE,
-			SourceInfo:  true,
+			Path:         fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:   true,
+			SourceInfo:   true,
+			FilterLevels: logger.NewLevelSet(logger.TRACE),
 		},
 	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
@@ -115,7 +115,7 @@ func (suite *ClientSuite) TestCanLoginWithClientCredentials() {
 	if value := core.GetEnvAsString("PURECLOUD_CLIENTID", ""); len(value) > 0 {
 		clientID = uuid.MustParse(value)
 	}
-	
+
 	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"),
 		Logger: suite.Logger,
@@ -134,7 +134,7 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsSecret(
 	if value := core.GetEnvAsString("PURECLOUD_CLIENTID", ""); len(value) > 0 {
 		clientID = uuid.MustParse(value)
 	}
-	
+
 	client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 		Region: core.GetEnvAsString("PURECLOUD_REGION", "mypurecloud.com"),
 		Logger: suite.Logger,

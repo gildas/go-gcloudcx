@@ -44,9 +44,10 @@ func (suite *OpenMessagingSuite) SetupSuite() {
 	suite.Name = strings.TrimSuffix(reflect.TypeOf(suite).Elem().Name(), "Suite")
 	suite.Logger = logger.Create("test",
 		&logger.FileStream{
-			Path:        fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
-			Unbuffered:  true,
-			FilterLevel: logger.TRACE,
+			Path:         fmt.Sprintf("./log/test-%s.log", strings.ToLower(suite.Name)),
+			Unbuffered:   true,
+			SourceInfo:   true,
+			FilterLevels: logger.NewLevelSet(logger.TRACE),
 		},
 	).Child("test", "test")
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
@@ -215,7 +216,7 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 	integration := gcloudcx.OpenMessagingIntegration{
 		ID:           uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"),
 		Name:         "TEST-GO-PURECLOUD",
-		WebhookURL:   core.Must(url.Parse("https://www.acme.com/gcloudcx")).(*url.URL),
+		WebhookURL:   core.Must(url.Parse("https://www.acme.com/gcloudcx")),
 		WebhookToken: "DEADBEEF",
 		SupportedContent: &gcloudcx.AddressableEntityRef{
 			ID:      uuid.MustParse("832066dd-6030-46b1-baeb-b89b681c6636"),

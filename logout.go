@@ -15,7 +15,7 @@ func (client *Client) Logout(context context.Context) {
 
 // DeleteCookie deletes the GCloud Client cookie from the response writer
 func (client *Client) DeleteCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: "", Path: "/", HttpOnly: true, MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: "pcsession", Value: "", Path: "/", HttpOnly: true, MaxAge: -1, Secure: true})
 }
 
 // LogoutHandler logs out the current user

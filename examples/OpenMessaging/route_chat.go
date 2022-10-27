@@ -21,7 +21,7 @@ func ChatRoutes(router *mux.Router) {
 // createChatHandler creates a new chat
 func createChatHandler(w http.ResponseWriter, r *http.Request) {
 	log := logger.Must(logger.FromContext(r.Context())).Child(nil, "create_chat")
-	config := core.Must(ConfigFromContext(r.Context())).(*Config)
+	config := core.Must(ConfigFromContext(r.Context()))
 
 	log.Debugf("Request Headers: %#v", r.Header)
 
@@ -57,7 +57,7 @@ func createChatHandler(w http.ResponseWriter, r *http.Request) {
 // chatSocketHandler starts the websocket that handles chats
 func chatSocketHandler(w http.ResponseWriter, r *http.Request) {
 	log := logger.Must(logger.FromContext(r.Context())).Child(nil, "create_websocket")
-	config := core.Must(ConfigFromContext(r.Context())).(*Config)
+	config := core.Must(ConfigFromContext(r.Context()))
 
 	log.Debugf("Request Headers: %#v", r.Header)
 	params := mux.Vars(r)
