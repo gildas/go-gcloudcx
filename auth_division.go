@@ -63,7 +63,7 @@ func (division *AuthorizationDivision) UnmarshalJSON(payload []byte) (err error)
 	(*division) = AuthorizationDivision(inner.surrogate)
 	if inner.ID != "*" {
 		if division.ID, err = uuid.Parse(inner.ID); err != nil {
-			return errors.JSONMarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.ID).(errors.Error).Wrap(err))
+			return errors.WrapErrors(errors.JSONMarshalError, errors.ArgumentInvalid.With("id", inner.ID), err)
 		}
 	}
 	if division.ObjectCounts == nil {
