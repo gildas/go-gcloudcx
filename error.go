@@ -169,7 +169,7 @@ func (e *APIError) UnmarshalJSON(payload []byte) (err error) {
 			*e = BadCredentialsError
 			e.Message = fmt.Sprintf(e.Message, oauthError.Description)
 			e.MessageParams = map[string]string{
-				"reason": oauthError.Error,
+				"reason":      oauthError.Error,
 				"description": oauthError.Description,
 			}
 		default:

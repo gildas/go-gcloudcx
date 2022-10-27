@@ -70,7 +70,7 @@ func main() {
 	// Initializing the Config
 	config := &Config{
 		IntegrationName:         *integrationName,
-		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)).(*url.URL),
+		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)),
 		IntegrationWebhookToken: *integrationToken,
 		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
 			Region:       *region,

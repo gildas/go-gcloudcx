@@ -36,7 +36,7 @@ func main() {
 	)
 	flag.Parse()
 
-	log := logger.Create("RolesAndPermissions_Example", &logger.StdoutStream{FilterLevel: logger.TRACE, Unbuffered: true})
+	log := logger.Create("RolesAndPermissions_Example", &logger.StdoutStream{FilterLevels: logger.NewLevelSet(logger.TRACE), Unbuffered: true})
 	defer log.Flush()
 	log.Infof(strings.Repeat("-", 80))
 	log.Infof("Log Destination: %s", log)

@@ -16,7 +16,7 @@ import (
 
 func mainRouteHandler(w http.ResponseWriter, r *http.Request) {
 	log := logger.Must(logger.FromContext(r.Context()))
-	config := core.Must(ConfigFromContext(r.Context())).(*Config)
+	config := core.Must(ConfigFromContext(r.Context()))
 
 	log.Debugf("Request Headers: %#v", r.Header)
 	defer r.Body.Close()

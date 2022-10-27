@@ -80,8 +80,8 @@ func (suite *ClientSuite) TestCanSendRequestWithFullyQualifiedURL() {
 	client := CreateTestClient(server.URL, suite.Logger)
 	suite.Require().NotNil(client, "GCloudCX Client is nil")
 	stuff := struct{}{}
-	serverURL := core.Must(url.Parse(server.URL)).(*url.URL)
-	requestURL := core.Must(serverURL.Parse("/api/v2/path/to/resource")).(*url.URL)
+	serverURL := core.Must(url.Parse(server.URL))
+	requestURL := core.Must(serverURL.Parse("/api/v2/path/to/resource"))
 	err := client.Get(context.Background(), gcloudcx.NewURI(requestURL.String()), &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
@@ -168,7 +168,7 @@ func CreateTestClient(serverURL string, log *logger.Logger) *gcloudcx.Client {
 	})
 	if client != nil {
 		client.Logger.Infof("Redirecting Client to Test Server at %s", serverURL)
-		client.API = core.Must(url.Parse(serverURL)).(*url.URL)
+		client.API = core.Must(url.Parse(serverURL))
 		client.LoginURL = client.API
 	}
 	return client
