@@ -44,7 +44,7 @@ func (client *Client) CreateNotificationChannel(context context.Context) (*Notif
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 		if err != nil {
-			return nil, errors.NotConnected.With("Channel").(errors.Error).Wrap(err)
+			return nil, errors.WrapErrors(errors.NotConnected.With("Channel"), err)
 		}
 	}
 	// Start the message loop
