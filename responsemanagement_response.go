@@ -47,9 +47,9 @@ type ResponseManagementQueryFilter struct {
 //
 // See https://developer.genesys.cloud/api/rest/v2/responsemanagement
 type ResponseManagementSubstitution struct {
-	ID          uuid.UUID `json:"id"`
-	Description string    `json:"description"`
-	Default     string    `json:"defaultValue"`
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	Default     string `json:"defaultValue"`
 }
 
 // Initialize initializes the object
