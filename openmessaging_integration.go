@@ -146,6 +146,9 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 	if integration.ID == uuid.Nil {
 		return errors.ArgumentMissing.With("ID")
 	}
+	if webhookURL == nil {
+		return errors.ArgumentMissing.With("webhookURL")
+	}
 	response := &OpenMessagingIntegration{}
 	err := integration.client.Patch(
 		integration.logger.ToContext(context),
