@@ -9,11 +9,11 @@ import (
 	"github.com/google/uuid"
 )
 
-// Fetch fetches an object from the Genesys Cloud API
+// Fetch fetches a resource from the Genesys Cloud API
 //
 // The object must implement the Fetchable interface
 //
-// Objects can be fetched by their ID:
+// Resources can be fetched by their ID:
 //
 //    user, err := Fetch[gcloudcx.User](context, client, uuid.UUID)
 //
@@ -47,9 +47,9 @@ func Fetch[T Fetchable, PT interface {
 	return nil, errors.NotFound.WithStack()
 }
 
-// FetchBy fetches an object from the Genesys Cloud API by a match function
+// FetchBy fetches a resource from the Genesys Cloud API by a match function
 //
-// The object must implement the Fetchable interface
+// The resource must implement the Fetchable interface
 //
 //   match := func(user gcloudcx.User) bool {
 //       return user.Name == "John Doe"
