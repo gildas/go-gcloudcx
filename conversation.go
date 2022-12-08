@@ -9,7 +9,8 @@ import (
 )
 
 // Conversation contains the details of a live conversation
-//   See: https://developer.mypurecloud.com/api/rest/v2/conversations
+//
+//	See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
 	ID              uuid.UUID      `json:"id"`
 	SelfURI         URI            `json:"selfUri,omitempty"`

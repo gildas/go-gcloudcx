@@ -11,17 +11,17 @@ import (
 
 // Fetch fetches a resource from the Genesys Cloud API
 //
-// The object must implement the Fetchable interface
+// # The object must implement the Fetchable interface
 //
 // Resources can be fetched by their ID:
 //
-//    user, err := Fetch[gcloudcx.User](context, client, uuid.UUID)
+//	user, err := Fetch[gcloudcx.User](context, client, uuid.UUID)
 //
-//    user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{ID: uuid.UUID})
+//	user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{ID: uuid.UUID})
 //
 // or by their URI:
 //
-//    user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{}.GetURI(uuid.UUID))
+//	user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{}.GetURI(uuid.UUID))
 func Fetch[T Fetchable, PT interface {
 	Initializable
 	*T
@@ -51,14 +51,14 @@ func Fetch[T Fetchable, PT interface {
 //
 // The resource must implement the Fetchable interface
 //
-//   match := func(user gcloudcx.User) bool {
-//       return user.Name == "John Doe"
-//   }
-//   user, err := FetchBy(context, client, match)
+//	match := func(user gcloudcx.User) bool {
+//	    return user.Name == "John Doe"
+//	}
+//	user, err := FetchBy(context, client, match)
 //
 // A gcloudcx.Query can be added to narrow the request:
 //
-//   user, err := FetchBy(context, client, match, gcloudcx.Query{Language: "en-US"})
+//	user, err := FetchBy(context, client, match, gcloudcx.Query{Language: "en-US"})
 func FetchBy[T Fetchable, PT interface {
 	Initializable
 	*T
@@ -93,11 +93,11 @@ func FetchBy[T Fetchable, PT interface {
 //
 // The objects must implement the Fetchable interface
 //
-//	 users, err := FetchAll[gcloudcx.User](context, client)
+//	users, err := FetchAll[gcloudcx.User](context, client)
 //
 // A gcloudcx.Query can be added to narrow the request:
 //
-//	 users, err := FetchAll[gcloudcx.User](context, client, gcloudcx.Query{Language: "en-US"})
+//	users, err := FetchAll[gcloudcx.User](context, client, gcloudcx.Query{Language: "en-US"})
 func FetchAll[T Fetchable, PT interface {
 	Initializable
 	*T

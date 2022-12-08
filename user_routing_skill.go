@@ -13,13 +13,15 @@ type UserRoutingSkill struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (userRoutingSkill UserRoutingSkill) GetID() uuid.UUID {
 	return userRoutingSkill.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (userRoutingSkill UserRoutingSkill) GetURI() URI {
 	return userRoutingSkill.SelfURI
 }

@@ -29,13 +29,15 @@ type SocialExpression struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (socialExpression SocialExpression) GetID() uuid.UUID {
 	return socialExpression.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (socialExpression SocialExpression) String() string {
 	return socialExpression.ID.String()
 }

@@ -13,13 +13,15 @@ type UserRoutingLanguage struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (userRoutingLanguage UserRoutingLanguage) GetID() uuid.UUID {
 	return userRoutingLanguage.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (userRoutingLanguage UserRoutingLanguage) GetURI() URI {
 	return userRoutingLanguage.SelfURI
 }

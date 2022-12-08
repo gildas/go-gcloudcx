@@ -16,7 +16,7 @@ import (
 
 // NotificationChannel defines a Notification Channel
 //
-//   See: https://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html
+//	See: https://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html
 type NotificationChannel struct {
 	ID            uuid.UUID              `json:"id"`
 	ConnectURL    *url.URL               `json:"-"`
@@ -30,7 +30,7 @@ type NotificationChannel struct {
 
 // CreateNotificationChannel creates a new channel for notifications
 //
-//   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
+//	If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
 func (client *Client) CreateNotificationChannel(context context.Context) (*NotificationChannel, error) {
 	var err error
 	channel := &NotificationChannel{}
@@ -238,14 +238,14 @@ func (channel *NotificationChannel) messageLoop() {
 
 // GetID gets the identifier of this
 //
-//   implements Identifiable
+//	implements Identifiable
 func (channel NotificationChannel) GetID() uuid.UUID {
 	return channel.ID
 }
 
 // String gets a string version
 //
-//   implements the fmt.Stringer interface
+//	implements the fmt.Stringer interface
 func (channel NotificationChannel) String() string {
 	return channel.ID.String()
 }

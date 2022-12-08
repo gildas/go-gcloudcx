@@ -28,13 +28,15 @@ type UserStations struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (station UserStation) GetID() uuid.UUID {
 	return station.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (station UserStation) GetURI() URI {
 	return station.SelfURI
 }

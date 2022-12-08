@@ -41,14 +41,16 @@ type NotificationTopicDefinition struct {
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (topic ChannelTopic) GetURI() URI {
 	return topic.SelfURI
 }
 
 // GetNotificationAvailableTopics retrieves available notification topics
-//   properties is one of more properties that should be expanded
-//   see https://developer.mypurecloud.com/api/rest/v2/notifications/#get-api-v2-notifications-availabletopics
+//
+//	properties is one of more properties that should be expanded
+//	see https://developer.mypurecloud.com/api/rest/v2/notifications/#get-api-v2-notifications-availabletopics
 func (client *Client) GetNotificationAvailableTopics(context context.Context, properties ...string) ([]NotificationTopicDefinition, error) {
 	query := url.Values{}
 	if len(properties) > 0 {

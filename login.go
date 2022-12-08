@@ -21,7 +21,8 @@ type Authorization struct {
 }
 
 // Login logs in a Client to Gcloud
-//   Uses the credentials stored in the Client
+//
+//	Uses the credentials stored in the Client
 func (client *Client) Login(context context.Context) error {
 	return client.LoginWithAuthorizationGrant(context, client.Grant)
 }

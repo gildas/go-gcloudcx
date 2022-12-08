@@ -14,7 +14,7 @@ import (
 //
 // When the Token is updated, the new token is sent to the TokenUpdated chan along with the CustomData
 //
-//   See: https://developer.mypurecloud.com/api/rest/authorization/use-client-credentials.html
+//	See: https://developer.mypurecloud.com/api/rest/authorization/use-client-credentials.html
 type ClientCredentialsGrant struct {
 	ClientID     uuid.UUID
 	Secret       string

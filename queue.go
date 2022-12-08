@@ -51,7 +51,8 @@ func (queue *Queue) Initialize(parameters ...interface{}) {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (queue Queue) GetID() uuid.UUID {
 	return queue.ID
 }

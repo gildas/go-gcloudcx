@@ -12,7 +12,8 @@ import (
 )
 
 // AuthorizationCodeGrant implements Gcloud's Client Authorization Code Grants
-//   See: https://developer.mypurecloud.com/api/rest/authorization/use-authorization-code.html
+//
+//	See: https://developer.mypurecloud.com/api/rest/authorization/use-authorization-code.html
 type AuthorizationCodeGrant struct {
 	ClientID     uuid.UUID
 	Secret       string

@@ -10,13 +10,15 @@ type DomainRole struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (role DomainRole) GetID() uuid.UUID {
 	return role.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (role DomainRole) GetURI() URI {
 	return role.SelfURI
 }
