@@ -8,7 +8,8 @@ type EntityRef struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (ref EntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
@@ -20,13 +21,15 @@ type AddressableEntityRef struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (ref AddressableEntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (ref AddressableEntityRef) GetURI() URI {
 	return ref.SelfURI
 }
@@ -39,13 +42,15 @@ type DomainEntityRef struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (ref DomainEntityRef) GetID() uuid.UUID {
 	return ref.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (ref DomainEntityRef) GetURI() URI {
 	return ref.SelfURI
 }

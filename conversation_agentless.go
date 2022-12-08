@@ -44,13 +44,15 @@ type AgentlessMessageResult struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (result AgentlessMessageResult) GetID() uuid.UUID {
 	return result.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (result AgentlessMessageResult) GetURI() URI {
 	return result.SelfURI
 }

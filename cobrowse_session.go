@@ -31,13 +31,15 @@ type CobrowseSession struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (session CobrowseSession) GetID() uuid.UUID {
 	return session.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (session CobrowseSession) String() string {
 	return session.ID.String()
 }

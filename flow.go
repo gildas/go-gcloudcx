@@ -24,7 +24,8 @@ func (flow *Flow) Initialize(parameters ...interface{}) {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (flow Flow) GetID() uuid.UUID {
 	return flow.ID
 }

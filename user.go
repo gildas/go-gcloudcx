@@ -54,8 +54,9 @@ type Jabber struct {
 }
 
 // GetMyUser retrieves the User that authenticated with the client
-//   properties is one of more properties that should be expanded
-//   see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
+//
+//	properties is one of more properties that should be expanded
+//	see https://developer.mypurecloud.com/api/rest/v2/users/#get-api-v2-users-me
 func (client *Client) GetMyUser(context context.Context, properties ...string) (*User, error) {
 	query := url.Values{}
 	if len(properties) > 0 {

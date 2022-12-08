@@ -9,7 +9,8 @@ type EmployerInfo struct {
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (info EmployerInfo) String() string {
 	return info.OfficialName
 }

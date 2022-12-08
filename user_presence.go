@@ -28,19 +28,22 @@ type PresenceDefinition struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (definition PresenceDefinition) GetID() uuid.UUID {
 	return definition.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (definition PresenceDefinition) GetURI() URI {
 	return definition.SelfURI
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (definition PresenceDefinition) String() string {
 	if len(definition.SystemPresence) > 0 {
 		return definition.SystemPresence
@@ -49,19 +52,22 @@ func (definition PresenceDefinition) String() string {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (presence UserPresence) GetID() uuid.UUID {
 	return presence.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (presence UserPresence) GetURI() URI {
 	return presence.SelfURI
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (presence UserPresence) String() string {
 	if len(presence.Name) > 0 {
 		return presence.Name

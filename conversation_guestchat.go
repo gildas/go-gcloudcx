@@ -48,7 +48,8 @@ func (conversation *ConversationGuestChat) Initialize(parameters ...interface{})
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (conversation ConversationGuestChat) GetID() uuid.UUID {
 	return conversation.ID
 }
@@ -67,14 +68,16 @@ func (conversation ConversationGuestChat) GetURI(ids ...uuid.UUID) URI {
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (conversation ConversationGuestChat) String() string {
 	return conversation.ID.String()
 }
 
 // Connect connects a Guest Chat to its websocket and starts its message loop
-//   If the websocket was already connected, nothing happens
-//   If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
+//
+//	If the websocket was already connected, nothing happens
+//	If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
 func (conversation *ConversationGuestChat) Connect(context context.Context) (err error) {
 	if conversation.Socket != nil {
 		return

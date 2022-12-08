@@ -22,13 +22,15 @@ type ScreenShare struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (screenShare ScreenShare) GetID() uuid.UUID {
 	return screenShare.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (screenShare ScreenShare) String() string {
 	return screenShare.ID.String()
 }

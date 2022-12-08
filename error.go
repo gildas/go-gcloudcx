@@ -104,9 +104,10 @@ func (e APIError) Error() string {
 // implements errors.Is interface (package "errors").
 //
 // To check if an error is an errors.Error, simply write:
-//  if errors.Is(err, gcloudcx.APIError{}) {
-//    // do something with err
-//  }
+//
+//	if errors.Is(err, gcloudcx.APIError{}) {
+//	  // do something with err
+//	}
 func (e APIError) Is(target error) bool {
 	if actual, ok := target.(APIError); ok {
 		if len(actual.Code) == 0 {
@@ -122,10 +123,11 @@ func (e APIError) Is(target error) bool {
 // As returns true if the conversion was successful and the target is now populated.
 //
 // Example:
-//   target := errors.ArgumentInvalid.Clone()
-//   if errors.As(err, &target) {
-//     // do something with target
-//   }
+//
+//	target := errors.ArgumentInvalid.Clone()
+//	if errors.As(err, &target) {
+//	  // do something with target
+//	}
 func (e APIError) As(target interface{}) bool {
 	if actual, ok := target.(**APIError); ok {
 		if *actual != nil && (*actual).Code != e.Code {

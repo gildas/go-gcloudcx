@@ -148,19 +148,22 @@ func (participant Participant) IsMember(mediaType string, identifiable Identifia
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (participant Participant) GetID() uuid.UUID {
 	return participant.ID
 }
 
 // GetURI gets the URI of this
-//   implements Addressable
+//
+//	implements Addressable
 func (participant Participant) GetURI() URI {
 	return participant.SelfURI
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (participant Participant) String() string {
 	if len(participant.Name) != 0 {
 		return participant.Name

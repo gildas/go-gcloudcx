@@ -41,7 +41,7 @@ func (recipient *RoutingMessageRecipient) Initialize(parameters ...interface{}) 
 
 // GetID gets the identifier of this
 //
-//   implements Identifiable
+//	implements Identifiable
 func (recipient RoutingMessageRecipient) GetID() uuid.UUID {
 	return recipient.ID
 }

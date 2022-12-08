@@ -19,13 +19,15 @@ type EvaluationQuestion struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (question EvaluationQuestion) GetID() uuid.UUID {
 	return question.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (question EvaluationQuestion) String() string {
 	return question.ID.String()
 }

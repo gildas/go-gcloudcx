@@ -37,7 +37,8 @@ func (message OpenMessageReceipt) GetType() string {
 }
 
 // GetID gets the identifier of this
-//   implements OpenMessage
+//
+//	implements OpenMessage
 func (message OpenMessageReceipt) GetID() string {
 	return message.ID
 }

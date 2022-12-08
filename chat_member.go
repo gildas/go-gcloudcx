@@ -24,13 +24,15 @@ type ChatMember struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (member ChatMember) GetID() uuid.UUID {
 	return member.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (member ChatMember) String() string {
 	if len(member.DisplayName) != 0 {
 		return member.DisplayName

@@ -79,13 +79,15 @@ type EvaluationScoringSet struct {
 }
 
 // GetID gets the identifier of this
-//   implements Identifiable
+//
+//	implements Identifiable
 func (evaluation Evaluation) GetID() uuid.UUID {
 	return evaluation.ID
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (evaluation Evaluation) String() string {
 	if len(evaluation.Name) != 0 {
 		return evaluation.Name

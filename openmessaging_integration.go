@@ -146,6 +146,9 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 	if integration.ID == uuid.Nil {
 		return errors.ArgumentMissing.With("ID")
 	}
+	if webhookURL == nil {
+		return errors.ArgumentMissing.With("webhookURL")
+	}
 	response := &OpenMessagingIntegration{}
 	err := integration.client.Patch(
 		integration.logger.ToContext(context),
@@ -284,7 +287,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 //
 // The message can be only text as it is sent bia the AgentLess Message API.
 //
-// This is mainly for debugging purposes
+// # This is mainly for debugging purposes
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
 func (integration *OpenMessagingIntegration) SendOutboundMessage(context context.Context, destination, text string) (*AgentlessMessageResult, error) {
@@ -333,7 +336,7 @@ func (integration *OpenMessagingIntegration) GetMessageData(context context.Cont
 
 // String gets a string version
 //
-//   implements the fmt.Stringer interface
+//	implements the fmt.Stringer interface
 func (integration OpenMessagingIntegration) String() string {
 	if len(integration.Name) > 0 {
 		return integration.Name

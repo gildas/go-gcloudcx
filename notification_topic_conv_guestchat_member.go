@@ -82,7 +82,8 @@ func (topic *ConversationGuestChatMemberTopic) UnmarshalJSON(payload []byte) (er
 }
 
 // String gets a string version
-//   implements the fmt.Stringer interface
+//
+//	implements the fmt.Stringer interface
 func (topic ConversationGuestChatMemberTopic) String() string {
 	return fmt.Sprintf("%s=%s", topic.Name, topic.Member)
 }
