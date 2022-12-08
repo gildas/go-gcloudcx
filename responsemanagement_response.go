@@ -2,6 +2,8 @@ package gcloudcx
 
 import (
 	"context"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/gildas/go-errors"
@@ -23,7 +25,7 @@ type ResponseManagementResponse struct {
 	SelfURI       URI                              `json:"selfUri,omitempty"`
 }
 
-// ResponseManagementContent is the interface for the Response Management Content
+// ResponseManagementContent represent a Response Management Content
 //
 // See https://developer.genesys.cloud/api/rest/v2/responsemanagement
 type ResponseManagementContent struct {
@@ -118,4 +120,46 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 		}
 	*/
 	return &results.Results.Responses[0], nil
+}
+
+// ApplySubstitutions applies the substitutions to the response text that matches the given content type
+func (response ResponseManagementResponse) ApplySubstitutions(contentType string, substitutions map[string]string) (string, error) {
+	var text string
+	for _, content := range response.Texts {
+		if strings.Compare(strings.ToLower(content.ContentType), strings.ToLower(contentType)) == 0 {
+			text = content.Content
+			break
+		}
+	}
+	if len(text) == 0 {
+		return "", errors.NotFound.With("text of type ", contentType)
+	}
+
+	if len(substitutions) == 0 {
+		return text, nil
+	}
+
+	// Apply defaults from the response to the given substitutions
+	for _, substitution := range response.Substitutions {
+		if s, ok := substitutions[substitution.ID]; ok && len(s) == 0 {
+			substitutions[substitution.ID] = substitution.Default
+		}
+	}
+
+	// change the placeholders to Go Template
+	for id, _ := range substitutions {
+		text = strings.ReplaceAll(text, "{{"+id+"}}", "{{."+id+"}}")
+	}
+
+	// apply the substitutions
+	tpl, err := template.New("response").Parse(text)
+	if err != nil {
+		return "", errors.WrapErrors(errors.ArgumentInvalid.With("text", "..."), err)
+	}
+	var expanded strings.Builder
+	err = tpl.Execute(&expanded, substitutions)
+	if err != nil {
+		return "", errors.WithStack(err)
+	}
+	return expanded.String(), nil
 }
