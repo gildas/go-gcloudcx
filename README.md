@@ -247,6 +247,98 @@ go func() {
 }()
 ```
 
+## Response Management (Canned Responses)
+
+Responses canbe fetched, like any other resource, via the `Fetch` function:
+
+```go
+response, err := gcloudcx.Fetch[gcloudcx.Response](context, client, responseID)
+```
+
+Or via the dedicated `FetchByFilter` function:
+
+```go
+response, err = gcloudcx.ResponseManagementResponse{}.FetchByFilters(
+	context,
+	client,
+	gcloudcx.ResponseManagementQueryFilter{
+		Name: "name", Operator: "EQUALS", Values: []string{response.Name},
+	},
+)
+```
+This calls the query API of Genesys Cloud, which is more efficient than fetching all the responses and then filtering them (`FetchBy` method).
+
+Responses can apply substitutions to provide the final text that can be sent to the user. Custom substitutions are provided as a `map[string]string` to the func and default substitutions are provided by the resource itself.
+
+```go
+text, err := response.ApplySubstitutions(context, "text/plain", map[string]string{
+	"firstName": "John",
+	"lastName":  "Doe",
+})
+```
+The second argument allows to specify the content type of the text to be returned, that content type has to be present in the resource, otherwise an error is returned. `text/plain` and `text/html` are supported by the Genesys Cloud API as of today.
+
+`ApplySubstitutions` supports both the Genesys Cloud substitutions (`{{substitutionId}}`) and the Go Template system, which is far more powerful. See the [Go Template documentation](https://pkg.go.dev/text/template) for more information. On top of the basic features, `ApplySubstitutions` also provides the functions from the Sprig library, which is a collection of useful functions for templates. See the [Sprig documentation](https://masterminds.github.io/sprig/) for more information.
+
+For example the following response will return the text `Hello John Doe`:
+```go
+response := gcloudcx.ResponseManagementResponse{ // This is a fake response, just to show the template
+	Texts: []gcloudcx.ResponseManagementContent{
+		{
+			ContentType: "text/plain",
+			Content: `Hello {{firstName}} {{lastName}}`, // Genesys Cloud substitutions
+		}
+	},
+}
+text, err := response.ApplySubstitutions(context, "text/plain", map[string]string{
+	"firstName": "John",
+	"lastName":  "Doe",
+})
+assert.Equal(t, "Hello John Doe", text)
+```
+
+To get the same result with Go Templates:
+```go
+response := gcloudcx.ResponseManagementResponse{ // This is a fake response, just to show the template
+	Texts: []gcloudcx.ResponseManagementContent{
+		{
+			ContentType: "text/plain",
+			Content: `Hello {{.firstName}} {{.lastName}}`, // Go Template substitutions
+		}
+	},
+}
+text, err := response.ApplySubstitutions(context, "text/plain", map[string]string{
+	"firstName": "John",
+	"lastName":  "Doe",
+})
+assert.Equal(t, "Hello John Doe", text)
+```
+
+You can mix both approaches:
+```go
+response := gcloudcx.ResponseManagementResponse{ // This is a fake response, just to show the template
+	Texts: []gcloudcx.ResponseManagementContent{
+		{
+			ContentType: "text/plain",
+			Content: `
+Hello {{.firstName}} {{.lastName}}, you are on {{location}}!   # Genesys Cloud and Go substitutions
+{{if eq .location "Earth"}}You are on the right place!{{end}}  # Go Template condition
+And you are visiting {{ default "Atlantis" .country }}.        # Sprig function
+`,
+		}
+	},
+	Substitutions: []gcloudcx.ResponseManagementSubstitution{{
+		ID: "location",
+		Description: "The location of the person to greet",
+		Default: "Earth",
+	}},
+}
+text, err := response.ApplySubstitutions(context, "text/plain", map[string]string{
+	"firstName": "John",
+	"lastName":  "Doe",
+})
+```
+
 ## Agent Chat API
 
 ## Guest Chat API

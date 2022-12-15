@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
+	"github.com/Masterminds/sprig/v3"
 )
 
 // ResponseManagementResponse is the interface for the Response Management Response
@@ -123,7 +125,10 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 }
 
 // ApplySubstitutions applies the substitutions to the response text that matches the given content type
-func (response ResponseManagementResponse) ApplySubstitutions(contentType string, substitutions map[string]string) (string, error) {
+func (response ResponseManagementResponse) ApplySubstitutions(context context.Context, contentType string, substitutions map[string]string) (string, error) {
+	log := logger.Must(logger.FromContext(context, logger.Create("gcloudcx", "nil"))).Child("response", "applysubstitutions", "response", response.ID)
+	// Logging is done at the TRACE level since the response and/or the text could contain sensitive information
+
 	var text string
 	for _, content := range response.Texts {
 		if strings.Compare(strings.ToLower(content.ContentType), strings.ToLower(contentType)) == 0 {
@@ -135,24 +140,34 @@ func (response ResponseManagementResponse) ApplySubstitutions(contentType string
 		return "", errors.NotFound.With("text of type ", contentType)
 	}
 
-	if len(substitutions) == 0 {
+	if len(substitutions) == 0 && len(response.Substitutions) == 0 {
 		return text, nil
+	}
+	if substitutions == nil {
+		substitutions = make(map[string]string)
 	}
 
 	// Apply defaults from the response to the given substitutions
+	log.Record("substitutions", substitutions).Tracef("Substitutions")
 	for _, substitution := range response.Substitutions {
-		if s, ok := substitutions[substitution.ID]; ok && len(s) == 0 {
+		if s, ok := substitutions[substitution.ID]; ok {
+			if len(s) == 0 {
+				substitutions[substitution.ID] = substitution.Default
+			}
+		} else {
 			substitutions[substitution.ID] = substitution.Default
 		}
 	}
+	log.Record("substitutions", substitutions).Tracef("Substitutions with defaults")
 
-	// change the placeholders to Go Template
-	for id, _ := range substitutions {
+	// change the Genesys Cloud placeholders to Go Template placeholders
+	for id := range substitutions {
 		text = strings.ReplaceAll(text, "{{"+id+"}}", "{{."+id+"}}")
 	}
+	log.Tracef("Replaced gcloud placeholders with Go Template placeholders: %s", text)
 
 	// apply the substitutions
-	tpl, err := template.New("response").Parse(text)
+	tpl, err := template.New("response").Funcs(sprig.FuncMap()).Parse(text)
 	if err != nil {
 		return "", errors.WrapErrors(errors.ArgumentInvalid.With("text", "..."), err)
 	}
