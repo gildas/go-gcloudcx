@@ -215,3 +215,88 @@ func (suite *ResponseManagementSuite) TestShouldFailFetchingResponseWithUnknownN
 	suite.Logger.Errorf("Expected Failure", err)
 	suite.Assert().ErrorIs(err, errors.NotFound, "Should have failed to fetch Response Management Response")
 }
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutions() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithGOPlaceholders() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{.name}}",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithDefaults() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     `Hello, {{name}}`,
+			},
+		},
+		Substitutions: []gcloudcx.ResponseManagementSubstitution{{
+			ID: "name",
+			Description: "The name of the person to greet",
+			Default: "John",
+		}},
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"lastname": "Doe"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithGODefaults() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     `Hello, {{default .name "John"}}`,
+			},
+		},
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"lastname": "Doe"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithGOAction() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     `Hello, {{if .name}}{{.name}}{{else}}John{{end}}`,
+			},
+		},
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"lastname": "Doe"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John", text)
+}
