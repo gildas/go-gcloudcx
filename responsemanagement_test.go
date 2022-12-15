@@ -300,3 +300,58 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithGOAction() {
 	suite.Require().NoError(err, "Failed to apply substitutions")
 	suite.Assert().Equal("Hello, John", text)
 }
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithComplexTemplate() {
+	ctx := suite.Logger.ToContext(context.Background())
+	expected := `
+{
+  "genesys_prompt": "Would you like to buy now?",
+  "genesys_quick_replies": [{
+    "text": "OK","payload": "answer=OK"
+  },{
+    "text": "Cancel","payload": "answer=Cancel"
+  }]
+}`
+	response := gcloudcx.ResponseManagementResponse{
+		Name: "Test",
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     `
+{
+  "genesys_prompt": "{{question}}",
+  "genesys_quick_replies": [{
+{{- if .OK_payload}}
+    "text": "{{OK}}","payload": "{{OK_payload}}"
+{{- else}}
+    "text": "{{OK}}","payload": "answer={{OK}}"
+{{- end}}
+  },{
+{{- if .Cancel_payload}}
+    "text": "{{Cancel}}","payload": "{{Cancel_payload}}"
+{{- else}}
+    "text": "{{Cancel}}","payload": "answer={{Cancel}}"
+{{- end}}
+  }]
+}`,
+			},
+		},
+		Substitutions: []gcloudcx.ResponseManagementSubstitution{{
+			ID: "question", Default: "Would you like to proceed?",
+		}, {
+			ID: "OK", Default: "OK",
+		}, {
+			ID: "OK_payload", Default: "",
+		}, {
+			ID: "Cancel", Default: "Cancel",
+		}, {
+			ID: "Cancel_payload", Default: "",
+		}},
+	}
+	arguments := map[string]string{
+		"question": "Would you like to buy now?",
+	}
+	text, err := response.ApplySubstitutions(ctx, "text/plain", arguments)
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal(expected, text)
+}
