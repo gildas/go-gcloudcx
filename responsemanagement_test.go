@@ -296,7 +296,7 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithGODefaults() 
 		Texts: []gcloudcx.ResponseManagementContent{
 			{
 				ContentType: "text/plain",
-				Content:     `Hello, {{default .name "John"}}`,
+				Content:     `Hello, {{default "John" .name}}`,
 			},
 		},
 	}
