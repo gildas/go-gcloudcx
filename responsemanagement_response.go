@@ -127,6 +127,7 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 // ApplySubstitutions applies the substitutions to the response text that matches the given content type
 func (response ResponseManagementResponse) ApplySubstitutions(context context.Context, contentType string, substitutions map[string]string) (string, error) {
 	log := logger.Must(logger.FromContext(context, logger.Create("gcloudcx", "nil"))).Child("response", "applysubstitutions", "response", response.ID)
+	// Logging is done at the TRACE level since the response and/or the text could contain sensitive information
 
 	var text string
 	for _, content := range response.Texts {
@@ -139,8 +140,11 @@ func (response ResponseManagementResponse) ApplySubstitutions(context context.Co
 		return "", errors.NotFound.With("text of type ", contentType)
 	}
 
-	if len(substitutions) == 0 {
+	if len(substitutions) == 0 && len(response.Substitutions) == 0 {
 		return text, nil
+	}
+	if substitutions == nil {
+		substitutions = make(map[string]string)
 	}
 
 	// Apply defaults from the response to the given substitutions
