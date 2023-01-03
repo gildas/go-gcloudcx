@@ -6,8 +6,8 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/gildas/go-core v0.5.2
 	github.com/gildas/go-errors v0.3.4
-	github.com/gildas/go-logger v1.6.4
-	github.com/gildas/go-request v0.7.14
+	github.com/gildas/go-logger v1.6.5
+	github.com/gildas/go-request v0.7.15
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/securecookie v1.1.1
@@ -20,7 +20,7 @@ require (
 require (
 	cloud.google.com/go v0.107.0 // indirect
 	cloud.google.com/go/compute v1.14.0 // indirect
-	cloud.google.com/go/compute/metadata v0.2.2 // indirect
+	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/logging v1.6.1 // indirect
 	cloud.google.com/go/longrunning v0.3.0 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -47,7 +47,7 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/api v0.105.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
+	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
 	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
