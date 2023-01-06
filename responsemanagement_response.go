@@ -6,10 +6,10 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
-	"github.com/Masterminds/sprig/v3"
 )
 
 // ResponseManagementResponse is the interface for the Response Management Response

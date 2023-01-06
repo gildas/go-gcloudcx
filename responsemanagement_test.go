@@ -279,9 +279,9 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithDefaults() {
 			},
 		},
 		Substitutions: []gcloudcx.ResponseManagementSubstitution{{
-			ID: "name",
+			ID:          "name",
 			Description: "The name of the person to greet",
-			Default: "John",
+			Default:     "John",
 		}},
 	}
 	text, err := response.ApplySubstitutions(ctx, "text/plain", map[string]string{"lastname": "Doe"})
@@ -337,7 +337,7 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithComplexTempla
 		Texts: []gcloudcx.ResponseManagementContent{
 			{
 				ContentType: "text/plain",
-				Content:     `
+				Content: `
 {
   "genesys_prompt": "{{question}}",
   "genesys_quick_replies": [{
@@ -392,7 +392,7 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithComplexTempla
 		Texts: []gcloudcx.ResponseManagementContent{
 			{
 				ContentType: "text/plain",
-				Content:     `
+				Content: `
 {
   "genesys_prompt": "{{question}}",
   "genesys_quick_replies": [{
