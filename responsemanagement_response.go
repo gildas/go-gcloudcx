@@ -167,7 +167,7 @@ func (response ResponseManagementResponse) ApplySubstitutions(context context.Co
 	log.Tracef("Replaced gcloud placeholders with Go Template placeholders: %s", text)
 
 	// apply the substitutions
-	tpl, err := template.New("response").Funcs(sprig.FuncMap()).Parse(text)
+	tpl, err := template.New("response").Funcs(sprig.TxtFuncMap()).Parse(text)
 	if err != nil {
 		return "", errors.WrapErrors(errors.ArgumentInvalid.With("text", "..."), err)
 	}
