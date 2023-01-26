@@ -19,13 +19,15 @@ func (role AuthorizationGrantRole) GetID() uuid.UUID {
 }
 
 // CheckScope checks if the grant role allows or denies the given scope
-func (role AuthorizationGrantRole) CheckScope(scope AuthorizationScope) bool {
+//
+// If allowed, the policy that allows the scope is returned
+func (role AuthorizationGrantRole) CheckScope(scope AuthorizationScope) (AuthorizationGrantPolicy, bool) {
 	for _, policy := range role.Policies {
 		if policy.CheckScope(scope) {
-			return true
+			return policy, true
 		}
 	}
-	return false
+	return AuthorizationGrantPolicy{}, false
 }
 
 // String returns a string representation of the AuthorizationDivision
