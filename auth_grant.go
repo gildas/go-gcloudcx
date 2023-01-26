@@ -10,7 +10,9 @@ type AuthorizationGrant struct {
 }
 
 // CheckScope checks if the grant allows or denies the given scope
-func (grant AuthorizationGrant) CheckScope(scope AuthorizationScope) bool {
+//
+// If allowed, the policy that allows the scope is returned
+func (grant AuthorizationGrant) CheckScope(scope AuthorizationScope) (AuthorizationGrantPolicy, bool) {
 	return grant.Role.CheckScope(scope)
 }
 

@@ -59,15 +59,16 @@ func (subject AuthorizationSubject) CheckScopes(scopes ...string) (permitted []s
 		authScope := AuthorizationScope{}.With(scope)
 		granted := false
 		for _, grant := range subject.Grants {
+			var policy AuthorizationGrantPolicy
 			log.Tracef("Checking against grant %s", grant)
-			if granted = grant.CheckScope(authScope); granted {
-				log.Debugf("Scope %s permitted by Authorization Grant %s", authScope, grant)
+			if policy, granted = grant.CheckScope(authScope); granted {
+				log.Debugf("Scope %s permitted by Grant %s (policy: %s)", authScope, grant, policy)
 				permitted = append(permitted, scope)
 				break
 			}
 		}
 		if !granted {
-			log.Tracef("Scope %s is denied", authScope)
+			log.Warnf("Scope %s is denied by all Grants", authScope)
 			denied = append(denied, scope)
 		}
 	}
