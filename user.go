@@ -73,7 +73,7 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (user *User) Initialize(parameters ...interface{}) {

@@ -46,7 +46,7 @@ func (integration OpenMessagingIntegration) IsError() bool {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (user *OpenMessagingIntegration) Initialize(parameters ...interface{}) {

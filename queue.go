@@ -36,7 +36,7 @@ type RoutingTarget struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (queue *Queue) Initialize(parameters ...interface{}) {

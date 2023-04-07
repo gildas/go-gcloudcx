@@ -29,7 +29,7 @@ type Group struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (group *Group) Initialize(parameters ...interface{}) {

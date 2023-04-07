@@ -25,7 +25,7 @@ type RoutingMessageRecipient struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (recipient *RoutingMessageRecipient) Initialize(parameters ...interface{}) {

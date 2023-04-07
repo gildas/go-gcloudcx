@@ -17,7 +17,7 @@ type AuthorizationSubject struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (subject *AuthorizationSubject) Initialize(parameters ...interface{}) {

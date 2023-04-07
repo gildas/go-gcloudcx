@@ -33,7 +33,7 @@ type ConversationGuestChat struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (conversation *ConversationGuestChat) Initialize(parameters ...interface{}) {
