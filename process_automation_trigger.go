@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
@@ -17,14 +18,14 @@ import (
 type ProcessAutomationTrigger struct {
 	ID              uuid.UUID                   `json:"id"`
 	Name            string                      `json:"name"`
-	Description     string                      `json:"description"`
-	TopicName       string                      `json:"topicName"`
+	Description     string                      `json:"description,omitempty"`
+	Topic           NotificationTopic           `json:"-"`
 	MatchCriteria   []ProcessAutomationCriteria `json:"matchCriteria"`
 	Target          ProcessAutomationTarget     `json:"target"`
 	Enabled         bool                        `json:"enabled"`
-	EventTTLSeconds int                         `json:"eventTTLSeconds"`
-	DelayBySeconds  int                         `json:"delayBySeconds"`
-	Version         int                         `json:"version"`
+	EventTTLSeconds int                         `json:"eventTTLSeconds,omitempty"`
+	DelayBySeconds  int                         `json:"delayBySeconds,omitempty"`
+	Version         int                         `json:"version,omitempty"`
 	client          *Client                     `json:"-"`
 	logger          *logger.Logger              `json:"-"`
 }
@@ -73,38 +74,25 @@ func (trigger ProcessAutomationTrigger) GetURI(ids ...uuid.UUID) URI {
 // Create creates a new ProcessAutomationTrigger
 //
 // See: https://developer.genesys.cloud/platform/process-automation/trigger-apis#post-api-v2-processautomation-triggers
-func (client *Client) CreateProcessAutomationTrigger(context context.Context, name, description, topicName string, target ProcessAutomationTarget, matchCriteria []ProcessAutomationCriteria, eventTTLSeconds, delayBySeconds int, enabled bool) (*ProcessAutomationTrigger, error) {
-	trigger := ProcessAutomationTrigger{}
+func (trigger ProcessAutomationTrigger) Create(context context.Context, client *Client) (*ProcessAutomationTrigger, error) {
+	created := ProcessAutomationTrigger{}
 	err := client.Post(
 		context,
 		"processautomation/triggers",
-		struct {
-			Name            string                      `json:"name"`
-			Description     string                      `json:"description,omitempty"`
-			TopicName       string                      `json:"topicName"`
-			MatchCriteria   []ProcessAutomationCriteria `json:"matchCriteria"`
-			Target          ProcessAutomationTarget     `json:"target"`
-			Enabled         bool                        `json:"enabled"`
-			EventTTLSeconds int                         `json:"eventTTLSeconds,omitempty"`
-			DelayBySeconds  int                         `json:"delayBySeconds,omitempty"`
-		}{
-			Name:            name,
-			Description:     description,
-			TopicName:       topicName,
-			MatchCriteria:   matchCriteria,
-			Target:          target,
-			Enabled:         enabled,
-			EventTTLSeconds: eventTTLSeconds,
-			DelayBySeconds:  delayBySeconds,
-		},
-		&trigger,
+		trigger,
+		&created,
 	)
 	if err != nil {
 		return nil, err
 	}
-	trigger.client = client
-	trigger.logger = client.Logger.Child("trigger", "trigger", "id", trigger.ID)
-	return &trigger, nil
+	created.client = client
+	created.logger = client.Logger.Child("trigger", "trigger", "id", trigger.ID)
+	return &created, nil
+}
+
+// Delete deletes this ProcessAutomationTrigger
+func (trigger ProcessAutomationTrigger) Delete(context context.Context) error {
+	return trigger.client.Delete(context, trigger.GetURI(), nil)
 }
 
 // String gets a string version
@@ -121,10 +109,29 @@ func (trigger ProcessAutomationTrigger) MarshalJSON() ([]byte, error) {
 	type surrogate ProcessAutomationTrigger
 	data, err := json.Marshal(&struct {
 		surrogate
-		SelfURI URI `json:"selfUri"`
+		ID        string `json:"id,omitempty"`
+		TopicName string `json:"topicName"`
 	}{
 		surrogate: surrogate(trigger),
-		SelfURI:   trigger.GetURI(),
+		ID:        core.UUID(trigger.ID).String(),
+		TopicName: trigger.Topic.GetType(),
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
+}
+
+// UnmarshalJSON unmarshals JSON into this
+//
+// implements json.Unmarshaler
+func (trigger *ProcessAutomationTrigger) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate ProcessAutomationTrigger
+	var inner struct {
+		surrogate
+		TopicName string `json:"topicName"`
+	}
+	if err = json.Unmarshal(payload, &inner); err != nil {
+		return errors.JSONUnmarshalError.Wrap(err)
+	}
+	*trigger = ProcessAutomationTrigger(inner.surrogate)
+	trigger.Topic, err = NotificationTopicFrom(inner.TopicName)
+	return errors.JSONUnmarshalError.Wrap(err)
 }
