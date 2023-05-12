@@ -2,7 +2,6 @@ package gcloudcx
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"strings"
 	"time"
@@ -191,60 +190,20 @@ func (conversation *ConversationGuestChat) messageLoop() {
 
 		// we have to use a custom version since topics are the same between agent chats and guest chats
 		// TODO: Maybe, we should create a Conversation interface...
-		topic, err := conversation.notificationTopicFromJSON(body)
+		topic, err := UnmarshalNotificationTopic(body)
 		if err != nil {
 			log.Warnf("%s, Body size: %d, Content: %s", err.Error(), len(body), string(body))
 			continue
 		}
 		switch topic.(type) {
-		case *MetadataTopic:
+		case MetadataTopic:
 			if conversation.LogHeartbeat {
 				log.Tracef("Request %d bytes: %s", len(body), string(body))
 			}
 		default:
 			log.Tracef("Request %d bytes: %s", len(body), string(body))
 		}
-		// Make a fake channel object so Notification Topics can be sent through
-		topic.Send(&NotificationChannel{
-			ID:            conversation.ID,
-			LogHeartbeat:  conversation.LogHeartbeat,
-			Logger:        conversation.logger,
-			Client:        conversation.client,
-			Socket:        conversation.Socket,
-			TopicReceived: conversation.TopicReceived,
-		})
-	}
-}
-
-func (conversation *ConversationGuestChat) notificationTopicFromJSON(payload []byte) (NotificationTopic, error) {
-	var header struct {
-		TopicName string `json:"topicName"`
-		Data      json.RawMessage
-	}
-	if err := json.Unmarshal(payload, &header); err != nil {
-		return nil, errors.JSONUnmarshalError.Wrap(err)
-	}
-	switch {
-	case ConversationGuestChatMessageTopic{}.Match(header.TopicName):
-		var topic ConversationGuestChatMessageTopic
-		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.JSONUnmarshalError.Wrap(err)
-		}
-		return &topic, nil
-	case ConversationGuestChatMemberTopic{}.Match(header.TopicName):
-		var topic ConversationGuestChatMemberTopic
-		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.JSONUnmarshalError.Wrap(err)
-		}
-		return &topic, nil
-	case MetadataTopic{}.Match(header.TopicName):
-		var topic MetadataTopic
-		if err := json.Unmarshal(payload, &topic); err != nil {
-			return nil, errors.JSONUnmarshalError.Wrap(err)
-		}
-		return &topic, nil
-	default:
-		return nil, errors.Unsupported.With("Topic", header.TopicName)
+		conversation.TopicReceived <- topic
 	}
 }
 

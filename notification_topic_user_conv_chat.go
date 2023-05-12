@@ -2,8 +2,6 @@ package gcloudcx
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/gildas/go-errors"
 	"github.com/google/uuid"
@@ -11,41 +9,45 @@ import (
 
 // UserConversationChatTopic describes a Topic about User's Presence
 type UserConversationChatTopic struct {
-	Name          string
-	User          *User
-	Conversation  *ConversationChat
-	Participants  []*Participant
-	CorrelationID string
-	client        *Client
+	Name           string
+	User           *User
+	ConversationID uuid.UUID
+	Participants   []*Participant
+	CorrelationID  string
+	Targets        []Identifiable
 }
 
-// Match tells if the given topicName matches this topic
-func (topic UserConversationChatTopic) Match(topicName string) bool {
-	return strings.HasPrefix(topicName, "v2.users.") && strings.HasSuffix(topicName, ".conversations.chats")
+func init() {
+	notificationTopicRegistry.Add(UserConversationChatTopic{})
 }
 
-// GetClient gets the GCloud Client associated with this
-func (topic *UserConversationChatTopic) GetClient() *Client {
-	return topic.client
+// GetType returns the type of this topic
+//
+// implements core.TypeCarrier
+func (topic UserConversationChatTopic) GetType() string {
+	return "v2.users.{id}.conversations.chats"
 }
 
-// TopicFor builds the topicName for the given identifiables
-func (topic UserConversationChatTopic) TopicFor(identifiables ...Identifiable) string {
-	if len(identifiables) > 0 {
-		return fmt.Sprintf("v2.users.%s.conversations.chats", identifiables[0].GetID())
+// GetTargets returns the targets of this topic
+func (topic UserConversationChatTopic) GetTargets() []Identifiable {
+	return topic.Targets
+}
+
+// With creates a new NotificationTopic with the given targets
+func (topic UserConversationChatTopic) With(targets ...Identifiable) NotificationTopic {
+	newTopic := topic
+	newTopic.Targets = targets
+	return newTopic
+}
+
+// String gets a string version
+//
+//	implements the fmt.Stringer interface
+func (topic UserConversationChatTopic) String() string {
+	if len(topic.Targets) == 0 {
+		return topic.GetType()
 	}
-	return ""
-}
-
-// Send sends the current topic to the Channel's chan
-func (topic *UserConversationChatTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Child("user_conversation_chat", "send")
-	log.Debugf("User: %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
-	topic.client = channel.Client
-	topic.User.client = channel.Client
-	topic.Conversation.client = channel.Client
-
-	channel.TopicReceived <- topic
+	return topicNameWith(topic, topic.Targets...)
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -64,21 +66,14 @@ func (topic *UserConversationChatTopic) UnmarshalJSON(payload []byte) (err error
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".conversations.chats"))
-	if err != nil {
-		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
+	found, targets := getTargets(topic.GetType(), inner.TopicName)
+	if !found || len(targets) == 0 {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("topicName", inner.TopicName))
 	}
 	topic.Name = inner.TopicName
-	topic.User = &User{ID: userID}
-	topic.Conversation = &ConversationChat{ID: inner.EventBody.ConversationID}
+	topic.User = &User{ID: targets[0].GetID()}
+	topic.ConversationID = inner.EventBody.ConversationID
 	topic.Participants = inner.EventBody.Participants
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
-}
-
-// String gets a string version
-//
-//	implements the fmt.Stringer interface
-func (topic UserConversationChatTopic) String() string {
-	return fmt.Sprintf("%s=%s", topic.Name, topic.Conversation)
 }

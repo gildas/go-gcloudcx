@@ -209,6 +209,8 @@ This will create a resource and set its ID, client, and log properly as needed.
 
 The Genesys Cloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.
 
+Processing incoming Notification Topics is simply done in a loop by reading the `TopicReceived` Go chan.
+
 Here is a quick example:  
 ```go
 user, err := client.GetMyUser(context.Background())
@@ -225,7 +227,7 @@ if err != nil {
 
 topics, err := config.NotificationChannel.Subscribe(
 	context.Background(),
-	gcloudcx.UserPresenceTopic{}.TopicFor(user),
+	gcloudcx.UserPresenceTopic{}.With(user),
 )
 if err != nil {
 	log.Errorf("Failed to subscribe to topics", err)
@@ -243,7 +245,7 @@ go func() {
 				return
 			}
 			switch topic := receivedTopic.(type) {
-			case *gcloudcx.UserPresenceTopic:
+			case gcloudcx.UserPresenceTopic:
 				log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
 			default:
 				log.Warnf("Unknown topic: %s", topic)

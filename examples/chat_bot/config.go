@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 )
 
 // AppConfig describes An Application Configuration
@@ -109,14 +109,14 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 
 	topics, err := config.NotificationChannel.Subscribe(
 		context,
-		gcloudcx.UserPresenceTopic{}.TopicFor(config.User),
-		gcloudcx.UserConversationChatTopic{}.TopicFor(config.User),
+		gcloudcx.UserPresenceTopic{}.With(config.User),
+		gcloudcx.UserConversationChatTopic{}.With(config.User),
 	)
 	if err != nil {
 		log.Errorf("Failed to subscribe to topics", err)
 		return
 	}
-	log.Infof("Subscribed to topics: [%s]", strings.Join(topics, ","))
+	log.Infof("Subscribed to topics: [%v]", topics)
 
 	// Call the Gcloud Notification Topic loop
 	go MessageLoop(config, client)

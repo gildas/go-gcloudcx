@@ -2,11 +2,8 @@ package gcloudcx
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/gildas/go-errors"
-	"github.com/google/uuid"
 )
 
 // UserPresenceTopic describes a Topic about User's Presence
@@ -15,34 +12,40 @@ type UserPresenceTopic struct {
 	User          *User
 	Presence      UserPresence
 	CorrelationID string
-	client        *Client
+	Targets       []Identifiable
 }
 
-// Match tells if the given topicName matches this topic
-func (topic UserPresenceTopic) Match(topicName string) bool {
-	return strings.HasPrefix(topicName, "v2.users.") && strings.HasSuffix(topicName, ".presence")
+func init() {
+	notificationTopicRegistry.Add(UserPresenceTopic{})
 }
 
-// GetClient gets the GCloud Client associated with this
-func (topic *UserPresenceTopic) GetClient() *Client {
-	return topic.client
+// GetType returns the type of this topic
+//
+// implements core.TypeCarrier
+func (topic UserPresenceTopic) GetType() string {
+	return "v2.users.{id}.presence"
 }
 
-// TopicFor builds the topicName for the given identifiables
-func (topic UserPresenceTopic) TopicFor(identifiables ...Identifiable) string {
-	if len(identifiables) > 0 {
-		return fmt.Sprintf("v2.users.%s.presence", identifiables[0].GetID())
+// GetTargets returns the targets of this topic
+func (topic UserPresenceTopic) GetTargets() []Identifiable {
+	return topic.Targets
+}
+
+// With creates a new NotificationTopic with the given targets
+func (topic UserPresenceTopic) With(targets ...Identifiable) NotificationTopic {
+	newTopic := topic
+	newTopic.Targets = targets
+	return newTopic
+}
+
+// String gets a string version
+//
+//	implements the fmt.Stringer interface
+func (topic UserPresenceTopic) String() string {
+	if len(topic.Targets) == 0 {
+		return topic.GetType()
 	}
-	return ""
-}
-
-// Send sends the current topic to the Channel's chan
-func (topic *UserPresenceTopic) Send(channel *NotificationChannel) {
-	log := channel.Logger.Child("user_presence", "send")
-	log.Debugf("User: %s, New Presence: %s", topic.User, topic.Presence)
-	topic.client = channel.Client
-	topic.User.client = channel.Client
-	channel.TopicReceived <- topic
+	return topicNameWith(topic, topic.Targets...)
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -58,20 +61,13 @@ func (topic *UserPresenceTopic) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	userID, err := uuid.Parse(strings.TrimSuffix(strings.TrimPrefix(inner.TopicName, "v2.users."), ".presence"))
-	if err != nil {
-		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("id", inner.TopicName))
+	found, targets := getTargets(topic.GetType(), inner.TopicName)
+	if !found || len(targets) == 0 {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentInvalid.With("topicName", inner.TopicName))
 	}
 	topic.Name = inner.TopicName
 	topic.Presence = inner.Presence
-	topic.User = &User{ID: userID}
+	topic.User = &User{ID: targets[0].GetID()}
 	topic.CorrelationID = inner.Metadata.CorrelationID
 	return
-}
-
-// String gets a string version
-//
-//	implements the fmt.Stringer interface
-func (topic UserPresenceTopic) String() string {
-	return fmt.Sprintf("%s=%s", topic.Name, topic.Presence)
 }
