@@ -73,17 +73,22 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (user *User) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			user.ID = parameter
 		case *Client:
 			user.client = parameter
 		case *logger.Logger:
 			user.logger = parameter.Child("user", "user", "id", user.ID)
 		}
+	}
+	if user.logger == nil {
+		user.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

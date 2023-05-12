@@ -80,17 +80,22 @@ type Voicemail struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (conversation *Conversation) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			conversation.ID = parameter
 		case *Client:
 			conversation.client = parameter
 		case *logger.Logger:
 			conversation.logger = parameter.Child("conversation", "conversation", "id", conversation.ID)
 		}
+	}
+	if conversation.logger == nil {
+		conversation.logger = logger.Create("gclouccx", &logger.NilStream{})
 	}
 }
 

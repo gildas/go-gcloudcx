@@ -1,0 +1,18 @@
+{
+  "topicName": "v2.conversations.chats.aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e.members",
+  "version": "2",
+  "eventBody": {
+    "conversation": {
+      "id": "aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e"
+    },
+    "member": {
+      "id": "f3b14049-4631-4b29-b45d-1b2822410cbe",
+      "state": "CONNECTED"
+    },
+    "timestamp": "2019-06-18T16:59:09.689Z"
+  },
+  "metadata": {
+    "CorrelationId": "bbd1fbef-cfbd-4a31-8008-51eba78dee76",
+    "type": "member-change"
+  }
+}

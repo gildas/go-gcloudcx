@@ -21,6 +21,12 @@ type Flow struct {
 //
 // implements Initializable
 func (flow *Flow) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case uuid.UUID:
+			flow.ID = parameter
+		}
+	}
 }
 
 // GetID gets the identifier of this

@@ -28,31 +28,32 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 			}
 			log.Debugf("Received topic: %s", receivedTopic)
 			switch topic := receivedTopic.(type) {
-			case *gcloudcx.UserConversationChatTopic:
-				log = log.Records("user", topic.User.ID, "conversation", topic.Conversation.ID)
-				log.Infof("User %s, Conversation: %s (state: %s)", topic.User, topic.Conversation, topic.Conversation.State)
+			case gcloudcx.UserConversationChatTopic:
+				log = log.Records("user", topic.User.ID, "conversation", topic.ConversationID)
+				log.Infof("User %s, Conversation: %s", topic.User, topic.ConversationID)
 				for i, participant := range topic.Participants {
 					log.Infof("  Participant #%d: id=%s, name=%s, purpose=%s, state=%s", i, participant.ID, participant.Name, participant.Purpose, participant.State)
 				}
 				participant := findParticipant(topic.Participants, topic.User, "agent")
 				if participant != nil {
 					log = log.Record("participant", participant.ID)
-					chatTopic := gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)
+					chatTopic := gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID})
 					log.Infof("User's Participant %s state: %s", participant, participant.State)
 					switch participant.State {
 					case "alerting": // Now we need to "answer" the participant, i.e. turn them connected
 						if channel.IsSubscribed(context, chatTopic) {
 							continue
 						}
-						log.Infof("Subscribing to Conversation %s", topic.Conversation)
-						_, err := channel.Subscribe(context, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+						log.Infof("Subscribing to Conversation %s", topic.ConversationID)
+						_, err := channel.Subscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
 						if err != nil {
 							log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 							continue
 						}
 
 						log.Infof("Setting Participant %s state to %s", participant, "connected")
-						err = participant.UpdateState(context, topic.Conversation, "connected")
+						conversation := gcloudcx.New[gcloudcx.ConversationChat](context, client, topic.ConversationID, log)
+						err = participant.UpdateState(context, conversation, "connected")
 						if err != nil {
 							log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
 							continue
@@ -65,26 +66,27 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 							log.Infof("Wrapping up chat")
 							// Once the transfer is initiated, we should "Wrapup" the participant
 							//   if needed (queue request a wrapup)
+							conversation := gcloudcx.New[gcloudcx.ConversationChat](context, client, topic.ConversationID, log)
 							wrapup := &gcloudcx.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-							if err := topic.Conversation.Wrapup(context, participant, wrapup); err != nil {
+							if err := conversation.Wrapup(context, participant, wrapup); err != nil {
 								log.Errorf("Failed to wrapup Participant %s", participant)
 								continue
 							}
 						}
-						if err := channel.Unsubscribe(context, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation)); err != nil {
-							log.Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, gcloudcx.ConversationChatMessageTopic{}.TopicFor(topic.Conversation))
+						if err := channel.Unsubscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID})); err != nil {
+							log.Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
 							continue
 						}
 					}
 				}
-			case *gcloudcx.ConversationChatMessageTopic:
-				log = log.Record("conversation", topic.Conversation.ID)
-				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.Conversation, topic.BodyType, topic.Body, topic.Sender)
+			case gcloudcx.ConversationChatMessageTopic:
+				log = log.Record("conversation", topic.ConversationID)
+				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.ConversationID, topic.BodyType, topic.Body, topic.Sender)
 				if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
 					// We need a full conversation object, so we can operate on it
-					conversation, err := gcloudcx.Fetch[gcloudcx.ConversationChat](context, client, topic.Conversation)
+					conversation, err := gcloudcx.Fetch[gcloudcx.ConversationChat](context, client, topic.ConversationID)
 					if err != nil {
-						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.Conversation, err)
+						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.ConversationID, err)
 						continue
 					}
 					participant := findParticipant(conversation.Participants, config.User, "agent")
@@ -151,7 +153,7 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 						}
 					}
 				}
-			case *gcloudcx.UserPresenceTopic:
+			case gcloudcx.UserPresenceTopic:
 				log.Infof("User %s, Presence: %s", topic.User, topic.Presence)
 			default:
 				log.Warnf("Unknown topic: %s", topic)

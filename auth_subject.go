@@ -17,15 +17,20 @@ type AuthorizationSubject struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (subject *AuthorizationSubject) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			subject.ID = parameter
 		case *logger.Logger:
 			subject.logger = parameter.Child("authorization_subject", "authorization_subject", "id", subject.ID)
 		}
+	}
+	if subject.logger == nil {
+		subject.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

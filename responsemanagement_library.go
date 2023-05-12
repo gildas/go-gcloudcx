@@ -22,6 +22,12 @@ type ResponseManagementLibrary struct {
 //
 // implements Initializable
 func (library *ResponseManagementLibrary) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case uuid.UUID:
+			library.ID = parameter
+		}
+	}
 }
 
 // GetID gets the identifier of this

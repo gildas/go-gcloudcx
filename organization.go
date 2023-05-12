@@ -39,17 +39,22 @@ func (client *Client) GetMyOrganization(context context.Context) (*Organization,
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (organization *Organization) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			organization.ID = parameter
 		case *Client:
 			organization.client = parameter
 		case *logger.Logger:
 			organization.logger = parameter.Child("organization", "organization", "id", organization.ID)
 		}
+	}
+	if organization.logger == nil {
+		organization.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

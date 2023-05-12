@@ -60,6 +60,12 @@ type ResponseManagementSubstitution struct {
 //
 // implements Initializable
 func (response *ResponseManagementResponse) Initialize(parameters ...interface{}) {
+	for _, raw := range parameters {
+		switch parameter := raw.(type) {
+		case uuid.UUID:
+			response.ID = parameter
+		}
+	}
 }
 
 // GetID gets the identifier of this

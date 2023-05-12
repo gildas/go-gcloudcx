@@ -1,0 +1,20 @@
+{
+  "topicName": "v2.conversations.chats.aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e.messages",
+  "version": "2",
+  "eventBody": {
+    "id": "485fc952-3021-4dab-bb04-e3ad84d8b62a",
+    "conversation": {
+      "id": "aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e"
+    },
+    "sender": {
+      "id": "6408f799-973a-436a-9e1a-a75a6ddc46f5"
+    },
+    "body": "Hi, how are you?",
+    "bodyType": "standard",
+    "timestamp": "2019-06-18T16:59:22.277Z"
+  },
+  "metadata": {
+    "CorrelationId": "ca138a93-3198-43b4-8ef4-bced8d38b3b9",
+    "type": "message"
+  }
+}

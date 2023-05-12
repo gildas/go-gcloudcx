@@ -174,6 +174,13 @@ func (suite *UserSuite) TestCanMarshal() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
+func (suite *UserSuite) TestCanInstantiate() {
+	userID := uuid.New()
+	user := gcloudcx.New[gcloudcx.User](context.Background(), suite.Client, userID, suite.Logger)
+	suite.Require().NotNil(user)
+	suite.Assert().Equal(userID, user.ID)
+}
+
 func (suite *UserSuite) TestCanFetchByID() {
 	user, err := gcloudcx.Fetch[gcloudcx.User](context.Background(), suite.Client, suite.UserID)
 	suite.Require().NoErrorf(err, "Failed to fetch User %s. %s", suite.UserID, err)

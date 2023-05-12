@@ -10,34 +10,35 @@ import (
 type MetadataTopic struct {
 	Name    string
 	Message string
-	Client  *Client
 }
 
-// Match tells if the given topicName matches this topic
-func (topic MetadataTopic) Match(topicName string) bool {
-	return topicName == "channel.metadata"
+func init() {
+	notificationTopicRegistry.Add(MetadataTopic{})
 }
 
-// GetClient gets the GCloud Client associated with this
-func (topic *MetadataTopic) GetClient() *Client {
-	return topic.Client
-}
-
-// TopicFor builds the topicName for the given identifiables
-func (topic MetadataTopic) TopicFor(identifiables ...Identifiable) string {
+// GetType returns the type of this topic
+//
+// implements core.TypeCarrier
+func (topic MetadataTopic) GetType() string {
 	return "channel.metadata"
 }
 
-// Send sends the current topic to the Channel's chan
-func (topic *MetadataTopic) Send(channel *NotificationChannel) {
-	if topic.Message == "WebSocket Heartbeat" && !channel.LogHeartbeat {
-		return
-	}
-	log := channel.Logger.Scope(topic.Name)
+// GetTargets returns the targets of this topic
+func (topic MetadataTopic) GetTargets() []Identifiable {
+	return nil
+}
 
-	log.Debugf("Topic Message: %s", topic.Message)
-	topic.Client = channel.Client
-	channel.TopicReceived <- topic
+// With creates a new NotificationTopic with the given targets
+func (topic MetadataTopic) With(targets ...Identifiable) NotificationTopic {
+	newTopic := topic
+	return newTopic
+}
+
+// String gets a string version
+//
+// implements fmt.Stringer
+func (topic MetadataTopic) String() string {
+	return topic.GetType()
 }
 
 // UnmarshalJSON unmarshals JSON into this

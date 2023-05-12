@@ -178,7 +178,7 @@ func (suite *OpenMessagingSuite) TestCanZZDeleteIntegration() {
 	suite.Require().True(integration.IsCreated(), "Integration should be created")
 	err = integration.Delete(context.Background())
 	suite.Require().NoErrorf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
-	integration, err = gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
+	_, err = gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().Error(err, "Integration should not exist anymore")
 	suite.Assert().ErrorIsf(err, gcloudcx.NotFoundError, "Expected NotFoundError, got %s", err)
 	suite.Assert().Truef(errors.Is(err, gcloudcx.NotFoundError), "Expected NotFoundError, got %s", err)

@@ -25,17 +25,22 @@ type RoutingMessageRecipient struct {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
 func (recipient *RoutingMessageRecipient) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			recipient.ID = parameter
 		case *Client:
 			recipient.client = parameter
 		case *logger.Logger:
 			recipient.logger = parameter.Child("routingmessagerecipient", "routingmessagerecipient", "id", recipient.ID)
 		}
+	}
+	if recipient.logger == nil {
+		recipient.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

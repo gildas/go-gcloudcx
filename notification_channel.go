@@ -69,31 +69,29 @@ func (channel *NotificationChannel) Close(context context.Context) (err error) {
 	return
 }
 
-// GetTopics gets all subscription topics set on this
-func (channel *NotificationChannel) GetTopics(context context.Context) ([]string, error) {
-	results := struct{ Entities []ChannelTopic }{}
+// GetTopicStates gets all subscription topics set on this
+func (channel *NotificationChannel) GetTopicStates(context context.Context) ([]NotificationChannelTopicState, error) {
+	results := struct {
+		Entities []NotificationChannelTopicState
+	}{}
 	if err := channel.Client.Get(
 		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
 	); err != nil {
-		return []string{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
 	}
-	ids := make([]string, len(results.Entities))
-	for i, entity := range results.Entities {
-		ids[i] = entity.ID
-	}
-	return ids, nil
+	return results.Entities, nil
 }
 
 // SetTopics sets the subscriptions. It overrides any previous subscriptions
-func (channel *NotificationChannel) SetTopics(context context.Context, topics ...string) ([]string, error) {
-	channelTopics := make([]ChannelTopic, len(topics))
-	for i, topic := range topics {
-		channelTopics[i].ID = topic
+func (channel *NotificationChannel) SetTopics(context context.Context, topics ...NotificationTopic) ([]NotificationChannelTopicState, error) {
+	channelTopics := make([]NotificationChannelTopicState, 0, len(topics))
+	for _, topic := range topics {
+		channelTopics = append(channelTopics, NotificationChannelTopicState{Topic: topic})
 	}
 	results := struct {
-		Entities []ChannelTopic `json:"entities"`
+		Entities []NotificationChannelTopicState `json:"entities"`
 	}{}
 	if err := channel.Client.Put(
 		context,
@@ -101,23 +99,19 @@ func (channel *NotificationChannel) SetTopics(context context.Context, topics ..
 		channelTopics,
 		&results,
 	); err != nil {
-		return []string{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
 	}
-	ids := make([]string, len(results.Entities))
-	for i, entity := range results.Entities {
-		ids[i] = entity.ID
-	}
-	return ids, nil
+	return results.Entities, nil
 }
 
 // IsSubscribed tells if the channel is subscribed to the given topic
-func (channel *NotificationChannel) IsSubscribed(context context.Context, topic string) bool {
-	topics, err := channel.GetTopics(context)
+func (channel *NotificationChannel) IsSubscribed(context context.Context, topic NotificationTopic) bool {
+	topicStates, err := channel.GetTopicStates(context)
 	if err != nil {
 		return false
 	}
-	for _, t := range topics {
-		if t == topic {
+	for _, topicState := range topicStates {
+		if topicState.Contains(topic) {
 			return true
 		}
 	}
@@ -125,13 +119,13 @@ func (channel *NotificationChannel) IsSubscribed(context context.Context, topic 
 }
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
-func (channel *NotificationChannel) Subscribe(context context.Context, topics ...string) ([]string, error) {
-	channelTopics := make([]ChannelTopic, len(topics))
-	for i, topic := range topics {
-		channelTopics[i].ID = topic
+func (channel *NotificationChannel) Subscribe(context context.Context, topics ...NotificationTopic) ([]NotificationChannelTopicState, error) {
+	channelTopics := make([]NotificationChannelTopicState, 0, len(topics))
+	for _, topic := range topics {
+		channelTopics = append(channelTopics, NotificationChannelTopicState{Topic: topic})
 	}
 	results := struct {
-		Entities []ChannelTopic `json:"entities"`
+		Entities []NotificationChannelTopicState `json:"entities"`
 	}{}
 	if err := channel.Client.Post(
 		context,
@@ -139,37 +133,33 @@ func (channel *NotificationChannel) Subscribe(context context.Context, topics ..
 		channelTopics,
 		&results,
 	); err != nil {
-		return []string{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
 	}
-	ids := make([]string, len(results.Entities))
-	for i, entity := range results.Entities {
-		ids[i] = entity.ID
-	}
-	return ids, nil
+	return results.Entities, nil
 }
 
 // Unsubscribe unsubscribes from some topics,
 //
 // If there is no argument, unsubscribe from all topics
-func (channel *NotificationChannel) Unsubscribe(context context.Context, topics ...string) error {
+func (channel *NotificationChannel) Unsubscribe(context context.Context, topics ...NotificationTopic) error {
 	if len(topics) == 0 {
 		return channel.Client.Delete(context, NewURI("/notifications/channels/%s/subscriptions", channel.ID), nil)
 	}
-	currentTopics, err := channel.GetTopics(context)
+	topicStates, err := channel.GetTopicStates(context)
 	if err != nil {
 		return err
 	}
-	filteredTopics := []string{}
-	for _, current := range currentTopics {
+	filteredTopics := []NotificationTopic{}
+	for _, topicState := range topicStates {
 		found := false
 		for _, topic := range topics {
-			if current == topic {
+			if topicState.Contains(topic) {
 				found = true
 				break
 			}
 		}
 		if !found {
-			filteredTopics = append(filteredTopics, current)
+			filteredTopics = append(filteredTopics, topicState.Topic)
 		}
 	}
 	_, err = channel.SetTopics(context, filteredTopics...)
@@ -219,20 +209,20 @@ func (channel *NotificationChannel) messageLoop() {
 			continue
 		}
 
-		topic, err := NotificationTopicFromJSON(body)
+		topic, err := UnmarshalNotificationTopic(body)
 		if err != nil {
 			log.Warnf("%s, Body size: %d, Content: %s", err.Error(), len(body), string(body))
 			continue
 		}
 		switch topic.(type) {
-		case *MetadataTopic:
+		case MetadataTopic:
 			if channel.LogHeartbeat {
 				log.Tracef("Request %d bytes: %s", len(body), string(body))
 			}
 		default:
 			log.Tracef("Request %d bytes: %s", len(body), string(body))
 		}
-		topic.Send(channel)
+		channel.TopicReceived <- topic
 	}
 }
 

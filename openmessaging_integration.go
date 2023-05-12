@@ -46,17 +46,22 @@ func (integration OpenMessagingIntegration) IsError() bool {
 
 // Initialize initializes the object
 //
-// accepted parameters: *gcloufcx.Client, *logger.Logger
+// accepted parameters: *gcloudcx.Client, *logger.Logger
 //
 // implements Initializable
-func (user *OpenMessagingIntegration) Initialize(parameters ...interface{}) {
+func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			integration.ID = parameter
 		case *Client:
-			user.client = parameter
+			integration.client = parameter
 		case *logger.Logger:
-			user.logger = parameter.Child("user", "user", "id", user.ID)
+			integration.logger = parameter.Child("integration", "integration", "id", integration.ID)
 		}
+	}
+	if integration.logger == nil {
+		integration.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 
