@@ -53,11 +53,16 @@ type DataTableSchemaProperty struct {
 func (table *DataTable) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			table.ID = parameter
 		case *Client:
 			table.client = parameter
 		case *logger.Logger:
 			table.logger = parameter.Child("user", "table", "id", table.ID)
 		}
+	}
+	if table.logger == nil {
+		table.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

@@ -195,6 +195,16 @@ integrations, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](contex
 })
 ```
 
+## Create Resource
+
+You can also create a resource without fetching it:
+
+```go
+user := gcloud.New[gcloud.User](context, client, id, log)
+```
+
+This will create a resource and set its ID, client, and log properly as needed.
+
 ## Notifications
 
 The Genesys Cloud Notification API is accessible via the `NotificationChannel` and `NotificationTopic` types.

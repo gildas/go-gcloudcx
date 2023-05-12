@@ -35,11 +35,16 @@ type Group struct {
 func (group *Group) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			group.ID = parameter
 		case *Client:
 			group.client = parameter
 		case *logger.Logger:
 			group.logger = parameter.Child("group", "group", "id", group.ID)
 		}
+	}
+	if group.logger == nil {
+		group.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

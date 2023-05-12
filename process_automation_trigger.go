@@ -37,11 +37,16 @@ type ProcessAutomationTrigger struct {
 func (trigger *ProcessAutomationTrigger) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			trigger.ID = parameter
 		case *Client:
 			trigger.client = parameter
 		case *logger.Logger:
 			trigger.logger = parameter.Child("trigger", "trigger", "id", trigger.ID)
 		}
+	}
+	if trigger.logger == nil {
+		trigger.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 

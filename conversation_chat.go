@@ -64,11 +64,16 @@ type JourneyContext struct {
 func (conversation *ConversationChat) Initialize(parameters ...interface{}) {
 	for _, raw := range parameters {
 		switch parameter := raw.(type) {
+		case uuid.UUID:
+			conversation.ID = parameter
 		case *Client:
 			conversation.client = parameter
 		case *logger.Logger:
 			conversation.logger = parameter.Child("conversation", "conversation", "id", conversation.ID, "media", "chat")
 		}
+	}
+	if conversation.logger == nil {
+		conversation.logger = logger.Create("gcloudcx", &logger.NilStream{})
 	}
 }
 
