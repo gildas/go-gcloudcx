@@ -3,6 +3,7 @@ package gcloudcx
 import (
 	"encoding/json"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 )
 
@@ -23,18 +24,9 @@ func (content *OpenMessageContent) UnmarshalJSON(payload []byte) (err error) {
 	if content.Attachment == nil {
 		return errors.ArgumentMissing.With("attachment")
 	}
-	// if !Contains(content.Type, []string{"Attachment", "Location", "QuickReply", "ButtonResponse", "Notification", "GenericTemplate", "ListTemplate", "Postback", "Reactions", "Mention"}) {
-	if !Contains(content.Type, []string{"Attachment", "Notification"}) {
+	// if !Contains([]string{"Attachment", "Location", "QuickReply", "ButtonResponse", "Notification", "GenericTemplate", "ListTemplate", "Postback", "Reactions", "Mention"}, content.Type) {
+	if !core.Contains([]string{"Attachment", "Notification"}, content.Type) {
 		return errors.ArgumentInvalid.With("contentType", content.Type)
 	}
 	return
-}
-
-func Contains(value string, values []string) bool {
-	for _, v := range values {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }
