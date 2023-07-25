@@ -2,7 +2,10 @@ package gcloudcx_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -64,12 +67,6 @@ func (suite *ResponseManagementSuite) SetupSuite() {
 	secret := core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
 	suite.Require().NotEmpty(secret, "PURECLOUD_CLIENTSECRET is not set")
 
-	value = core.GetEnvAsString("PURECLOUD_DEPLOYMENTID", "")
-	suite.Require().NotEmpty(value, "PURECLOUD_DEPLOYMENTID is not set")
-
-	deploymentID, err := uuid.Parse(value)
-	suite.Require().NoError(err, "PURECLOUD_DEPLOYMENTID is not a valid UUID")
-
 	value = core.GetEnvAsString("RESPONSE_MANAGEMENT_LIBRARY_ID", "")
 	suite.Require().NotEmpty(value, "RESPONSE_MANAGEMENT_LIBRARY_ID is not set in your environment")
 
@@ -89,9 +86,8 @@ func (suite *ResponseManagementSuite) SetupSuite() {
 	suite.Require().NotEmpty(suite.ResponseName, "RESPONSE_MANAGEMENT_RESPONSE_NAME is not set in your environment")
 
 	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
-		Region:       region,
-		DeploymentID: deploymentID,
-		Logger:       suite.Logger,
+		Region: region,
+		Logger: suite.Logger,
 	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: clientID,
 		Secret:   secret,
@@ -130,8 +126,70 @@ func (suite *ResponseManagementSuite) AfterTest(suiteName, testName string) {
 	suite.Logger.Record("duration", duration.String()).Infof("Test End: %s %s", testName, strings.Repeat("-", 80-11-len(testName)))
 }
 
+func (suite *ResponseManagementSuite) LoadTestData(filename string) []byte {
+	data, err := os.ReadFile(filepath.Join(".", "testdata", filename))
+	suite.Require().NoErrorf(err, "Failed to Load Data. %s", err)
+	return data
+}
+
+func (suite *ResponseManagementSuite) UnmarshalData(filename string, v interface{}) error {
+	data := suite.LoadTestData(filename)
+	suite.Logger.Infof("Loaded %s: %s", filename, string(data))
+	return json.Unmarshal(data, v)
+}
+
 // #endregion: Suite Tools }}}
 // *****************************************************************************
+
+func (suite *ResponseManagementSuite) TestCanUnmarshalCampaignSMSTemplate() {
+	var response gcloudcx.ResponseManagementResponse
+
+	err := suite.UnmarshalData("response-campaignsms-template.json", &response)
+	suite.Require().NoError(err, "Failed to unmarshal response")
+	suite.Assert().Equal("response-01", response.Name)
+	suite.Assert().Equal(uuid.MustParse("86CABAAE-BD5E-4615-A4F2-712467E808F0"), response.ID)
+	suite.Assert().Equal(12, response.Version)
+	suite.Assert().Equal("CampaignSmsTemplate", response.GetType())
+	suite.Assert().Equal(time.Date(2023, 7, 25, 7, 30, 10, 449000000, time.UTC), response.DateCreated)
+	suite.Require().NotNil(response.CreatedBy, "Respnose CreatedBy should not be nil")
+	suite.Assert().Equal(uuid.MustParse("DDA998ED-2258-4317-8070-2745465B8B28"), response.CreatedBy.ID)
+	suite.Require().Len(response.Libraries, 1)
+	suite.Assert().Equal(uuid.MustParse("2035D559-793E-4F4B-9A09-118D9C265EFD"), response.Libraries[0].ID)
+	suite.Assert().Equal("Test Library", response.Libraries[0].Name)
+	suite.Require().Len(response.Texts, 1)
+	suite.Assert().Equal("text/plain", response.Texts[0].ContentType)
+	suite.Assert().Equal("Hello {{Name}}", response.Texts[0].Content)
+	suite.Require().Len(response.Substitutions, 1)
+	suite.Assert().Equal("Name", response.Substitutions[0].ID)
+	suite.Assert().Equal("John Doe", response.Substitutions[0].Default)
+}
+
+func (suite *ResponseManagementSuite) TestCanUnmarshalMessageTemplate() {
+	var response gcloudcx.ResponseManagementResponse
+
+	err := suite.UnmarshalData("response-message-template.json", &response)
+	suite.Require().NoError(err, "Failed to unmarshal response")
+	suite.Assert().Equal("response-02", response.Name)
+	suite.Assert().Equal(uuid.MustParse("A7F1F131-7E50-4117-982A-2D5C55C9ED5E"), response.ID)
+	suite.Assert().Equal(1, response.Version)
+	suite.Assert().Equal("MessagingTemplate", response.GetType())
+	suite.Assert().Equal(time.Date(2023, 7, 25, 7, 30, 10, 449000000, time.UTC), response.DateCreated)
+	suite.Require().NotNil(response.CreatedBy, "Respnose CreatedBy should not be nil")
+	suite.Assert().Equal(uuid.MustParse("DDA998ED-2258-4317-8070-2745465B8B28"), response.CreatedBy.ID)
+	suite.Require().Len(response.Libraries, 1)
+	suite.Assert().Equal(uuid.MustParse("2035D559-793E-4F4B-9A09-118D9C265EFD"), response.Libraries[0].ID)
+	suite.Assert().Equal("Test Library", response.Libraries[0].Name)
+	suite.Require().Len(response.Texts, 1)
+	suite.Assert().Equal("text/plain", response.Texts[0].ContentType)
+	suite.Assert().Equal("Hello {{Name}}", response.Texts[0].Content)
+	suite.Require().Len(response.Substitutions, 1)
+	suite.Assert().Equal("Name", response.Substitutions[0].ID)
+	suite.Assert().Equal("John Doe", response.Substitutions[0].Default)
+	suite.Assert().Equal("whatsApp", response.TemplateType)
+	suite.Assert().Equal("template-01", response.TemplateName)
+	suite.Assert().Equal("templates", response.TemplateNamespace)
+	suite.Assert().Equal("en_US", response.TemplateLanguage)
+}
 
 func (suite *ResponseManagementSuite) TestCanFetchLibraryByID() {
 	library, err := gcloudcx.Fetch[gcloudcx.ResponseManagementLibrary](context.Background(), suite.Client, suite.LibraryID)
