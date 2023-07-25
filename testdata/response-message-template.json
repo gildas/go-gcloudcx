@@ -1,0 +1,38 @@
+{
+  "id": "A7F1F131-7E50-4117-982A-2D5C55C9ED5E",
+  "name": "response-02",
+  "version": 1,
+  "libraries": [
+    {
+      "id": "2035D559-793E-4F4B-9A09-118D9C265EFD",
+      "name": "Test Library",
+      "selfUri": "/api/v2/responsemanagement/libraries/2035D559-793E-4F4B-9A09-118D9C265EFD"
+    }
+  ],
+  "texts": [
+    {
+      "content": "Hello {{Name}}",
+      "contentType": "text/plain"
+    }
+  ],
+  "createdBy": {
+    "id": "DDA998ED-2258-4317-8070-2745465B8B28",
+    "selfUri": "/api/v2/users/DDA998ED-2258-4317-8070-2745465B8B28"
+  },
+  "dateCreated": "2023-07-25T07:30:10.449Z",
+  "substitutions": [
+    {
+      "id": "Name",
+      "defaultValue": "John Doe"
+    }
+  ],
+  "responseType": "MessagingTemplate",
+  "messagingTemplate": {
+    "whatsApp": {
+      "name": "template-01",
+      "namespace": "templates",
+      "language": "en_US"
+    }
+  },
+  "selfUri": "/api/v2/responsemanagement/responses/A7F1F131-7E50-4117-982A-2D5C55C9ED5E"
+}

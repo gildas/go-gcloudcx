@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"text/template"
 	"time"
@@ -16,15 +17,20 @@ import (
 //
 // See https://developer.genesys.cloud/api/rest/v2/responsemanagement
 type ResponseManagementResponse struct {
-	ID            uuid.UUID                        `json:"id"`
-	Name          string                           `json:"name"`
-	DateCreated   time.Time                        `json:"dateCreated,omitempty"`
-	CreatedBy     *DomainEntityRef                 `json:"createdBy,omitempty"`
-	Libraries     []DomainEntityRef                `json:"libraries,omitempty"`
-	Texts         []ResponseManagementContent      `json:"texts,omitempty"`
-	Substitutions []ResponseManagementSubstitution `json:"substitutions,omitempty"`
-	Version       int                              `json:"version"`
-	SelfURI       URI                              `json:"selfUri,omitempty"`
+	ID                uuid.UUID                        `json:"id"`
+	Name              string                           `json:"name"`
+	Type              string                           `json:"ResponseType"`
+	DateCreated       time.Time                        `json:"dateCreated,omitempty"`
+	CreatedBy         *DomainEntityRef                 `json:"createdBy,omitempty"`
+	Libraries         []DomainEntityRef                `json:"libraries,omitempty"`
+	Texts             []ResponseManagementContent      `json:"texts,omitempty"`
+	Substitutions     []ResponseManagementSubstitution `json:"substitutions,omitempty"`
+	TemplateType      string                           `json:"-"`
+	TemplateName      string                           `json:"-"`
+	TemplateNamespace string                           `json:"-"`
+	TemplateLanguage  string                           `json:"-"`
+	Version           int                              `json:"version"`
+	SelfURI           URI                              `json:"selfUri,omitempty"`
 }
 
 // ResponseManagementContent represent a Response Management Content
@@ -86,6 +92,13 @@ func (response ResponseManagementResponse) GetURI(ids ...uuid.UUID) URI {
 		return NewURI("/api/v2/responsemanagement/responses/%s", response.ID)
 	}
 	return URI("/api/v2/responsemanagement/responses/")
+}
+
+// GetType gets the type of this
+//
+// implements core.TypeCarrier
+func (response ResponseManagementResponse) GetType() string {
+	return response.Type
 }
 
 // String gets a string version
@@ -183,4 +196,69 @@ func (response ResponseManagementResponse) ApplySubstitutions(context context.Co
 		return "", errors.WithStack(err)
 	}
 	return expanded.String(), nil
+}
+
+// MarshalJSON marshals into JSON
+//
+// implements json.Marshaler
+func (response ResponseManagementResponse) MarshalJSON() ([]byte, error) {
+	type surrogate ResponseManagementResponse
+	type MessagingTemplate struct {
+		WhatsApp struct {
+			Name      string `json:"name"`
+			Namespace string `json:"namespace"`
+			Language  string `json:"language"`
+		} `json:"whatsApp"`
+	}
+
+	data, err := json.Marshal(struct {
+		surrogate
+		MessagingTemplate *MessagingTemplate `json:"messagingTemplate,omitempty"`
+	}{
+		surrogate: surrogate(response),
+		MessagingTemplate: func() *MessagingTemplate {
+			switch response.TemplateType {
+			case "whatsApp":
+				template := MessagingTemplate{}
+				template.WhatsApp.Name = response.TemplateName
+				template.WhatsApp.Namespace = response.TemplateNamespace
+				template.WhatsApp.Language = response.TemplateLanguage
+				return &template
+			default:
+				return nil
+			}
+		}(),
+	})
+	return data, errors.JSONMarshalError.Wrap(err)
+}
+
+// UnmarshalJSON unmarshals JSON
+//
+// implements json.Unmarshaler
+func (response *ResponseManagementResponse) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate ResponseManagementResponse
+	var inner struct {
+		surrogate
+		MessagingTemplate *struct {
+			WhatsApp *struct {
+				Name      string `json:"name"`
+				Namespace string `json:"namespace"`
+				Language  string `json:"language"`
+			} `json:"whatsApp"`
+		}
+	}
+
+	if err := json.Unmarshal(payload, &inner); err != nil {
+		return errors.JSONUnmarshalError.Wrap(err)
+	}
+	*response = ResponseManagementResponse(inner.surrogate)
+	if inner.MessagingTemplate != nil {
+		if inner.MessagingTemplate.WhatsApp != nil {
+			response.TemplateType = "whatsApp"
+			response.TemplateName = inner.MessagingTemplate.WhatsApp.Name
+			response.TemplateNamespace = inner.MessagingTemplate.WhatsApp.Namespace
+			response.TemplateLanguage = inner.MessagingTemplate.WhatsApp.Language
+		}
+	}
+	return
 }

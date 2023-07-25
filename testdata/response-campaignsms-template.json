@@ -1,0 +1,31 @@
+{
+  "id": "86CABAAE-BD5E-4615-A4F2-712467E808F0",
+  "name": "response-01",
+  "version": 12,
+  "libraries": [
+    {
+      "id": "2035D559-793E-4F4B-9A09-118D9C265EFD",
+      "name": "Test Library",
+      "selfUri": "/api/v2/responsemanagement/libraries/2035D559-793E-4F4B-9A09-118D9C265EFD"
+    }
+  ],
+  "texts": [
+    {
+      "content": "Hello {{Name}}",
+      "contentType": "text/plain"
+    }
+  ],
+  "createdBy": {
+    "id": "DDA998ED-2258-4317-8070-2745465B8B28",
+    "selfUri": "/api/v2/users/DDA998ED-2258-4317-8070-2745465B8B28"
+  },
+  "dateCreated": "2023-07-25T07:30:10.449Z",
+  "substitutions": [
+    {
+      "id": "Name",
+      "defaultValue": "John Doe"
+    }
+  ],
+  "responseType": "CampaignSmsTemplate",
+  "selfUri": "/api/v2/responsemanagement/responses/86CABAAE-BD5E-4615-A4F2-712467E808F0"
+}
