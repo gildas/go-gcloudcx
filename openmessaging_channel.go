@@ -13,7 +13,7 @@ type OpenMessageChannel struct {
 	ID        uuid.UUID                   `json:"id,omitempty"`
 	Platform  string                      `json:"platform"` // Open
 	Type      string                      `json:"type"`     // Private, Public
-	MessageID string                      `json:"messageId"`
+	MessageID string                      `json:"messageId,omitempty"`
 	Time      time.Time                   `json:"-"`
 	To        *OpenMessageTo              `json:"to"`
 	From      *OpenMessageFrom            `json:"from"`

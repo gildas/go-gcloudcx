@@ -8,8 +8,8 @@ type OpenMessageTo struct {
 type OpenMessageFrom struct {
 	ID        string `json:"id"`
 	Type      string `json:"idType"`
-	Firstname string `json:"firstName"`
-	Lastname  string `json:"lastName"`
+	Firstname string `json:"firstName,omitempty"`
+	Lastname  string `json:"lastName,omitempty"`
 	Nickname  string `json:"nickname"`
 }
 

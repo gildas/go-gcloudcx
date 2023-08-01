@@ -261,7 +261,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 // Valid status values are: Delivered, Failed, Published, Read, Removed, and Sent.
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, from *OpenMessageFrom, messageID, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, to *OpenMessageTo, messageID, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
@@ -273,11 +273,11 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 		integration.logger.ToContext(context),
 		"/conversations/messages/inbound/open",
 		&OpenMessageReceipt{
+			ID:        messageID,
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
-				messageID,
-				&OpenMessageTo{ID: integration.ID.String()},
-				from,
+				to,
+				&OpenMessageFrom{ID: integration.ID.String()},
 			).WithAttributes(attributes),
 			Status:   status,
 			Reasons:  reasons,
