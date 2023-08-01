@@ -286,6 +286,29 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithParameters() {
+	payload := suite.LoadTestData("outbound-text-with-parameters.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageStructured)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
+	suite.Assert().Equal("68d79558191e6f93ee7e3c1f996994cd", actual.ID)
+	suite.Assert().Equal("Hi Happy, How can I help you?", actual.Text)
+	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
+
+	content := actual.Content[0]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("Notification", content.Type)
+	suite.Require().NotNil(content.Template, "Content Template should not be nil")
+	suite.Assert().Equal("Hi Happy, How can I help you?", content.Template.Text)
+	suite.Require().NotEmpty(content.Template.Parameters, "Content Template Parameters should not be empty")
+	value, found := content.Template.Parameters["name"]
+	suite.Require().True(found, "Content Template Parameters should contain 'name'")
+	suite.Assert().Equal("Happy", value)
+}
+
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
 	message := gcloudcx.OpenMessageText{
 		ID:        "12345678",
