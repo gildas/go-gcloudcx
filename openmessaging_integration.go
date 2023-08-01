@@ -276,6 +276,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 			ID:        messageID,
 			Direction: "Inbound",
 			Channel: NewOpenMessageChannel(
+				"",
 				to,
 				&OpenMessageFrom{ID: integration.ID.String()},
 			).WithAttributes(attributes),
