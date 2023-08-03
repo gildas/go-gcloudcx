@@ -7,10 +7,10 @@ type OpenMessageTo struct {
 
 type OpenMessageFrom struct {
 	ID        string `json:"id"`
-	Type      string `json:"idType"`
+	Type      string `json:"idType,omitempty"`
 	Firstname string `json:"firstName,omitempty"`
 	Lastname  string `json:"lastName,omitempty"`
-	Nickname  string `json:"nickname"`
+	Nickname  string `json:"nickname,omitempty"`
 }
 
 // Redact redacts sensitive data
