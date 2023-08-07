@@ -3,6 +3,7 @@ package gcloudcx
 import (
 	"encoding/json"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 )
 
@@ -13,14 +14,14 @@ type OpenMessageReceipt struct {
 	ID           string              `json:"id,omitempty"` // Can be anything, message ID this receipt relates to
 	Channel      *OpenMessageChannel `json:"channel"`
 	Direction    string              `json:"direction"`         // Can be "Inbound" or "Outbound"
-	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Failed"
+	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Sent", "Read", "Failed", "Removed"
 	Reasons      []StatusReason      `json:"reasons,omitempty"` // Contains the reason for the failure
 	FinalReceipt bool                `json:"isFinalReceipt"`    // True if this is the last receipt about this message ID
 	Metadata     map[string]string   `json:"metadata,omitempty"`
 }
 
 type StatusReason struct {
-	Code    string `json:"code,omitempty"`
+	Code    string `json:"code,omitempty"` // MessageExpired, RateLimited, MessageNotAllowed, GeneralError, UnsupportedMessage, UnknownMessage, InvalidMessageStructure, InvalidDestination, ServerError, MediaTypeNotAllowed, InvalidMediaContentLength, RecipientOptedOut
 	Message string `json:"message"`
 }
 
@@ -46,6 +47,45 @@ func (message OpenMessageReceipt) GetID() string {
 // IsFailed tells if the receipt is failed
 func (message OpenMessageReceipt) IsFailed() bool {
 	return message.Status == "Failed"
+}
+
+// AsError converts this to an error
+func (reason StatusReason) AsError() error {
+	switch reason.Code {
+	case "MessageExpired":
+		return MessageExpired.With(reason.Message)
+	case "RateLimited":
+		return RateLimited.With(reason.Message)
+	case "MessageNotAllowed":
+		return MessageNotAllowed.With(reason.Message)
+	case "GeneralError":
+		return GeneralError.With(reason.Message)
+	case "UnsupportedMessage":
+		return UnsupportedMessage.With(reason.Message)
+	case "UnknownMessage":
+		return UnknownMessage.With(reason.Message)
+	case "InvalidMessageStructure":
+		return InvalidMessageStructure.With(reason.Message)
+	case "InvalidDestination":
+		return InvalidDestination.With(reason.Message)
+	case "ServerError":
+		return ServerError.With(reason.Message)
+	case "MediaTypeNotAllowed":
+		return MediaTypeNotAllowed.With(reason.Message)
+	case "InvalidMediaContentLength":
+		return InvalidMediaContentLength.With(reason.Message)
+	case "RecipientOptedOut":
+		return RecipientOptedOut.With(reason.Message)
+	}
+	return GeneralError.With(reason.Message)
+}
+
+// AsError converts this to an error
+func (message OpenMessageReceipt) AsError() error {
+	if !message.IsFailed() {
+		return nil
+	}
+	return errors.Join(core.Map(message.Reasons, func(reason StatusReason) error { return reason.AsError() })...)
 }
 
 // Redact redacts sensitive data
