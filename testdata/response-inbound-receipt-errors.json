@@ -1,0 +1,40 @@
+{
+  "id": "c8e53e498891dfc9400c79a278cc1863",
+  "channel": {
+    "id": "a9d478ff-da37-4d41-88e8-01536aee464a",
+    "platform": "Open",
+    "type": "Private",
+    "messageId": "c8e53e498891dfc9400c79a278cc1863",
+    "to": {
+      "id": "52b5eb487cebd87aa1dd4a5522852996|97147047050"
+    },
+    "from": {
+      "id": "a9d478ff-da37-4d41-88e8-01536aee464a",
+      "idType": "Opaque"
+    },
+    "time": "2023-08-03T13:06:05Z",
+    "metadata": {
+      "customAttributes": {
+        "gum-tenantId": "722320d4-5ff7-4bd8-9cbb-94b7445b8273"
+      }
+    }
+  },
+  "type": "Receipt",
+  "status": "Failed",
+  "reasons": [
+    {
+      "code": "GeneralError",
+      "message": "some general error"
+    },
+    {
+      "code": "RateLimited",
+      "message": "you have reached your limit"
+    }
+  ],
+  "isFinalReceipt": false,
+  "direction": "Outbound",
+  "metadata": {
+    "gum-correlationId": "a7a1fc65-a368-4042-a227-c04b043796bc",
+    "type": "delivery"
+  }
+}

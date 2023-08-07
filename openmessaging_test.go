@@ -309,6 +309,29 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithParame
 	suite.Assert().Equal("Happy", value)
 }
 
+func (suite *OpenMessagingSuite) TestCanUnmarshalReceipt() {
+	var receipt gcloudcx.OpenMessageReceipt
+	err := suite.UnmarshalData("response-inbound-receipt.json", &receipt)
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageReceipt. %s", err)
+	suite.Assert().False(receipt.IsFailed(), "Receipt should not be failed")
+	suite.Assert().Equal("Delivered", receipt.Status)
+	suite.Assert().Equal("Outbound", receipt.Direction)
+	suite.Assert().Equal("c8e53e498891dfc9400c79a278cc1863", receipt.ID)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalReceiptWithErrors() {
+	var receipt gcloudcx.OpenMessageReceipt
+	err := suite.UnmarshalData("response-inbound-receipt-errors.json", &receipt)
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageReceipt. %s", err)
+	suite.Assert().True(receipt.IsFailed(), "Receipt should be failed")
+	suite.Assert().Equal("Outbound", receipt.Direction)
+	suite.Assert().Equal("c8e53e498891dfc9400c79a278cc1863", receipt.ID)
+	err = receipt.AsError()
+	suite.Require().Error(err, "Receipt should be convert to an error")
+	suite.ErrorIs(err, gcloudcx.GeneralError, "Receipt should convert to a GeneralError")
+	suite.ErrorIs(err, gcloudcx.RateLimited, "Receipt should convert to a RateLimited")
+}
+
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
 	message := gcloudcx.OpenMessageText{
 		ID:        "12345678",

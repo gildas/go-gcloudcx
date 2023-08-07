@@ -56,6 +56,30 @@ var (
 	ChatInvalidQueueError = APIError{Status: 400, Code: "chat.error.invalid.queue", Message: "The specified queue is not valid."}
 	// ChatCreateConversationRequestRoutingTargetError means the routing target is not valid
 	ChatCreateConversationRequestRoutingTargetError = APIError{Status: 400, Code: "chat.error.createconversationrequest.routingtarget", Message: "The routing target is not valid."}
+	// MessageExpired means the message has expired
+	MessageExpired = APIError{Status: 400, Code: "message.expired", Message: "%s"}
+	// RateLimited means the request was rate limited
+	RateLimited = APIError{Status: 429, Code: "rate.limited", Message: "%s"}
+	// MessageNotAllowed means the message is not allowed
+	MessageNotAllowed = APIError{Status: 400, Code: "message.not.allowed", Message: "%s"}
+	// GeneralError means the request failed for a general reason
+	GeneralError = APIError{Status: 400, Code: "general.error", Message: "%s"}
+	// UnsupportedMessage means the message is not supported
+	UnsupportedMessage = APIError{Status: 400, Code: "unsupported.message", Message: "%s"}
+	// UnknownMessage means the message is unknown
+	UnknownMessage = APIError{Status: 400, Code: "unknown.message", Message: "%s"}
+	// InvalidMessageStructure means the message structure is invalid
+	InvalidMessageStructure = APIError{Status: 400, Code: "invalid.message.structure", Message: "%s"}
+	// InvalidDestination means the destination is invalid
+	InvalidDestination = APIError{Status: 400, Code: "invalid.destination", Message: "%s"}
+	// ServerError means the server failed
+	ServerError = APIError{Status: 500, Code: "server.error", Message: "%s"}
+	// MediaTypeNotAllowed means the media type is not allowed
+	MediaTypeNotAllowed = APIError{Status: 415, Code: "media.type.not.allowed", Message: "%s"}
+	// InvalidMediaContentLength means the media content length is invalid
+	InvalidMediaContentLength = APIError{Status: 400, Code: "invalid.media.content.length", Message: "%s"}
+	// RecipientOptedOut means the recipient opted out
+	RecipientOptedOut = APIError{Status: 400, Code: "recipient.opted.out", Message: "%s"}
 )
 
 // APIError represents an error from the Gcloud API
