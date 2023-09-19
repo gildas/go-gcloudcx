@@ -15,7 +15,7 @@ type OpenMessageChannel struct {
 	Type      string                      `json:"type"`     // Private, Public
 	MessageID string                      `json:"messageId,omitempty"`
 	Time      time.Time                   `json:"-"`
-	To        *OpenMessageTo              `json:"to"`
+	To        *OpenMessageTo              `json:"to,omitempty"`
 	From      *OpenMessageFrom            `json:"from"`
 	Metadata  *OpenMessageChannelMetadata `json:"metadata,omitempty"`
 }

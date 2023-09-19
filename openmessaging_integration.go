@@ -297,6 +297,31 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 	return result.ID, err
 }
 
+// SendInboundEvent sends an event from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundEventMessages
+func (integration *OpenMessagingIntegration) SendInboundEvents(context context.Context, from *OpenMessageFrom, attributes map[string]string, metadata map[string]string, events ...OpenMessageEvent) (id string, err error) {
+	if integration.ID == uuid.Nil {
+		return "", errors.ArgumentMissing.With("ID")
+	}
+	result := OpenMessageEvents{}
+	err = integration.client.Post(
+		integration.logger.ToContext(context),
+		NewURI("/conversations/messages/%s/inbound/open/event", integration.ID),
+		&OpenMessageEvents{
+			Channel: NewOpenMessageChannel(
+				"",
+				&OpenMessageTo{ID: integration.ID.String()},
+				from,
+			).WithAttributes(attributes),
+			Events:   events,
+			Metadata: metadata,
+		},
+		&result,
+	)
+	return result.ID, err
+}
+
 // SendOutboundMessage sends a message from GENESYS Cloud to the middleware
 //
 // The message can be only text as it is sent bia the AgentLess Message API.
