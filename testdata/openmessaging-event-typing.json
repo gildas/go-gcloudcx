@@ -1,0 +1,18 @@
+{
+  "channel": {
+    "platform": "Open",
+    "type": "Private",
+    "from": {
+			"id": "abcdef12345",
+			"idType": "Email",
+			"firstName": "Bob",
+			"lastName": "Minion",
+			"nickname": "Bobby"
+    },
+    "time": "2021-04-09T04:43:33Z"
+  },
+	"type": "Event",
+  "events": [
+		{ "eventType": "Typing" }
+	]
+}

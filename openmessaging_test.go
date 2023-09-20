@@ -412,3 +412,48 @@ func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 	integration.Name = ""
 	suite.Assert().Equal(id.String(), integration.String())
 }
+
+func (suite *OpenMessagingSuite) TestCanMarshalTypingEvent() {
+	channel := gcloudcx.NewOpenMessageChannel(
+		"",
+		nil,
+		&gcloudcx.OpenMessageFrom{
+			ID:        "abcdef12345",
+			Type:      "Email",
+			Firstname: "Bob",
+			Lastname:  "Minion",
+			Nickname:  "Bobby",
+		},
+	)
+	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+	event := gcloudcx.OpenMessageEvents{
+		Channel: channel,
+		Events: []gcloudcx.OpenMessageEvent{
+			gcloudcx.OpenMessageTypingEvent{IsTyping: true},
+		},
+	}
+	payload, err := json.Marshal(event)
+	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageEvents. %s", err)
+	expected := suite.LoadTestData("openmessaging-event-typing.json")
+	suite.Require().JSONEq(string(expected), string(payload))
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalTypingEvent() {
+	payload := suite.LoadTestData("inbound-openmessaging-event-typing.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageEvents)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageEvents, but was %T", message)
+	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
+	suite.Assert().Equal("6ffd815bca1570e46251fcc71c103837", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("1af69355-f1b0-477e-8ed9-66baff370209"), actual.Channel.ID)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Require().Len(actual.Events, 1, "Unmarshaled message should have 1 event")
+
+	messageEvent, ok := actual.Events[0].(*gcloudcx.OpenMessageTypingEvent)
+	suite.Require().True(ok, "Unmarshaled message event should be of type *OpenMessageTypingEvent, but was %T", actual.Events[0])
+	suite.Assert().True(messageEvent.IsTyping)
+	suite.Assert().Equal(5*time.Second, messageEvent.Duration)
+}
