@@ -273,7 +273,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 	result := OpenMessageReceipt{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
-		"/conversations/messages/inbound/open",
+		"/conversations/messages/inbound/open/receipt",
 		&OpenMessageReceipt{
 			ID:        messageID,
 			Direction: "Inbound",
