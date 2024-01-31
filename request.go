@@ -99,7 +99,7 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 			return client.SendRequest(context, path, options, results)
 		}
 		if errors.Is(err, errors.HTTPBadRequest) {
-			log.Record("payload", options.Payload).Errorf("Bad Request from remote")
+			log.Record("payload", options.Payload).Errorf("Bad Request from remote", err)
 		}
 		var details *errors.Error
 		if errors.As(err, &details) {

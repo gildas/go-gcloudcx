@@ -263,7 +263,7 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 // Genesys Cloud will return a receipt from this request. If the returned receipt has a Failed status, the return error contains the reason(s) for the failure.
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, to *OpenMessageTo, messageID, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, to *OpenMessageTo, messageID string, finalReceipt bool, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
@@ -273,7 +273,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 	result := OpenMessageReceipt{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
-		"/conversations/messages/inbound/open",
+		"/conversations/messages/inbound/open/receipt",
 		&OpenMessageReceipt{
 			ID:        messageID,
 			Direction: "Inbound",
@@ -282,9 +282,10 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 				to,
 				&OpenMessageFrom{ID: integration.ID.String()},
 			).WithAttributes(attributes),
-			Status:   status,
-			Reasons:  reasons,
-			Metadata: metadata,
+			FinalReceipt: finalReceipt,
+			Status:       status,
+			Reasons:      reasons,
+			Metadata:     metadata,
 		},
 		&result,
 	)
