@@ -10,8 +10,8 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 )
 
 func mainRouteHandler(w http.ResponseWriter, r *http.Request) {

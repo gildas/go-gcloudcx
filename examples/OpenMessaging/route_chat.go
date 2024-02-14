@@ -36,10 +36,10 @@ func createChatHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Infof("Received body: %s", string(body[:]))
 
-	chatConfig := struct{
-		Account    string `json:"account"`
-		Secret     string `json:"secret"`
-		UserID     string `json:"userId"`
+	chatConfig := struct {
+		Account string `json:"account"`
+		Secret  string `json:"secret"`
+		UserID  string `json:"userId"`
 	}{}
 
 	if err := json.Unmarshal(body, &chatConfig); err != nil {
@@ -51,7 +51,9 @@ func createChatHandler(w http.ResponseWriter, r *http.Request) {
 	chat := config.ChatServer.CreateChat(chatConfig.UserID)
 
 	log.Infof("Returning HTTP 200")
-	core.RespondWithJSON(w, http.StatusOK, struct {Path string `json:"path"`}{Path: "/chat/ws/" + chat.ID.String()})
+	core.RespondWithJSON(w, http.StatusOK, struct {
+		Path string `json:"path"`
+	}{Path: "/chat/ws/" + chat.ID.String()})
 }
 
 // chatSocketHandler starts the websocket that handles chats

@@ -10,8 +10,8 @@ import (
 )
 
 type Chat struct {
-	ID           uuid.UUID
-	UserID       string
+	ID     uuid.UUID
+	UserID string
 
 	server       *ChatServer
 	connection   *websocket.Conn
@@ -92,7 +92,7 @@ func (chat *Chat) readMessageLoop() {
 		message := &ChatMessage{}
 		if err := json.Unmarshal(payload, &message); err != nil {
 			log.Errorf("Failed to unmarshal data: \"%s\"", string(payload), err)
-			response, _ := json.Marshal(ChatMessageError{ Error: err.Error() })
+			response, _ := json.Marshal(ChatMessageError{Error: err.Error()})
 			chat.send <- response
 			continue
 		}
@@ -117,7 +117,7 @@ func (chat *Chat) writeMessageLoop() {
 
 	for {
 		select {
-		case message, ok := <- chat.send:
+		case message, ok := <-chat.send:
 			if err := chat.connection.SetWriteDeadline(time.Now().Add(chat.writeTimeout)); err != nil {
 				log.Errorf("Failed setting write deadline", err)
 			}
@@ -140,7 +140,7 @@ func (chat *Chat) writeMessageLoop() {
 			}
 			log.Infof("Written %d bytes", count)
 
-		case <- ticker.C: // the ticker is used to send pings to the websocket
+		case <-ticker.C: // the ticker is used to send pings to the websocket
 			if err := chat.connection.SetWriteDeadline(time.Now().Add(chat.writeTimeout)); err != nil {
 				log.Errorf("Failed setting write deadline", err)
 			}

@@ -12,13 +12,13 @@ import (
 )
 
 type ChatServer struct {
-	router      *mux.Router
-	chats       map[uuid.UUID]*Chat
-	messages    map[string]*ChatMessage
-	register    chan *Chat
-	unregister  chan *Chat
-	sendCX      chan *ChatMessage
-	Logger      *logger.Logger
+	router     *mux.Router
+	chats      map[uuid.UUID]*Chat
+	messages   map[string]*ChatMessage
+	register   chan *Chat
+	unregister chan *Chat
+	sendCX     chan *ChatMessage
+	Logger     *logger.Logger
 }
 
 var upgrader = websocket.Upgrader{
@@ -28,13 +28,13 @@ var upgrader = websocket.Upgrader{
 
 func NewChatServer(router *mux.Router, log *logger.Logger) *ChatServer {
 	return &ChatServer{
-		router:      router,
-		chats:       map[uuid.UUID]*Chat{},
-		messages:    map[string]*ChatMessage{},
-		register:    make(chan *Chat),
-		unregister:  make(chan *Chat),
-		sendCX:      make(chan *ChatMessage),
-		Logger:      log.Child("chatserver", "chatserver"),
+		router:     router,
+		chats:      map[uuid.UUID]*Chat{},
+		messages:   map[string]*ChatMessage{},
+		register:   make(chan *Chat),
+		unregister: make(chan *Chat),
+		sendCX:     make(chan *ChatMessage),
+		Logger:     log.Child("chatserver", "chatserver"),
 	}
 }
 
@@ -88,14 +88,14 @@ func (server *ChatServer) Start(config *Config) {
 		case chat := <-server.register:
 			server.Logger.Record("chat", chat).Infof("Registering new chat %s", chat)
 			server.chats[chat.ID] = chat
-		case chat := <- server.unregister:
+		case chat := <-server.unregister:
 			server.Logger.Record("chat", chat).Infof("Unregistering chat %s", chat)
 			delete(server.chats, chat.ID)
 		case message := <-server.sendCX:
 			server.messages[message.ID] = message
 
 			// Here we need to send the message to GENESYS Cloud
-			go func(){
+			go func() {
 				log := server.Logger.Child(nil, "sendCX", "chat", message.Chat.ID, "message", message.ID)
 
 				log.Debugf("Sending message to GENESYS Cloud")
