@@ -44,12 +44,12 @@ func main() {
 	// Initializing the Config
 	config := &Config{
 		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
-			Region:       *region,
-			Logger:       log,
+			Region: *region,
+			Logger: log,
 		}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
 			Secret:   *clientSecret,
-			Token:    gcloudcx.AccessToken{
+			Token: gcloudcx.AccessToken{
 				Type:  "bearer",
 				Token: *clientToken,
 			},

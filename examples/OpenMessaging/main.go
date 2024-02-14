@@ -14,8 +14,8 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -50,9 +50,9 @@ func main() {
 		integrationHook  = flag.String("webhook", core.GetEnvAsString("INTEGRATION_WEBHOOK", ""), "the Integration Webhook URL")
 		integrationToken = flag.String("webhook-token", core.GetEnvAsString("INTEGRATION_TOKEN", ""), "the Integration Webhook Token")
 
-		port         = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
-		wait         = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
-		err error
+		port = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
+		wait = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
+		err  error
 	)
 	flag.Parse()
 
@@ -73,12 +73,12 @@ func main() {
 		IntegrationWebhookURL:   core.Must(url.Parse(*integrationHook)),
 		IntegrationWebhookToken: *integrationToken,
 		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
-			Region:       *region,
-			Logger:       Log,
+			Region: *region,
+			Logger: Log,
 		}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
 			Secret:   *clientSecret,
-			Token:    gcloudcx.AccessToken{
+			Token: gcloudcx.AccessToken{
 				Type:  "bearer",
 				Token: *clientToken,
 			},
@@ -176,7 +176,7 @@ func main() {
 
 	// Accepting shutdowns from SIGINT (^C) and SIGTERM (docker, heroku)
 	interruptChannel := make(chan os.Signal, 1)
-	exitChannel      := make(chan struct{})
+	exitChannel := make(chan struct{})
 	signal.Notify(interruptChannel, os.Interrupt, syscall.SIGTERM)
 
 	// Waiting to clean stuff up when exiting
@@ -200,6 +200,6 @@ func main() {
 		close(exitChannel)
 	}()
 
-	<- exitChannel
+	<-exitChannel
 	os.Exit(0)
 }

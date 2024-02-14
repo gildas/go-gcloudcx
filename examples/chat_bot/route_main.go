@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gildas/go-core"
-	"github.com/gildas/go-logger"
 	"github.com/gildas/go-gcloudcx"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
 

@@ -20,7 +20,8 @@ type Config struct {
 	ChatServer  *ChatServer
 }
 
-type  key int
+type key int
+
 const contextKey key = iota + 56334
 
 // FromContext retrieves the Logger stored in the context
@@ -38,7 +39,7 @@ func (item *Config) ToContext(parent context.Context) context.Context {
 
 func (config *Config) HttpHandler() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r*http.Request){
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r.WithContext(config.ToContext(r.Context())))
 		})
 	}
