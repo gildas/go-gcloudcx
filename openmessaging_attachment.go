@@ -19,6 +19,7 @@ type OpenMessageAttachment struct {
 	URL      *url.URL `json:"-"`
 	Mime     string   `json:"mime,omitempty"`
 	Filename string   `json:"filename,omitempty"`
+	Length   uint64   `json:"contentSizeBytes,omitempty"`
 	Text     string   `json:"text,omitempty"`
 	Hash     string   `json:"sha256,omitempty"`
 }
@@ -42,6 +43,7 @@ func (attachment OpenMessageAttachment) WithContent(content *request.Content) *O
 	attachment.Mime = content.Type
 	attachment.Filename = content.Name
 	attachment.URL = content.URL
+	attachment.Length = content.Length
 
 	if attachmentType != "Link" && len(content.Name) == 0 {
 		fileExtension := path.Ext(content.URL.Path)
