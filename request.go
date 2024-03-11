@@ -99,7 +99,14 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 			return client.SendRequest(context, path, options, results)
 		}
 		if errors.Is(err, errors.HTTPBadRequest) {
-			log.Record("payload", options.Payload).Errorf("Bad Request from remote", err)
+			log.Record("Request payload", options.Payload).Errorf("Bad Request from remote: %s", err)
+		}
+		log.Errorf("Response payload: %s", res.Data)
+		var simpleError struct {
+			Error string `json:"error"`
+		}
+		if jsonerr := res.UnmarshalContentJSON(&simpleError); jsonerr == nil && len(simpleError.Error) > 0 {
+			return APIError{Message: simpleError.Error, CorrelationID: correlationID}.WithStack()
 		}
 		var details *errors.Error
 		if errors.As(err, &details) {
