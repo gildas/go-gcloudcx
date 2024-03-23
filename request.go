@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -37,19 +38,23 @@ func (client *Client) Delete(context context.Context, path URI, results interfac
 }
 
 // SendRequest sends a REST request to GCloud
-func (client *Client) SendRequest(context context.Context, path URI, options *request.Options, results interface{}) (err error) {
+func (client *Client) SendRequest(context context.Context, uri URI, options *request.Options, results interface{}) (err error) {
 	log := client.GetLogger(context).Child(nil, "request")
 	if options == nil {
 		options = &request.Options{}
 	}
-	if path.HasProtocol() {
-		options.URL, err = path.URL()
+	log = log.Record("method", options.Method)
+	if uri.HasProtocol() {
+		options.URL, err = uri.URL()
+		log = log.Record("api", uri.String())
 	} else if client.API == nil {
 		return errors.ArgumentMissing.With("Client API")
-	} else if !path.HasPrefix("/api") {
-		options.URL, err = client.API.Parse(NewURI("/api/v2/").Join(path).String())
+	} else if !uri.HasPrefix("/api") {
+		options.URL, err = client.API.Parse(NewURI("/api/v2/").Join(uri).String())
+		log = log.Record("api", path.Join("/api/v2/", uri.String()))
 	} else {
-		options.URL, err = client.API.Parse(path.String())
+		options.URL, err = client.API.Parse(uri.String())
+		log = log.Record("api", uri.String())
 	}
 	if err != nil {
 		return errors.WithStack(APIError{Code: "url.parse", Message: err.Error()})
@@ -96,7 +101,7 @@ func (client *Client) SendRequest(context context.Context, path URI, options *re
 			log.Infof("Authorization Token is expired, we need to authenticate again")
 			options.Authorization = ""
 			client.Grant.AccessToken().Reset()
-			return client.SendRequest(context, path, options, results)
+			return client.SendRequest(context, uri, options, results)
 		}
 		if errors.Is(err, errors.HTTPBadRequest) {
 			log.Record("Request payload", options.Payload).Errorf("Bad Request from remote: %s", err)
