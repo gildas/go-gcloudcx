@@ -258,11 +258,11 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 
 // SendInboundReceipt sends a receipt from the middleware to GENESYS Cloud
 //
-// Valid status values are: Delivered, Failed, Published, Read, Removed, and Sent.
+// Valid status values are: Delivered, Failed.
 //
 // Genesys Cloud will return a receipt from this request. If the returned receipt has a Failed status, the return error contains the reason(s) for the failure.
 //
-// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+// See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundReceiptMessages
 func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, to *OpenMessageTo, messageID string, finalReceipt bool, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
@@ -273,14 +273,14 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 	result := OpenMessageReceipt{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
-		"/conversations/messages/inbound/open/receipt",
+		NewURI("/conversations/messages/%s/inbound/open/receipt", integration.ID),
 		&OpenMessageReceipt{
 			ID:        messageID,
-			Direction: "Inbound",
+			Direction: "Outbound",
 			Channel: NewOpenMessageChannel(
 				"",
 				to,
-				&OpenMessageFrom{ID: integration.ID.String()},
+				&OpenMessageFrom{ID: integration.ID.String(), Type: "email"},
 			).WithAttributes(attributes),
 			FinalReceipt: finalReceipt,
 			Status:       status,
