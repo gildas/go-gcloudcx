@@ -108,11 +108,11 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 		}
 		log.Errorf("Response payload: %s", res.Data)
 		var simpleError struct {
-			Error string `json:"error"`
+			Error       string `json:"error"`
 			Description string `json:"description"`
 		}
 		if jsonerr := res.UnmarshalContentJSON(&simpleError); jsonerr == nil && len(simpleError.Error) > 0 {
-			return APIError{Message: simpleError.Error, MessageParams: map[string]string{ "description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
+			return APIError{Message: simpleError.Error, MessageParams: map[string]string{"description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
 		}
 		var details *errors.Error
 		if errors.As(err, &details) {
