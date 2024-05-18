@@ -5,11 +5,13 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 type OpenMessage interface {
 	GetID() string
 	core.TypeCarrier
+	logger.Redactable
 }
 
 var openMessageRegistry = core.TypeRegistry{}

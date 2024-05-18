@@ -6,6 +6,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
 
@@ -24,6 +25,20 @@ type OpenMessageData struct {
 	CreatedBy         *User        `json:"createdBy"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
 	Conversation      Conversation `json:"-"`
 	SelfURI           URI          `json:"selfUri"`
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (messageData OpenMessageData) Redact() interface{} {
+	redacted := messageData
+	if messageData.NormalizedMessage != nil {
+		redacted.NormalizedMessage = messageData.NormalizedMessage.Redact().(OpenMessage)
+	}
+	if core.GetEnvAsBool("REDACT_MESSAGE_TEXT", true) && len(messageData.Text) > 0 {
+		redacted.Text = logger.RedactWithHash(messageData.Text)
+	}
+	return &redacted
 }
 
 // MarshalJSON marshals this into JSON

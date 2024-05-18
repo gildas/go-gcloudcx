@@ -5,19 +5,21 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // OpenMessageReceipt is the message receipt returned by the Open Message Integration API.
 //
 // See: https://developer.genesys.cloud/api/digital/openmessaging/receipts
 type OpenMessageReceipt struct {
-	ID           string              `json:"id,omitempty"` // Can be anything, message ID this receipt relates to
-	Channel      *OpenMessageChannel `json:"channel"`
-	Direction    string              `json:"direction"`         // Can be "Inbound" or "Outbound"
-	Status       string              `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Sent", "Read", "Failed", "Removed"
-	Reasons      []StatusReason      `json:"reasons,omitempty"` // Contains the reason for the failure
-	FinalReceipt bool                `json:"isFinalReceipt"`    // True if this is the last receipt about this message ID
-	Metadata     map[string]string   `json:"metadata,omitempty"`
+	ID           string             `json:"id,omitempty"` // Can be anything, message ID this receipt relates to
+	Channel      OpenMessageChannel `json:"channel"`
+	Direction    string             `json:"direction"`         // Can be "Inbound" or "Outbound"
+	Status       string             `json:"status"`            // Can be "Published" (Inbound), "Delivered" (Outbound), "Sent", "Read", "Failed", "Removed"
+	Reasons      []StatusReason     `json:"reasons,omitempty"` // Contains the reason for the failure
+	FinalReceipt bool               `json:"isFinalReceipt"`    // True if this is the last receipt about this message ID
+	Metadata     map[string]string  `json:"metadata,omitempty"`
+	KeysToRedact []string           `json:"-"`
 }
 
 type StatusReason struct {
@@ -93,8 +95,11 @@ func (message OpenMessageReceipt) AsError() error {
 // implements logger.Redactable
 func (message OpenMessageReceipt) Redact() interface{} {
 	redacted := message
-	if message.Channel != nil {
-		redacted.Channel = message.Channel.Redact().(*OpenMessageChannel)
+	redacted.Channel = message.Channel.Redact().(OpenMessageChannel)
+	for _, key := range message.KeysToRedact {
+		if value, found := redacted.Metadata[key]; found {
+			redacted.Metadata[key] = logger.RedactWithHash(value)
+		}
 	}
 	return &redacted
 }
@@ -117,7 +122,8 @@ func (message *OpenMessageReceipt) UnmarshalJSON(data []byte) (err error) {
 	type surrogate OpenMessageReceipt
 	var inner struct {
 		surrogate
-		Type string `json:"type"`
+		Type         string   `json:"type"`
+		KeysToRedact []string `json:"keysToRedact"`
 	}
 
 	if err = json.Unmarshal(data, &inner); err != nil {
@@ -127,5 +133,6 @@ func (message *OpenMessageReceipt) UnmarshalJSON(data []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(errors.InvalidType.With(inner.Type))
 	}
 	*message = OpenMessageReceipt(inner.surrogate)
+	message.KeysToRedact = append(message.KeysToRedact, inner.KeysToRedact...)
 	return
 }

@@ -187,70 +187,37 @@ func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context 
 	return Fetch[RoutingMessageRecipient](context, integration.client, integration)
 }
 
-// SendInboundMessage sends a text message from the middleware to GENESYS Cloud
+// SendInboundTextMessage sends an Open Message text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundMessage(context context.Context, from *OpenMessageFrom, messageID, text string, attributes map[string]string, metadata map[string]string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundTextMessage(context context.Context, message OpenMessageText) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
-	if len(messageID) == 0 {
-		return "", errors.ArgumentMissing.With("messageID")
+	if len(message.Channel.ID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.ID")
 	}
-	result := OpenMessageText{}
-	err = integration.client.Post(
-		integration.logger.ToContext(context),
-		NewURI("/conversations/messages/%s/inbound/open/message", integration.ID),
-		&OpenMessageText{
-			Direction: "Inbound",
-			Channel: NewOpenMessageChannel(
-				messageID,
-				&OpenMessageTo{ID: integration.ID.String()},
-				from,
-			).WithAttributes(attributes),
-			Text:     text,
-			Metadata: metadata,
-		},
-		&result,
-	)
-	return result.ID, err
-}
-
-// SendInboundMessageWithAttachment sends a text message with an attachemnt from the middleware to GENESYS Cloud
-//
-// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#inbound-message-with-attached-photo
-// See https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
-func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(context context.Context, from *OpenMessageFrom, messageID, text string, attachment *OpenMessageAttachment, attributes map[string]string, metadata map[string]string) (id string, err error) {
-	if integration.ID == uuid.Nil {
-		return "", errors.ArgumentMissing.With("ID")
+	if len(message.Channel.MessageID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.MessageID")
 	}
-	if len(messageID) == 0 {
-		return "", errors.ArgumentMissing.With("messageID")
+	message.Channel.Platform = "Open"
+	message.Channel.Type = "Private"
+	message.Channel.Time = time.Now().UTC()
+	message.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
+	if err := message.Channel.Validate(); err != nil {
+		return "", err
 	}
-	if attachment.URL == nil {
-		return "", errors.ArgumentMissing.With("url")
+	if len(message.Text) == 0 {
+		return "", errors.ArgumentMissing.With("text")
 	}
+	message.Direction = "Inbound"
+	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	result := OpenMessageText{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/message", integration.ID),
-		&OpenMessageText{
-			Direction: "Inbound",
-			Channel: NewOpenMessageChannel(
-				messageID,
-				&OpenMessageTo{ID: integration.ID.String()},
-				from,
-			).WithAttributes(attributes),
-			Text: text,
-			Content: []*OpenMessageContent{
-				{
-					Type:       "Attachment",
-					Attachment: attachment,
-				},
-			},
-			Metadata: metadata,
-		},
+		message,
 		&result,
 	)
 	return result.ID, err
@@ -263,30 +230,35 @@ func (integration *OpenMessagingIntegration) SendInboundMessageWithAttachment(co
 // Genesys Cloud will return a receipt from this request. If the returned receipt has a Failed status, the return error contains the reason(s) for the failure.
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundReceiptMessages
-func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, to *OpenMessageTo, messageID string, finalReceipt bool, status string, reasons []StatusReason, attributes map[string]string, metadata map[string]string) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, receipt OpenMessageReceipt) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
 	}
-	if len(messageID) == 0 {
-		return "", errors.ArgumentMissing.With("messageID")
+	if len(receipt.ID) == 0 {
+		// if the messageID was provided in the Channel, we need to move it to the receipt
+		receipt.ID = receipt.Channel.MessageID
+		if len(receipt.ID) == 0 {
+			return "", errors.ArgumentMissing.With("ID")
+		}
 	}
+	receipt.Channel.MessageID = ""
+	receipt.Direction = "Outbound"
+	if len(receipt.Channel.ID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.ID")
+	}
+	receipt.Channel.Platform = "Open"
+	receipt.Channel.Type = "Private"
+	receipt.Channel.Time = time.Now().UTC()
+	receipt.Channel.From = &OpenMessageFrom{ID: integration.ID.String(), Type: "email"}
+	if err := receipt.Channel.Validate(); err != nil {
+		return "", err
+	}
+
 	result := OpenMessageReceipt{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/receipt", integration.ID),
-		&OpenMessageReceipt{
-			ID:        messageID,
-			Direction: "Outbound",
-			Channel: NewOpenMessageChannel(
-				"",
-				to,
-				&OpenMessageFrom{ID: integration.ID.String(), Type: "email"},
-			).WithAttributes(attributes),
-			FinalReceipt: finalReceipt,
-			Status:       status,
-			Reasons:      reasons,
-			Metadata:     metadata,
-		},
+		receipt,
 		&result,
 	)
 	if err != nil {
@@ -301,23 +273,23 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 // SendInboundEvent sends an event from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundEventMessages
-func (integration *OpenMessagingIntegration) SendInboundEvents(context context.Context, from *OpenMessageFrom, attributes map[string]string, metadata map[string]string, events ...OpenMessageEvent) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundEvents(context context.Context, events OpenMessageEvents) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
+	}
+	events.Channel.MessageID = ""
+	events.Channel.Platform = "Open"
+	events.Channel.Type = "Private"
+	events.Channel.Time = time.Now().UTC()
+	events.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
+	if err := events.Channel.Validate(); err != nil {
+		return "", err
 	}
 	result := OpenMessageEvents{}
 	err = integration.client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/event", integration.ID),
-		&OpenMessageEvents{
-			Channel: NewOpenMessageChannel(
-				"",
-				&OpenMessageTo{ID: integration.ID.String()},
-				from,
-			).WithAttributes(attributes),
-			Events:   events,
-			Metadata: metadata,
-		},
+		events,
 		&result,
 	)
 	return result.ID, err
