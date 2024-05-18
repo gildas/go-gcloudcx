@@ -156,7 +156,7 @@ func (suite *RoutingMessageRecipientSuite) TestCanUnmarshal() {
 }
 
 func (suite *RoutingMessageRecipientSuite) TestCanFetchByID() {
-	id := uuid.MustParse("2be1fcc8-4f7d-406d-accc-43be454e2f14")
+	id := uuid.MustParse("968acd86-f5eb-4565-94da-6c2873e02b2c")
 	recipient, err := gcloudcx.Fetch[gcloudcx.RoutingMessageRecipient](context.Background(), suite.Client, id)
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", id, err)
 	suite.Assert().Equal(id, recipient.GetID())
@@ -173,7 +173,7 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByName() {
 	}
 	recipient, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", name, err)
-	suite.Assert().Equal(uuid.MustParse("2be1fcc8-4f7d-406d-accc-43be454e2f14"), recipient.GetID())
+	suite.Assert().Equal(uuid.MustParse("968acd86-f5eb-4565-94da-6c2873e02b2c"), recipient.GetID())
 	suite.Assert().Equal(name, recipient.Name)
 	suite.Assert().Equal("open", recipient.MessengerType)
 	suite.Require().NotNil(recipient.Flow, "Recipient should have a Flow")
