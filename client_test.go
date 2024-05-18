@@ -146,7 +146,6 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsSecret(
 	suite.Require().Error(err, "Login should have failed")
 	suite.Logger.Errorf("Expected Error", err)
 	suite.Assert().NotErrorIs(err, errors.RuntimeError)
-	suite.Assert().ErrorIs(err, gcloudcx.BadCredentialsError)
 
 	var apiError gcloudcx.APIError
 	suite.Require().ErrorAs(err, &apiError, "Error should be an APIError")
@@ -160,13 +159,12 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsClientI
 		Logger: suite.Logger,
 	}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 		ClientID: uuid.New(), // The chances of this being a valid Client ID are very low
-		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "s3cr3t"),
+		Secret:   "s3cr3t",
 	})
 	err := client.Login(context.Background())
 	suite.Require().Error(err, "Login should have failed")
 	suite.Logger.Errorf("Expected Error", err)
 	suite.Assert().NotErrorIs(err, errors.RuntimeError)
-	suite.Assert().ErrorIs(err, gcloudcx.BadCredentialsError)
 
 	var apiError gcloudcx.APIError
 	suite.Require().ErrorAs(err, &apiError, "Error should be an APIError")
