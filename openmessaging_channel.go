@@ -18,7 +18,7 @@ type OpenMessageChannel struct {
 	Time             time.Time         `json:"-"`
 	To               *OpenMessageTo    `json:"to,omitempty"`
 	From             *OpenMessageFrom  `json:"from"`
-	CustomAttributes map[string]string `json:"customAttributes,omitempty"`
+	CustomAttributes map[string]string `json:"-"`
 	KeysToRedact     []string          `json:"-"`
 }
 
@@ -30,9 +30,14 @@ func (channel OpenMessageChannel) Redact() interface{} {
 	if channel.From != nil {
 		redacted.From = channel.From.Redact().(*OpenMessageFrom)
 	}
-	for _, key := range channel.KeysToRedact {
-		if value, found := redacted.CustomAttributes[key]; found {
-			redacted.CustomAttributes[key] = logger.RedactWithHash(value)
+	if len(channel.KeysToRedact) > 0 {
+		redacted.CustomAttributes = make(map[string]string, len(channel.CustomAttributes))
+		for key, value := range channel.CustomAttributes {
+			if core.Contains(channel.KeysToRedact, key) {
+				redacted.CustomAttributes[key] = logger.RedactWithHash(value)
+			} else {
+				redacted.CustomAttributes[key] = value
+			}
 		}
 	}
 	return redacted

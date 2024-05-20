@@ -21,8 +21,8 @@ type OpenMessageData struct {
 	MessengerType     string       `json:"messengerType"` // sms, facebook, twitter, etc
 	Text              string       `json:"textBody"`
 	NormalizedMessage OpenMessage  `json:"-"`
-	Status            string       `json:"status"`    // sent, received, delivered, undelivered, etc
-	CreatedBy         *User        `json:"createdBy"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
+	Status            string       `json:"status"`              // sent, received, delivered, undelivered, etc
+	CreatedBy         *User        `json:"createdBy,omitempty"` // nil unless NormalizedMessage.OriginatingEntity is "Human"
 	Conversation      Conversation `json:"-"`
 	SelfURI           URI          `json:"selfUri"`
 }
@@ -32,6 +32,9 @@ type OpenMessageData struct {
 // implements logger.Redactable
 func (messageData OpenMessageData) Redact() interface{} {
 	redacted := messageData
+	if messageData.CreatedBy != nil {
+		redacted.CreatedBy = messageData.CreatedBy.Redact().(*User)
+	}
 	if messageData.NormalizedMessage != nil {
 		redacted.NormalizedMessage = messageData.NormalizedMessage.Redact().(OpenMessage)
 	}

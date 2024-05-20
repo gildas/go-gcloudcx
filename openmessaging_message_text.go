@@ -51,7 +51,7 @@ func (message OpenMessageText) Redact() interface{} {
 		redacted.Text = logger.RedactWithHash(message.Text)
 	}
 	for _, key := range message.KeysToRedact {
-		if value, found := redacted.Metadata[key]; found {
+		if value, found := message.Metadata[key]; found {
 			redacted.Metadata[key] = logger.RedactWithHash(value)
 		}
 	}
