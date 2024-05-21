@@ -4,17 +4,19 @@ import (
 	"encoding/json"
 
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // OpenMessageText is a text message sent or received by the Open Messaging API
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundEventMessages
 type OpenMessageEvents struct {
-	ID        string              `json:"id,omitempty"` // Can be anything
-	Channel   *OpenMessageChannel `json:"channel"`
-	Direction string              `json:"direction,omitempty"` // Can be "Inbound" or "Outbound"
-	Events    []OpenMessageEvent  `json:"events"`
-	Metadata  map[string]string   `json:"metadata,omitempty"`
+	ID           string             `json:"id,omitempty"` // Can be anything
+	Channel      OpenMessageChannel `json:"channel"`
+	Direction    string             `json:"direction,omitempty"` // Can be "Inbound" or "Outbound"
+	Events       []OpenMessageEvent `json:"events"`
+	Metadata     map[string]string  `json:"metadata,omitempty"`
+	KeysToRedact []string           `json:"-"`
 }
 
 // init initializes this type
@@ -34,6 +36,25 @@ func (message OpenMessageEvents) GetType() string {
 //	implements OpenMessage
 func (message OpenMessageEvents) GetID() string {
 	return message.ID
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (message OpenMessageEvents) Redact() interface{} {
+	redacted := message
+	redacted.Channel = message.Channel.Redact().(OpenMessageChannel)
+	for i, event := range message.Events {
+		if redactable, ok := event.(logger.Redactable); ok {
+			message.Events[i] = redactable.Redact().(OpenMessageEvent)
+		}
+	}
+	for _, key := range message.KeysToRedact {
+		if value, found := redacted.Metadata[key]; found {
+			redacted.Metadata[key] = logger.RedactWithHash(value)
+		}
+	}
+	return &redacted
 }
 
 // MarshalJSON marshals this into JSON
@@ -59,8 +80,9 @@ func (message *OpenMessageEvents) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageEvents
 	var inner struct {
 		surrogate
-		Type   string            `json:"type"`
-		Events []json.RawMessage `json:"events"`
+		Type         string            `json:"type"`
+		Events       []json.RawMessage `json:"events"`
+		KeysToRedact []string          `json:"keysToRedact"`
 	}
 	if err = json.Unmarshal(payload, &inner); errors.Is(err, errors.JSONUnmarshalError) {
 		return err
@@ -77,5 +99,6 @@ func (message *OpenMessageEvents) UnmarshalJSON(payload []byte) (err error) {
 		}
 		message.Events = append(message.Events, event)
 	}
+	message.KeysToRedact = append(message.KeysToRedact, inner.KeysToRedact...)
 	return
 }

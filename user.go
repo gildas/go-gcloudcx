@@ -128,6 +128,41 @@ func (user User) String() string {
 	return user.ID.String()
 }
 
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (user User) Redact() interface{} {
+	redacted := user
+	if len(user.Name) > 0 {
+		redacted.Name = logger.RedactWithHash(user.Name)
+	}
+	if len(user.UserName) > 0 {
+		redacted.UserName = logger.RedactWithHash(user.UserName)
+	}
+	if len(user.Mail) > 0 {
+		redacted.Mail = logger.RedactWithHash(user.Mail)
+	}
+	if len(user.PrimaryContact) > 0 {
+		redacted.PrimaryContact = make([]*Contact, len(user.PrimaryContact))
+		for i, contact := range user.PrimaryContact {
+			redacted.PrimaryContact[i] = contact.Redact().(*Contact)
+		}
+	}
+	if len(user.Addresses) > 0 {
+		redacted.Addresses = make([]*Contact, len(user.Addresses))
+		for i, contact := range user.Addresses {
+			redacted.Addresses[i] = contact.Redact().(*Contact)
+		}
+	}
+	if user.Manager != nil {
+		redacted.Manager = user.Manager.Redact().(*User)
+	}
+	if user.Biography != nil {
+		redacted.Biography = user.Biography.Redact().(*Biography)
+	}
+	return &redacted
+}
+
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler

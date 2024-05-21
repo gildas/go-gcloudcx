@@ -99,19 +99,21 @@ func (server *ChatServer) Start(config *Config) {
 				log := server.Logger.Child(nil, "sendCX", "chat", message.Chat.ID, "message", message.ID)
 
 				log.Debugf("Sending message to GENESYS Cloud")
-				inboundResult, err := config.Integration.SendInboundMessage(
+				inboundResult, err := config.Integration.SendInboundTextMessage(
 					context.Background(),
-					&gcloudcx.OpenMessageFrom{
-						ID:        message.UserID,
-						Type:      "email",
-						Firstname: "Bob",
-						Lastname:  "Minion",
-						Nickname:  "",
+					gcloudcx.OpenMessageText{
+						Channel: gcloudcx.OpenMessageChannel{
+							MessageID: message.ID,
+							From: &gcloudcx.OpenMessageFrom{
+								ID:        message.UserID,
+								Type:      "email",
+								Firstname: "Bob",
+								Lastname:  "Minion",
+								Nickname:  "",
+							},
+						},
+						Text: message.Content,
 					},
-					message.ID,
-					message.Content,
-					nil,
-					nil,
 				)
 				if err != nil {
 					Log.Errorf("Failed to send inbound", err)

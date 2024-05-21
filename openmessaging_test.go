@@ -1,13 +1,17 @@
 package gcloudcx_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -117,6 +121,63 @@ func (suite *OpenMessagingSuite) UnmarshalData(filename string, v interface{}) e
 	data := suite.LoadTestData(filename)
 	suite.Logger.Infof("Loaded %s: %s", filename, string(data))
 	return json.Unmarshal(data, v)
+}
+
+func (suite *OpenMessagingSuite) LogLineEqual(line string, records map[string]string) {
+	rex_records := make(map[string]*regexp.Regexp)
+	for key, value := range records {
+		rex_records[key] = regexp.MustCompile(value)
+	}
+
+	properties := map[string]interface{}{}
+	err := json.Unmarshal([]byte(line), &properties)
+	suite.Require().NoError(err, "Could not unmarshal line, error: %s", err)
+
+	for key, rex := range rex_records {
+		suite.Assert().Contains(properties, key, "The line does not contain the key %s", key)
+		if value, found := properties[key]; found {
+			var stringvalue string
+			switch actual := value.(type) {
+			case string:
+				stringvalue = actual
+			case int, int8, int16, int32, int64:
+				stringvalue = strconv.FormatInt(value.(int64), 10)
+			case uint, uint8, uint16, uint32, uint64:
+				stringvalue = strconv.FormatUint(value.(uint64), 10)
+			case float32, float64:
+				stringvalue = strconv.FormatFloat(value.(float64), 'f', -1, 64)
+			case fmt.Stringer:
+				stringvalue = actual.String()
+			case map[string]interface{}:
+				stringvalue = fmt.Sprintf("%v", value)
+			default:
+				suite.Failf(fmt.Sprintf("The value of the key %s cannot be casted to string", key), "Type: %s", reflect.TypeOf(value))
+			}
+			suite.Assert().Truef(rex.MatchString(stringvalue), `Key "%s": the value %v does not match the regex /%s/`, key, value, rex)
+		}
+	}
+
+	for key := range properties {
+		suite.Assert().Contains(rex_records, key, "The line contains the extra key %s", key)
+	}
+}
+
+func CaptureStdout(f func()) string {
+	reader, writer, err := os.Pipe()
+	if err != nil {
+		panic(err)
+	}
+	defer func(stdout *os.File) {
+		os.Stdout = stdout
+	}(os.Stdout)
+	os.Stdout = writer
+
+	f()
+	writer.Close()
+
+	output := bytes.Buffer{}
+	_, _ = io.Copy(&output, reader)
+	return output.String()
 }
 
 // #endregion: Suite Tools }}}
@@ -266,18 +327,20 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
-	channel := gcloudcx.NewOpenMessageChannel(
-		"gmAy9zNkhf4ermFvHH9mB5",
-		&gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
-		&gcloudcx.OpenMessageFrom{
+	channel := gcloudcx.OpenMessageChannel{
+		Platform:  "Open",
+		Type:      "Private",
+		MessageID: "gmAy9zNkhf4ermFvHH9mB5",
+		To:        &gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+		From: &gcloudcx.OpenMessageFrom{
 			ID:        "abcdef12345",
 			Type:      "Email",
 			Firstname: "Bob",
 			Lastname:  "Minion",
 			Nickname:  "Bobby",
 		},
-	)
-	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+		Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+	}
 
 	data, err := json.Marshal(channel)
 	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageChannel. %s", err)
@@ -333,52 +396,160 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalReceiptWithErrors() {
 }
 
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
-	message := gcloudcx.OpenMessageText{
-		ID:        "12345678",
-		Direction: "inbound",
-		Text:      "text message",
-	}
-	message.Channel = gcloudcx.NewOpenMessageChannel(
-		"gmAy9zNkhf4ermFvHH9mB5",
-		&gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
-		&gcloudcx.OpenMessageFrom{
-			ID:        "abcdef12345",
-			Type:      "Email",
-			Firstname: "Bob",
-			Lastname:  "Minion",
-			Nickname:  "Bobby",
-		},
-	)
-	message.Channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
+	output := CaptureStdout(func() {
+		log := logger.Create("test", &logger.StdoutStream{})
+		defer log.Flush()
+		log.SetFilterLevel(logger.TRACE)
+		message := gcloudcx.OpenMessageText{
+			ID: "12345678",
+			Channel: gcloudcx.OpenMessageChannel{
+				Platform:  "Open",
+				Type:      "Private",
+				MessageID: "gmAy9zNkhf4ermFvHH9mB5",
+				To:        &gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+				From: &gcloudcx.OpenMessageFrom{
+					ID:        "abcdef12345",
+					Type:      "Email",
+					Firstname: "Bob",
+					Lastname:  "Minion",
+					Nickname:  "Bobby",
+				},
+				Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+			},
+			Direction: "inbound",
+			Text:      "text message",
+		}
 
-	suite.Logger.Record("message", message).Infof("message")
+		suite.Logger.Record("message", message).Infof("message")
+		log.Record("message", message).Infof("message")
+	})
+	suite.Require().NotEmpty(output, "There was no output")
+	lines := strings.Split(output, "\n")
+	lines = lines[0 : len(lines)-1] // remove the last empty line
+	suite.Require().Len(lines, 1, "There should be 1 line in the log output, found %d", len(lines))
+	suite.LogLineEqual(lines[0], map[string]string{
+		"message":  `map\[channel:map\[from:map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\] messageId:gmAy9zNkhf4ermFvHH9mB5 platform:Open time:2021-04-09T04:43:33Z to:map\[id:edce4efa-4abf-468b-ada7-cd6d35e7bbaf\] type:Private\] direction:inbound id:12345678 text:REDACTED-[0-9a-f]+ type:Text\]`,
+		"hostname": `[a-zA-Z_0-9\-\.]+`,
+		"level":    "30",
+		"msg":      "message",
+		"name":     "test",
+		"pid":      "[0-9]+",
+		"scope":    "main",
+		"tid":      "[0-9]+",
+		"time":     `[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+Z`,
+		"topic":    "main",
+		"v":        "0",
+	})
 }
 
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessageChannel() {
-	channel := gcloudcx.NewOpenMessageChannel(
-		"gmAy9zNkhf4ermFvHH9mB5",
-		&gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
-		&gcloudcx.OpenMessageFrom{
+	output := CaptureStdout(func() {
+		log := logger.Create("test", &logger.StdoutStream{})
+		defer log.Flush()
+		log.SetFilterLevel(logger.TRACE)
+		channel := gcloudcx.OpenMessageChannel{
+			Platform:  "Open",
+			Type:      "Private",
+			MessageID: "gmAy9zNkhf4ermFvHH9mB5",
+			To:        &gcloudcx.OpenMessageTo{ID: "edce4efa-4abf-468b-ada7-cd6d35e7bbaf"},
+			From: &gcloudcx.OpenMessageFrom{
+				ID:        "abcdef12345",
+				Type:      "Email",
+				Firstname: "Bob",
+				Lastname:  "Minion",
+				Nickname:  "Bobby",
+			},
+			Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+		}
+		log.Record("channel", channel).Infof("channel")
+		suite.Logger.Record("channel", channel).Infof("channel")
+	})
+	suite.Require().NotEmpty(output, "There was no output")
+	lines := strings.Split(output, "\n")
+	lines = lines[0 : len(lines)-1] // remove the last empty line
+	suite.Require().Len(lines, 1, "There should be 1 line in the log output, found %d", len(lines))
+	suite.LogLineEqual(lines[0], map[string]string{
+		"channel":  `map\[from:map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\] messageId:gmAy9zNkhf4ermFvHH9mB5 platform:Open time:2021-04-09T04:43:33Z to:map\[id:edce4efa-4abf-468b-ada7-cd6d35e7bbaf\] type:Private\]`,
+		"hostname": `[a-zA-Z_0-9\-\.]+`,
+		"level":    "30",
+		"msg":      "channel",
+		"name":     "test",
+		"pid":      "[0-9]+",
+		"scope":    "main",
+		"tid":      "[0-9]+",
+		"time":     `[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+Z`,
+		"topic":    "main",
+		"v":        "0",
+	})
+}
+
+func (suite *OpenMessagingSuite) TestCanRedactOpenMessageFrom() {
+	output := CaptureStdout(func() {
+		log := logger.Create("test", &logger.StdoutStream{})
+		defer log.Flush()
+		log.SetFilterLevel(logger.TRACE)
+		from := gcloudcx.OpenMessageFrom{
 			ID:        "abcdef12345",
 			Type:      "Email",
 			Firstname: "Bob",
 			Lastname:  "Minion",
 			Nickname:  "Bobby",
-		},
-	)
-	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
-	suite.Logger.Record("channel", channel).Infof("channel")
+		}
+		log.Record("from", from).Infof("from")
+		suite.Logger.Record("from", from).Infof("from")
+	})
+	suite.Require().NotEmpty(output, "There was no output")
+	lines := strings.Split(output, "\n")
+	lines = lines[0 : len(lines)-1] // remove the last empty line
+	suite.Require().Len(lines, 1, "There should be 1 line in the log output, found %d", len(lines))
+	suite.LogLineEqual(lines[0], map[string]string{
+		"from":     `map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\]`,
+		"hostname": `[a-zA-Z_0-9\-\.]+`,
+		"level":    "30",
+		"msg":      "from",
+		"name":     "test",
+		"pid":      "[0-9]+",
+		"scope":    "main",
+		"tid":      "[0-9]+",
+		"time":     `[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+Z`,
+		"topic":    "main",
+		"v":        "0",
+	})
 }
 
-func (suite *OpenMessagingSuite) TestCanRedactOpenMessageFrom() {
-	from := gcloudcx.OpenMessageFrom{
-		ID:        "abcdef12345",
-		Type:      "Email",
-		Firstname: "Bob",
-		Lastname:  "Minion",
-		Nickname:  "Bobby",
-	}
-	suite.Logger.Record("from", from).Infof("from")
+func (suite *OpenMessagingSuite) TestCanRedactOpenMessageMetadata() {
+	output := CaptureStdout(func() {
+		log := logger.Create("test", &logger.StdoutStream{})
+		defer log.Flush()
+		log.SetFilterLevel(logger.TRACE)
+		// TODO: call SendInboundMessage. We should pass a list of keys to redact in the metadata, somehow. Context?
+		from := gcloudcx.OpenMessageFrom{
+			ID:        "abcdef12345",
+			Type:      "Email",
+			Firstname: "Bob",
+			Lastname:  "Minion",
+			Nickname:  "Bobby",
+		}
+		log.Record("from", from).Infof("from")
+		suite.Logger.Record("from", from).Infof("from")
+	})
+	suite.Require().NotEmpty(output, "There was no output")
+	lines := strings.Split(output, "\n")
+	lines = lines[0 : len(lines)-1] // remove the last empty line
+	suite.Require().Len(lines, 1, "There should be 1 line in the log output, found %d", len(lines))
+	suite.LogLineEqual(lines[0], map[string]string{
+		"from":     `map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\]`,
+		"hostname": `[a-zA-Z_0-9\-\.]+`,
+		"level":    "30",
+		"msg":      "from",
+		"name":     "test",
+		"pid":      "[0-9]+",
+		"scope":    "main",
+		"tid":      "[0-9]+",
+		"time":     `[0-9]+-[0-9]+-[0-9]+T[0-9]+:[0-9]+:[0-9]+Z`,
+		"topic":    "main",
+		"v":        "0",
+	})
 }
 
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() {
@@ -414,20 +585,19 @@ func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalTypingEvent() {
-	channel := gcloudcx.NewOpenMessageChannel(
-		"",
-		nil,
-		&gcloudcx.OpenMessageFrom{
-			ID:        "abcdef12345",
-			Type:      "Email",
-			Firstname: "Bob",
-			Lastname:  "Minion",
-			Nickname:  "Bobby",
-		},
-	)
-	channel.Time = time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC)
 	event := gcloudcx.OpenMessageEvents{
-		Channel: channel,
+		Channel: gcloudcx.OpenMessageChannel{
+			Platform: "Open",
+			Type:     "Private",
+			From: &gcloudcx.OpenMessageFrom{
+				ID:        "abcdef12345",
+				Type:      "Email",
+				Firstname: "Bob",
+				Lastname:  "Minion",
+				Nickname:  "Bobby",
+			},
+			Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+		},
 		Events: []gcloudcx.OpenMessageEvent{
 			gcloudcx.OpenMessageTypingEvent{IsTyping: true},
 		},
