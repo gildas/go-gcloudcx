@@ -22,7 +22,7 @@ client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 })
 ```
 
-You can also pass a `context.Context` with a `logger.Logger``:
+You can also pass a (context.Context)[https://pkg.go.dev/context] with a (logger.Logger)[https://pkg.go.dev/github.com/gildas/go-logger]:
 
 ```go
 log    := logger.Create("gcloudcx")
