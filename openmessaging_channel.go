@@ -28,7 +28,8 @@ type OpenMessageChannel struct {
 func (channel OpenMessageChannel) Redact() interface{} {
 	redacted := channel
 	if channel.From != nil {
-		redacted.From = channel.From.Redact().(*OpenMessageFrom)
+		redactedFrom := channel.From.Redact().(OpenMessageFrom)
+		redacted.From = &redactedFrom
 	}
 	if len(channel.KeysToRedact) > 0 {
 		redacted.CustomAttributes = make(map[string]string, len(channel.CustomAttributes))

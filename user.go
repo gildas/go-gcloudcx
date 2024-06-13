@@ -145,22 +145,26 @@ func (user User) Redact() interface{} {
 	if len(user.PrimaryContact) > 0 {
 		redacted.PrimaryContact = make([]*Contact, len(user.PrimaryContact))
 		for i, contact := range user.PrimaryContact {
-			redacted.PrimaryContact[i] = contact.Redact().(*Contact)
+			redactedContact := contact.Redact().(Contact)
+			redacted.PrimaryContact[i] = &redactedContact
 		}
 	}
 	if len(user.Addresses) > 0 {
 		redacted.Addresses = make([]*Contact, len(user.Addresses))
 		for i, contact := range user.Addresses {
-			redacted.Addresses[i] = contact.Redact().(*Contact)
+			redactedContact := contact.Redact().(Contact)
+			redacted.Addresses[i] = &redactedContact
 		}
 	}
 	if user.Manager != nil {
-		redacted.Manager = user.Manager.Redact().(*User)
+		redactedUser := user.Manager.Redact().(User)
+		redacted.Manager = &redactedUser
 	}
 	if user.Biography != nil {
-		redacted.Biography = user.Biography.Redact().(*Biography)
+		redactedBiography := user.Biography.Redact().(Biography)
+		redacted.Biography = &redactedBiography
 	}
-	return &redacted
+	return redacted
 }
 
 // MarshalJSON marshals this into JSON

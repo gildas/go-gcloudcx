@@ -6,6 +6,9 @@ import (
 	"time"
 
 	"github.com/gildas/go-core"
+	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 	"github.com/gorilla/securecookie"
 )
 
@@ -13,9 +16,10 @@ import (
 //
 // It must be obtained via an AuthorizationGrant
 type AccessToken struct {
+	ID        uuid.UUID `json:"id" db:"key"`
 	Type      string    `json:"tokenType"`
 	Token     string    `json:"token"`
-	ExpiresOn time.Time `json:"tokenExpires"` // UTC!
+	ExpiresOn time.Time `json:"expiresOn"` // UTC!
 }
 
 // UpdatedAccessToken describes an updated Access Token
@@ -31,6 +35,46 @@ var (
 	blockKey     = []byte(core.GetEnvAsString("PURECLOUD_SESSION_BLOCK_KEY", "Pur3Cl0udS3ss10nBl0ckK3y"))
 	secureCookie = securecookie.New(hashKey, blockKey)
 )
+
+// NewAccessToken creates a new AccessToken
+func NewAccessToken(token string, expiresOn time.Time) *AccessToken {
+	return &AccessToken{
+		ID:        uuid.New(),
+		Type:      "Bearer",
+		Token:     token,
+		ExpiresOn: expiresOn,
+	}
+}
+
+// NewAccessTokenWithType creates a new AccessToken with a type
+func NewAccessTokenWithType(tokenType, token string, expiresOn time.Time) *AccessToken {
+	return &AccessToken{
+		ID:        uuid.New(),
+		Type:      tokenType,
+		Token:     token,
+		ExpiresOn: expiresOn,
+	}
+}
+
+// NewAccessTokenWithDuration creates a new AccessToken that expires in a given duration
+func NewAccessTokenWithDuration(token string, expiresIn time.Duration) *AccessToken {
+	return &AccessToken{
+		ID:        uuid.New(),
+		Type:      "Bearer",
+		Token:     token,
+		ExpiresOn: time.Now().UTC().Add(expiresIn),
+	}
+}
+
+// NewAccessTokenWithDurationAndType creates a new AccessToken with a type and that expires in a given duration
+func NewAccessTokenWithDurationAndType(tokenType, token string, expiresIn time.Duration) *AccessToken {
+	return &AccessToken{
+		ID:        uuid.New(),
+		Type:      tokenType,
+		Token:     token,
+		ExpiresOn: time.Now().UTC().Add(expiresIn),
+	}
+}
 
 // Reset resets the Token so it is expired and empty
 func (token *AccessToken) Reset() {
@@ -76,6 +120,59 @@ func (token AccessToken) ExpiresIn() time.Duration {
 	return token.ExpiresOn.Sub(time.Now().UTC())
 }
 
+// Redact redacts sensitive information
+//
+// implements logger.Redactable
+func (token AccessToken) Redact() any {
+	redacted := token
+	if len(redacted.Token) > 0 {
+		redacted.Token = logger.RedactWithHash(token.Token)
+	}
+	return redacted
+}
+
+// String gets a string representation of this AccessToken
 func (token AccessToken) String() string {
 	return token.Type + " " + token.Token
+}
+
+// MarshalJSON marshals this into JSON
+//
+// implements json.Marshaler
+func (token AccessToken) MarshalJSON() ([]byte, error) {
+	type surrogate AccessToken
+
+	data, err := json.Marshal(struct {
+		ID core.UUID `json:"id"`
+		surrogate
+		ExpiresOn core.Time `json:"expiresOn"`
+	}{
+		ID:        core.UUID(token.ID),
+		surrogate: surrogate(token),
+		ExpiresOn: core.Time(token.ExpiresOn),
+	})
+	return data, errors.JSONMarshalError.Wrap(err)
+}
+
+// UnmarshalJSON decodes JSON
+//
+// implements json.Unmarshaler
+func (token *AccessToken) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate AccessToken
+
+	var inner struct {
+		ID core.UUID `json:"id"`
+		surrogate
+		ExpiresOn core.Time `json:"expiresOn"`
+	}
+	if err = json.Unmarshal(payload, &inner); err != nil {
+		return errors.JSONUnmarshalError.Wrap(err)
+	}
+	*token = AccessToken(inner.surrogate)
+	token.ID = uuid.UUID(inner.ID)
+	token.ExpiresOn = inner.ExpiresOn.AsTime()
+	if token.ID == uuid.Nil {
+		token.ID = uuid.New()
+	}
+	return nil
 }

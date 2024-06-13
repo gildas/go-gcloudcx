@@ -55,7 +55,7 @@ func (message OpenMessageStructured) Redact() interface{} {
 			redacted.Metadata[key] = logger.RedactWithHash(value)
 		}
 	}
-	return &redacted
+	return redacted
 }
 
 // MarshalJSON marshals this into JSON
