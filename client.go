@@ -27,6 +27,7 @@ type Client struct {
 
 // ClientOptions contains the options to create a new Client
 type ClientOptions struct {
+	Context        context.Context
 	Region         string
 	OrganizationID uuid.UUID
 	DeploymentID   uuid.UUID
@@ -46,6 +47,9 @@ func NewClient(options *ClientOptions) *Client {
 	}
 	if options.RequestTimeout < 2*time.Second {
 		options.RequestTimeout = 10 * time.Second
+	}
+	if log, err := logger.FromContext(options.Context); err == nil && options.Logger == nil {
+		options.Logger = log
 	}
 	client := Client{
 		Proxy:          options.Proxy,
