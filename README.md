@@ -22,6 +22,18 @@ client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
 })
 ```
 
+You can also pass a `context.Context` with a `logger.Logger``:
+
+```go
+log    := logger.Create("gcloudcx")
+client := gcloudcx.NewClient(&gcloudcx.ClientOptions{
+    Context:      log.ToContext(context.Background())
+	DeploymentID: "123abc0981234i0df8g0",
+})
+```
+
+This makes cascading logs into contexts a lot easier.
+
 You can choose the authorization grant right away as well:  
 ```go
 log    := logger.Create("gcloudcx")
