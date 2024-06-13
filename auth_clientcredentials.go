@@ -34,7 +34,7 @@ func (grant *ClientCredentialsGrant) GetID() uuid.UUID {
 //
 // Implements Authorizable
 func (grant *ClientCredentialsGrant) Authorize(context context.Context, client *Client) (err error) {
-	log := client.GetLogger(context).Child(nil, "authorize", "grant", "client_credentials")
+	log := client.GetLogger(context).Child("client", "authorize", "grant", "client_credentials", "token", grant.Token.ID)
 
 	log.Infof("Authenticating with %s using Client Credentials grant", client.Region)
 
@@ -78,7 +78,7 @@ func (grant *ClientCredentialsGrant) Authorize(context context.Context, client *
 
 	log.Debugf("New %s token expires on %s", grant.Token.Type, grant.Token.ExpiresOn)
 	if grant.TokenUpdated != nil {
-		log.Debugf("Sending new token to TokenUpdated chan")
+		log.Debugf("Sending new token to TokenUpdated Go channel")
 		grant.TokenUpdated <- UpdatedAccessToken{
 			AccessToken: grant.Token,
 			CustomData:  grant.CustomData,

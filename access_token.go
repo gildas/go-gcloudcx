@@ -125,7 +125,9 @@ func (token AccessToken) ExpiresIn() time.Duration {
 // implements logger.Redactable
 func (token AccessToken) Redact() any {
 	redacted := token
-	redacted.Token = logger.RedactWithHash(token.Token)
+	if len(redacted.Token) > 0 {
+		redacted.Token = logger.RedactWithHash(token.Token)
+	}
 	return redacted
 }
 
