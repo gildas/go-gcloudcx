@@ -21,5 +21,5 @@ func (biography Biography) Redact() interface{} {
 	if len(biography.Spouse) > 0 {
 		redacted.Spouse = logger.RedactWithHash(biography.Spouse)
 	}
-	return &redacted
+	return redacted
 }
