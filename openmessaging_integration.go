@@ -30,7 +30,7 @@ type OpenMessagingIntegration struct {
 	CreateStatus     string                `json:"createStatus,omitempty"` // Initiated, Completed, Error
 	CreateError      *ErrorBody            `json:"createError,omitempty"`
 	Status           string                `json:"status,omitempty"` // Active, Inactive
-	client           *Client               `json:"-"`
+	Client           *Client               `json:"-"`
 	logger           *logger.Logger        `json:"-"`
 }
 
@@ -55,7 +55,7 @@ func (integration *OpenMessagingIntegration) Initialize(parameters ...interface{
 		case uuid.UUID:
 			integration.ID = parameter
 		case *Client:
-			integration.client = parameter
+			integration.Client = parameter
 		case *logger.Logger:
 			integration.logger = parameter.Child("integration", "integration", "id", integration.ID)
 		}
@@ -107,7 +107,7 @@ func (client *Client) CreateOpenMessagingIntegration(context context.Context, na
 	if err != nil {
 		return nil, err
 	}
-	integration.client = client
+	integration.Client = client
 	integration.logger = client.Logger.Child("openmessagingintegration", "openmessagingintegration", "id", integration.ID)
 	return &integration, nil
 }
@@ -119,7 +119,7 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 	if integration.ID == uuid.Nil {
 		return nil
 	}
-	return integration.client.Delete(
+	return integration.Client.Delete(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
 		nil,
@@ -128,7 +128,7 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 
 func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error {
 	var value OpenMessagingIntegration
-	if err := integration.client.Get(ctx, integration.GetURI(), &value); err != nil {
+	if err := integration.Client.Get(ctx, integration.GetURI(), &value); err != nil {
 		return err
 	}
 	integration.Name = value.Name
@@ -155,7 +155,7 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 		return errors.ArgumentMissing.With("webhookURL")
 	}
 	response := &OpenMessagingIntegration{}
-	err := integration.client.Patch(
+	err := integration.Client.Patch(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
 		struct {
@@ -184,7 +184,7 @@ func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context 
 	if !integration.IsCreated() {
 		return nil, errors.CreationFailed.With("integration", integration.ID)
 	}
-	return Fetch[RoutingMessageRecipient](context, integration.client, integration)
+	return Fetch[RoutingMessageRecipient](context, integration.Client, integration)
 }
 
 // SendInboundTextMessage sends an Open Message text message from the middleware to GENESYS Cloud
@@ -214,7 +214,7 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	result := OpenMessageText{}
-	err = integration.client.Post(
+	err = integration.Client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/message", integration.ID),
 		message,
@@ -255,7 +255,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 	}
 
 	result := OpenMessageReceipt{}
-	err = integration.client.Post(
+	err = integration.Client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/receipt", integration.ID),
 		receipt,
@@ -286,7 +286,7 @@ func (integration *OpenMessagingIntegration) SendInboundEvents(context context.C
 		return "", err
 	}
 	result := OpenMessageEvents{}
-	err = integration.client.Post(
+	err = integration.Client.Post(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/event", integration.ID),
 		events,
@@ -307,7 +307,7 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(context context
 		return nil, errors.ArgumentMissing.With("ID")
 	}
 	result := &AgentlessMessageResult{}
-	err := integration.client.Post(
+	err := integration.Client.Post(
 		integration.logger.ToContext(context),
 		"/conversations/messages/agentless",
 		AgentlessMessage{
@@ -333,7 +333,7 @@ func (integration *OpenMessagingIntegration) GetMessageData(context context.Cont
 		return nil, errors.ArgumentMissing.With("messageID")
 	}
 	data := &OpenMessageData{}
-	err := integration.client.Get(
+	err := integration.Client.Get(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messages/%s/details", message.GetID()),
 		data,
@@ -341,7 +341,7 @@ func (integration *OpenMessagingIntegration) GetMessageData(context context.Cont
 	if err != nil {
 		return nil, err
 	}
-	data.Conversation.client = integration.client
+	data.Conversation.client = integration.Client
 	data.Conversation.logger = integration.logger.Child("conversation", "conversation", "id", data.Conversation.ID)
 	return data, nil
 }
