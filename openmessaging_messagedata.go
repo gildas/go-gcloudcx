@@ -33,7 +33,8 @@ type OpenMessageData struct {
 func (messageData OpenMessageData) Redact() interface{} {
 	redacted := messageData
 	if messageData.CreatedBy != nil {
-		redacted.CreatedBy = messageData.CreatedBy.Redact().(*User)
+		redactedUser := messageData.CreatedBy.Redact().(User)
+		redacted.CreatedBy = &redactedUser
 	}
 	if messageData.NormalizedMessage != nil {
 		redacted.NormalizedMessage = messageData.NormalizedMessage.Redact().(OpenMessage)
@@ -41,7 +42,7 @@ func (messageData OpenMessageData) Redact() interface{} {
 	if core.GetEnvAsBool("REDACT_MESSAGE_TEXT", true) && len(messageData.Text) > 0 {
 		redacted.Text = logger.RedactWithHash(messageData.Text)
 	}
-	return &redacted
+	return redacted
 }
 
 // MarshalJSON marshals this into JSON

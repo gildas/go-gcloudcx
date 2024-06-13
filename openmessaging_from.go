@@ -27,7 +27,7 @@ func (from OpenMessageFrom) Redact() interface{} {
 	if len(from.Nickname) > 0 {
 		redacted.Nickname = logger.RedactWithHash(from.Nickname)
 	}
-	return &redacted
+	return redacted
 }
 
 // Validate checks if the object is valid
