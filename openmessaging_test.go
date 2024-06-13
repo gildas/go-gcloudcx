@@ -75,7 +75,7 @@ func (suite *OpenMessagingSuite) SetupSuite() {
 			Token: token,
 		},
 	})
-	suite.IntegrationName = "TEST-GO-PURECLOUD"
+	suite.IntegrationName = core.GetEnvAsString("PURECLOUD_INTEGRATION_NAME", "TEST-GO-PURECLOUD")
 	suite.Require().NotNil(suite.Client, "GCloudCX Client is nil")
 }
 
