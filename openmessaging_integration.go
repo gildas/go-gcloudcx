@@ -119,8 +119,9 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 	if integration.ID == uuid.Nil {
 		return nil
 	}
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
 	return integration.Client.Delete(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
 		nil,
 	)
@@ -184,7 +185,8 @@ func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context 
 	if !integration.IsCreated() {
 		return nil, errors.CreationFailed.With("integration", integration.ID)
 	}
-	return Fetch[RoutingMessageRecipient](context, integration.Client, integration)
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
+	return Fetch[RoutingMessageRecipient](log.ToContext(context), integration.Client, integration)
 }
 
 // SendInboundTextMessage sends an Open Message text message from the middleware to GENESYS Cloud
@@ -210,12 +212,13 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	if len(message.Text) == 0 {
 		return "", errors.ArgumentMissing.With("text")
 	}
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	message.Direction = "Inbound"
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	result := OpenMessageText{}
 	err = integration.Client.Post(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/message", integration.ID),
 		message,
 		&result,
@@ -254,9 +257,10 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 		return "", err
 	}
 
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "receipt", receipt.GetID())
 	result := OpenMessageReceipt{}
 	err = integration.Client.Post(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/receipt", integration.ID),
 		receipt,
 		&result,
@@ -286,8 +290,9 @@ func (integration *OpenMessagingIntegration) SendInboundEvents(context context.C
 		return "", err
 	}
 	result := OpenMessageEvents{}
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", events.GetID())
 	err = integration.Client.Post(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/event", integration.ID),
 		events,
 		&result,
@@ -306,9 +311,10 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(context context
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
 	}
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
 	result := &AgentlessMessageResult{}
 	err := integration.Client.Post(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		"/conversations/messages/agentless",
 		AgentlessMessage{
 			From:          integration.ID.String(),
@@ -332,9 +338,10 @@ func (integration *OpenMessagingIntegration) GetMessageData(context context.Cont
 	if len(message.GetID()) == 0 {
 		return nil, errors.ArgumentMissing.With("messageID")
 	}
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	data := &OpenMessageData{}
 	err := integration.Client.Get(
-		integration.logger.ToContext(context),
+		log.ToContext(context),
 		NewURI("/conversations/messages/%s/details", message.GetID()),
 		data,
 	)

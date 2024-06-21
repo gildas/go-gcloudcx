@@ -79,6 +79,7 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	options.Logger = log
 	options.ResponseBodyLogSize = 4096
 	options.Timeout = client.RequestTimeout
+	options.InterAttemptUseRetryAfter = true
 
 	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)
 	start := time.Now()
