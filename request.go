@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-request"
 )
@@ -79,6 +80,7 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	options.Logger = log
 	options.ResponseBodyLogSize = 4096
 	options.Timeout = client.RequestTimeout
+	options.RetryableStatusCodes = []int{http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout}
 	options.InterAttemptUseRetryAfter = true
 
 	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)
@@ -96,6 +98,15 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 		if errors.As(err, &urlError) {
 			log.Errorf("URL Error", urlError)
 			return err
+		}
+		if errors.Is(err, errors.HTTPStatusTooManyRequests) {
+			log.Errorf("Too many requests, retrying in %s seconds", res.Headers.Get("Retry-After"))
+			retryAfter := time.Duration(core.Atoi(res.Headers.Get("Retry-After"), 0))*time.Second + 1*time.Second // just to stay on the safe side, add 1 second
+			log.Debugf("Retry-After from headers (+1s safety net): %s", retryAfter)
+			log.Infof("Waiting for %s before trying again", retryAfter)
+			time.Sleep(retryAfter)
+			log.Infof("Retrying request")
+			return client.SendRequest(context, uri, options, results)
 		}
 		if errors.Is(err, errors.HTTPUnauthorized) && len(client.Grant.AccessToken().String()) > 0 {
 			// This means our token most probably expired, we should try again without it
