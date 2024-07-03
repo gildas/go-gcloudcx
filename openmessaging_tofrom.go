@@ -10,7 +10,7 @@ type OpenMessageTo struct {
 // Validate checks if the object is valid
 func (to *OpenMessageTo) Validate() (err error) {
 	if len(to.ID) == 0 {
-		return errors.ArgumentMissing.With("ID")
+		return errors.ArgumentMissing.With("channel.to.id")
 	}
 	return
 }

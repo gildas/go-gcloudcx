@@ -33,7 +33,7 @@ func (from OpenMessageFrom) Redact() interface{} {
 // Validate checks if the object is valid
 func (from *OpenMessageFrom) Validate() (err error) {
 	if len(from.ID) == 0 {
-		return errors.ArgumentMissing.With("ID")
+		return errors.ArgumentMissing.With("channel.from.id")
 	}
 	return
 }

@@ -212,10 +212,10 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	if len(message.Text) == 0 {
 		return "", errors.ArgumentMissing.With("text")
 	}
-	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	message.Direction = "Inbound"
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	result := OpenMessageText{}
 	err = integration.Client.Post(
 		log.ToContext(context),
