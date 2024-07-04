@@ -209,7 +209,7 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	if err := message.Channel.Validate(); err != nil {
 		return "", err
 	}
-	if len(message.Text) == 0 {
+	if len(message.Text) == 0 && len(message.Content) == 0 {
 		return "", errors.ArgumentMissing.With("text")
 	}
 	message.Direction = "Inbound"
