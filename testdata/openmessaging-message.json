@@ -8,12 +8,15 @@
       "id": "gildas@kkt"
     },
     "from": {
-      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da"
+      "nickName": "Open Messaging Integration",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+      "idType": "Opaque"
     },
     "time": "2021-04-09T04:43:33.100Z"
   },
   "type": "Text",
   "text": "Hello From GCloud via the middleware",
+  "originatingIdentity": "Human",
   "content": [],
   "reasons": [],
   "direction": "Outbound",
