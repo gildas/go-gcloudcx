@@ -3,6 +3,7 @@ package gcloudcx
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/gildas/go-errors"
 )
@@ -80,6 +81,8 @@ var (
 	InvalidMediaContentLength = APIError{Status: 400, Code: "invalid.media.content.length", Message: "%s"}
 	// RecipientOptedOut means the recipient opted out
 	RecipientOptedOut = APIError{Status: 400, Code: "recipient.opted.out", Message: "%s"}
+	// JSONUnmarshalError means the JSON could not be unmarshaled
+	JSONUnmarshalError = APIError{Status: http.StatusNotAcceptable, Code: "json.unmarshal", Message: "Unmarshable Data for type %s"}
 )
 
 // APIError represents an error from the Gcloud API
@@ -164,12 +167,35 @@ func (e APIError) As(target interface{}) bool {
 	return false
 }
 
+// SetCorrelationID creates a new APIError from a given Error and records its correlation ID.
+func (e APIError) SetCorrelationID(correlationID string) APIError {
+	final := e
+	final.CorrelationID = correlationID
+	return final
+}
+
 // With creates a new Error from a given sentinel telling "what" is wrong and eventually their value.
 //
 // With also records the stack trace at the point it was called.
 func (e APIError) With(what string, values ...interface{}) error {
 	final := e
+	// insert what in the values
+	final.MessageParams = map[string]string{"what": what}
+	for i, value := range values {
+		final.MessageParams[fmt.Sprintf("value%d", i+1)] = fmt.Sprintf("%v", value)
+	}
+	values = append([]interface{}{what}, values...)
+	final.MessageWithParams = fmt.Sprintf(final.Message, values...)
+	final.Stack.Initialize()
+	return final
+}
+
+// WithParams creates a new Error from a given sentinel telling "what" is wrong and eventually their value.
+func (e APIError) WithParams(what string, values map[string]string) error {
+	final := e
 	final.MessageWithParams = fmt.Sprintf(final.Message, what)
+	// TODO: Inject the values in the messageWithParams. Since it is a map, we need to find the keys in the messageWithParams and replace them with the values
+	final.MessageParams = values
 	final.Stack.Initialize()
 	return final
 }

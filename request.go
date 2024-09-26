@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"path"
@@ -118,13 +119,18 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 		if errors.Is(err, errors.HTTPBadRequest) {
 			log.Record("Request payload", options.Payload).Errorf("Bad Request from remote: %s", err.Error())
 		}
+		if errors.Is(err, errors.JSONUnmarshalError) {
+			log.Errorf("Failed to unmarshal the response: %s", err.Error())
+			log.Infof("Response payload: %s", res.Data)
+			return errors.Join(JSONUnmarshalError.SetCorrelationID(correlationID).WithParams(fmt.Sprintf("%T", results), map[string]string{"data": string(res.Data)}), err)
+		}
 		log.Errorf("Response payload: %s", res.Data)
 		var simpleError struct {
 			Error       string `json:"error"`
 			Description string `json:"description"`
 		}
 		if jsonerr := res.UnmarshalContentJSON(&simpleError); jsonerr == nil && len(simpleError.Error) > 0 {
-			return APIError{Message: simpleError.Error, MessageParams: map[string]string{"description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
+			return APIError{Status: 500, Code: "generic", Message: simpleError.Error, MessageParams: map[string]string{"description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
 		}
 		var details *errors.Error
 		if errors.As(err, &details) {
