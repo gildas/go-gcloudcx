@@ -2,8 +2,10 @@ package gcloudcx
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
@@ -12,18 +14,18 @@ import (
 //
 //	See: https://developer.mypurecloud.com/api/rest/v2/conversations
 type Conversation struct {
-	ID              uuid.UUID      `json:"id"`
-	SelfURI         URI            `json:"selfUri,omitempty"`
-	Name            string         `json:"name"`
-	ExternalTag     string         `json:"externalTag,omitempty"`
-	StartTime       time.Time      `json:"startTime"`
-	EndTime         time.Time      `json:"endTime"`
-	Address         string         `json:"address"`
-	Participants    []*Participant `json:"participants"`
-	ConversationIDs []uuid.UUID    `json:"conversationIds"`
-	MaxParticipants int            `json:"maxParticipants"`
-	RecordingState  string         `json:"recordingState"`
-	State           string         `json:"state"`
+	ID              uuid.UUID     `json:"id"`
+	SelfURI         URI           `json:"selfUri,omitempty"`
+	Name            string        `json:"name"`
+	ExternalTag     string        `json:"externalTag,omitempty"`
+	StartTime       time.Time     `json:"startTime"`
+	EndTime         time.Time     `json:"endTime"`
+	Address         string        `json:"address"`
+	Participants    []Participant `json:"participants"`
+	ConversationIDs []uuid.UUID   `json:"conversationIds"`
+	MaxParticipants int           `json:"maxParticipants"`
+	RecordingState  string        `json:"recordingState"`
+	State           string        `json:"state"`
 	Divisions       []struct {
 		Division DomainEntityRef   `json:"division"`
 		Entities []DomainEntityRef `json:"entities"`
@@ -153,24 +155,35 @@ func (conversation Conversation) UpdateState(context context.Context, identifiab
 	)
 }
 
-/*
-func (conversation *Conversation) GetParticipants(context context.Context) []*Participant {
-	log := conversation.logger.Child(nil, "participants")
-	data := struct {
-		ID             uuid.UUID      `json:"id"`
-		Participants   []*Participant `json:"participants"`
-		OtherMediaURIs []URI          `json:"otherMediaUris"`
-		SelfURI        URI            `json:"selfUri"`
-	}{}
-	err := conversation.client.Get(
-		context,
-		NewURI("/conversations/messages/%s", conversation.ID),
-		&data,
-)
-	if err != nil {
-		log.Errorf("Failed to get participants", err)
-	return []*Participant{}
+// GetParticipantByPurpose get the conversation's participant by its purpose
+func (conversation Conversation) GetParticipantByPurpose(purpose string) (participant *Participant, found bool) {
+	for _, current := range conversation.Participants {
+		if current.Purpose == purpose {
+			return &current, true
+		}
 	}
-	return data.Participants
+	return nil, false
 }
-*/
+
+// AssociateExternalContact associates an ExternalContact to this Conversation
+func (conversation Conversation) AssociateExternalContact(context context.Context, contact *ExternalContact, communicationID uuid.UUID, mediaType string) error {
+	if contact == nil {
+		return errors.ArgumentMissing.With("contact")
+	}
+	return conversation.client.Put(
+		context,
+		NewURI("/externalcontacts/conversations/%s", conversation.ID),
+		struct {
+			MediaType         string `json:"mediaType"`
+			ConversationID    string `json:"conversationId"`
+			CommunicationID   string `json:"communicationId"`
+			ExternalContactID string `json:"externalContactId"`
+		}{
+			MediaType:         strings.ToUpper(mediaType),
+			ConversationID:    conversation.ID.String(),
+			CommunicationID:   communicationID.String(),
+			ExternalContactID: contact.ID.String(),
+		},
+		nil,
+	)
+}
