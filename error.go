@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gildas/go-errors"
 )
@@ -117,13 +118,20 @@ func (e APIError) Clone() *APIError {
 
 // Error returns a string representation of this error
 func (e APIError) Error() string {
+	var buffer strings.Builder
+	if len(e.Code) > 0 {
+		buffer.WriteString(fmt.Sprintf("GCloudCX Code %s: ", e.Code))
+	}
 	if len(e.MessageWithParams) > 0 {
-		return e.MessageWithParams
+		buffer.WriteString(e.MessageWithParams)
 	}
 	if len(e.Message) > 0 {
-		return e.Message
+		buffer.WriteString(e.Message)
 	}
-	return e.Code
+	if len(e.CorrelationID) > 0 {
+		buffer.WriteString(fmt.Sprintf(" (Correlation: %s)", e.CorrelationID))
+	}
+	return buffer.String()
 }
 
 // Is tells if this error matches the target.
