@@ -269,6 +269,7 @@ func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.
 		return "", err
 	}
 	if result.IsFailed() {
+		log.Debugf("Receipt was sent successfully. But the returned payload contained an error: %s", result.AsError().Error())
 		return "", result.AsError()
 	}
 	return result.ID, err
