@@ -36,8 +36,8 @@ func (messageData OpenMessageData) Redact() interface{} {
 		redactedUser := messageData.CreatedBy.Redact().(User)
 		redacted.CreatedBy = &redactedUser
 	}
-	if messageData.NormalizedMessage != nil {
-		redacted.NormalizedMessage = messageData.NormalizedMessage.Redact().(OpenMessage)
+	if redactable, ok := messageData.NormalizedMessage.(logger.Redactable); ok {
+		redacted.NormalizedMessage = redactable.Redact().(OpenMessage)
 	}
 	if core.GetEnvAsBool("REDACT_MESSAGE_TEXT", true) && len(messageData.Text) > 0 {
 		redacted.Text = logger.RedactWithHash(messageData.Text)
