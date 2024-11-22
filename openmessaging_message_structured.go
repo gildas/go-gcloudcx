@@ -50,6 +50,12 @@ func (message OpenMessageStructured) Redact() interface{} {
 	if core.GetEnvAsBool("REDACT_MESSAGE_TEXT", true) && len(message.Text) > 0 {
 		redacted.Text = logger.RedactWithHash(message.Text)
 	}
+	redacted.Content = make([]OpenMessageContent, 0, len(message.Content))
+	for _, content := range message.Content {
+		if redactable, ok := content.(logger.Redactable); ok {
+			redacted.Content = append(redacted.Content, redactable.Redact().(OpenMessageContent))
+		}
+	}
 	for _, key := range message.KeysToRedact {
 		if value, found := redacted.Metadata[key]; found {
 			redacted.Metadata[key] = logger.RedactWithHash(value)
@@ -76,8 +82,9 @@ func (message *OpenMessageStructured) UnmarshalJSON(data []byte) (err error) {
 	type surrogate OpenMessageStructured
 	var inner struct {
 		surrogate
-		Type         string   `json:"type"`
-		KeysToRedact []string `json:"keysToRedact"`
+		Type         string            `json:"type"`
+		KeysToRedact []string          `json:"keysToRedact"`
+		Content      []json.RawMessage `json:"content,omitempty"`
 	}
 
 	if err = json.Unmarshal(data, &inner); err != nil {
@@ -88,5 +95,15 @@ func (message *OpenMessageStructured) UnmarshalJSON(data []byte) (err error) {
 	}
 	*message = OpenMessageStructured(inner.surrogate)
 	message.KeysToRedact = append(message.KeysToRedact, inner.KeysToRedact...)
+	if len(inner.Content) > 0 {
+		message.Content = make([]OpenMessageContent, len(inner.Content))
+		for i, content := range inner.Content {
+			if message.Content[i], err = UnmarshalOpenMessageContent(content); errors.Is(err, errors.JSONUnmarshalError) {
+				return err
+			} else if err != nil {
+				return errors.JSONUnmarshalError.Wrap(err)
+			}
+		}
+	}
 	return
 }

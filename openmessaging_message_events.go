@@ -28,7 +28,7 @@ func init() {
 //
 // implements core.TypeCarrier
 func (message OpenMessageEvents) GetType() string {
-	return "Event"
+	return "Event" // it should be "Events" but the API is wrong...
 }
 
 // GetID gets the identifier of this
@@ -80,7 +80,6 @@ func (message *OpenMessageEvents) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageEvents
 	var inner struct {
 		surrogate
-		Type         string            `json:"type"`
 		Events       []json.RawMessage `json:"events"`
 		KeysToRedact []string          `json:"keysToRedact"`
 	}
