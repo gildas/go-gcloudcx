@@ -82,7 +82,7 @@ func (suite *ClientSuite) TestCanSendRequestWithFullyQualifiedURL() {
 	stuff := struct{}{}
 	serverURL := core.Must(url.Parse(server.URL))
 	requestURL := core.Must(serverURL.Parse("/api/v2/path/to/resource"))
-	err := client.Get(context.Background(), gcloudcx.NewURI(requestURL.String()), &stuff)
+	err := client.Get(context.Background(), gcloudcx.NewURI("%s", requestURL.String()), &stuff)
 	suite.Require().Nilf(err, "Failed to send GET Request: Error %s", err)
 }
 
