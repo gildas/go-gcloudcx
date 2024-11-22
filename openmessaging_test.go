@@ -248,31 +248,6 @@ func (suite *OpenMessagingSuite) TestCanZZDeleteIntegration() {
 	suite.IntegrationID = uuid.Nil
 }
 
-func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err := suite.UnmarshalData("openmessagingintegration.json", &integration)
-	if err != nil {
-		suite.Logger.Errorf("Failed to Unmarshal", err)
-	}
-	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
-	suite.Logger.Record("integration", integration).Infof("Got a integration")
-	suite.Assert().Equal("34071108-1569-4cb0-9137-a326b8a9e815", integration.ID.String())
-	suite.Assert().NotEmpty(integration.CreatedBy.ID)
-	suite.Assert().NotEmpty(integration.CreatedBy.SelfURI, "CreatedBy SelfURI should not be empty")
-	suite.Assert().Equal(2021, integration.DateCreated.Year())
-	suite.Assert().Equal(time.Month(4), integration.DateCreated.Month())
-	suite.Assert().Equal(8, integration.DateCreated.Day())
-	suite.Assert().NotEmpty(integration.ModifiedBy.ID)
-	suite.Assert().NotEmpty(integration.ModifiedBy.SelfURI, "ModifiedBy SelfURI should not be empty")
-	suite.Assert().Equal(2021, integration.DateModified.Year())
-	suite.Assert().Equal(time.Month(4), integration.DateModified.Month())
-	suite.Assert().Equal(8, integration.DateModified.Day())
-	suite.Assert().Equal("TEST-GO-PURECLOUD", integration.Name)
-	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
-	suite.Require().NotNil(integration.WebhookURL)
-	suite.Assert().Equal("https://www.acme.com/gcloudcx", integration.WebhookURL.String())
-}
-
 func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 	integration := gcloudcx.OpenMessagingIntegration{
 		ID:           uuid.MustParse("34071108-1569-4cb0-9137-a326b8a9e815"),
@@ -298,32 +273,8 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 
 	data, err := json.Marshal(integration)
 	suite.Require().NoErrorf(err, "Failed to marshal OpenMessagingIntegration. %s", err)
-	expected := suite.LoadTestData("openmessagingintegration.json")
+	expected := suite.LoadTestData("openmessaging-integration.json")
 	suite.Assert().JSONEq(string(expected), string(data))
-}
-
-func (suite *OpenMessagingSuite) TestShouldNotUnmarshalIntegrationWithInvalidJSON() {
-	var err error
-
-	integration := gcloudcx.OpenMessagingIntegration{}
-	err = json.Unmarshal([]byte(`{"Name": 15}`), &integration)
-	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
-}
-
-func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
-	channel := gcloudcx.OpenMessageChannel{}
-	err := suite.UnmarshalData("openmessaging-channel.json", &channel)
-	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
-	suite.Assert().Equal("Open", channel.Platform)
-	suite.Assert().Equal("Private", channel.Type)
-	suite.Assert().Equal("gmAy9zNkhf4ermFvHH9mB5", channel.MessageID)
-	suite.Assert().Equal(time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC), channel.Time)
-	suite.Assert().Equal("edce4efa-4abf-468b-ada7-cd6d35e7bbaf", channel.To.ID)
-	suite.Assert().Equal("Email", channel.From.Type)
-	suite.Assert().Equal("abcdef12345", channel.From.ID)
-	suite.Assert().Equal("Bob", channel.From.Firstname)
-	suite.Assert().Equal("Minion", channel.From.Lastname)
-	suite.Assert().Equal("Bobby", channel.From.Nickname)
 }
 
 func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
@@ -349,8 +300,164 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 	suite.Assert().JSONEq(string(expected), string(data))
 }
 
-func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithParameters() {
-	payload := suite.LoadTestData("outbound-text-with-parameters.json")
+func (suite *OpenMessagingSuite) TestCanMarshalTypingEvent() {
+	event := gcloudcx.OpenMessageEvents{
+		Channel: gcloudcx.OpenMessageChannel{
+			Platform: "Open",
+			Type:     "Private",
+			From: &gcloudcx.OpenMessageFrom{
+				ID:        "abcdef12345",
+				Type:      "Email",
+				Firstname: "Bob",
+				Lastname:  "Minion",
+				Nickname:  "Bobby",
+			},
+			Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+		},
+		Events: []gcloudcx.OpenMessageEvent{
+			gcloudcx.OpenMessageTypingEvent{IsTyping: true},
+		},
+	}
+	payload, err := json.Marshal(event)
+	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageEvents. %s", err)
+	expected := suite.LoadTestData("openmessaging-inbound-event-typing.json")
+	suite.Require().JSONEq(string(expected), string(payload))
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
+	integration := gcloudcx.OpenMessagingIntegration{}
+	err := suite.UnmarshalData("openmessaging-integration.json", &integration)
+	if err != nil {
+		suite.Logger.Errorf("Failed to Unmarshal", err)
+	}
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessagingIntegration. %s", err)
+	suite.Logger.Record("integration", integration).Infof("Got a integration")
+	suite.Assert().Equal("34071108-1569-4cb0-9137-a326b8a9e815", integration.ID.String())
+	suite.Assert().NotEmpty(integration.CreatedBy.ID)
+	suite.Assert().NotEmpty(integration.CreatedBy.SelfURI, "CreatedBy SelfURI should not be empty")
+	suite.Assert().Equal(2021, integration.DateCreated.Year())
+	suite.Assert().Equal(time.Month(4), integration.DateCreated.Month())
+	suite.Assert().Equal(8, integration.DateCreated.Day())
+	suite.Assert().NotEmpty(integration.ModifiedBy.ID)
+	suite.Assert().NotEmpty(integration.ModifiedBy.SelfURI, "ModifiedBy SelfURI should not be empty")
+	suite.Assert().Equal(2021, integration.DateModified.Year())
+	suite.Assert().Equal(time.Month(4), integration.DateModified.Month())
+	suite.Assert().Equal(8, integration.DateModified.Day())
+	suite.Assert().Equal("TEST-GO-PURECLOUD", integration.Name)
+	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
+	suite.Require().NotNil(integration.WebhookURL)
+	suite.Assert().Equal("https://www.acme.com/gcloudcx", integration.WebhookURL.String())
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
+	channel := gcloudcx.OpenMessageChannel{}
+	err := suite.UnmarshalData("openmessaging-channel.json", &channel)
+	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageChannel. %s", err)
+	suite.Assert().Equal("Open", channel.Platform)
+	suite.Assert().Equal("Private", channel.Type)
+	suite.Assert().Equal("gmAy9zNkhf4ermFvHH9mB5", channel.MessageID)
+	suite.Assert().Equal(time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC), channel.Time)
+	suite.Assert().Equal("edce4efa-4abf-468b-ada7-cd6d35e7bbaf", channel.To.ID)
+	suite.Assert().Equal("Email", channel.From.Type)
+	suite.Assert().Equal("abcdef12345", channel.From.ID)
+	suite.Assert().Equal("Bob", channel.From.Firstname)
+	suite.Assert().Equal("Minion", channel.From.Lastname)
+	suite.Assert().Equal("Bobby", channel.From.Nickname)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalInboundTypingEvent() {
+	payload := suite.LoadTestData("openmessaging-inbound-event-typing.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageEvents)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageEvents, but was %T", message)
+	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("73cb7fb7-c2db-4996-88f3-0a83a4fea1da"), actual.Channel.ID)
+	suite.Assert().Equal("Inbound", actual.Direction)
+	suite.Require().Len(actual.Events, 1, "Unmarshaled message should have 1 event")
+
+	messageEvent, ok := actual.Events[0].(*gcloudcx.OpenMessageTypingEvent)
+	suite.Require().True(ok, "Unmarshaled message event should be of type *OpenMessageTypingEvent, but was %T", actual.Events[0])
+	suite.Assert().True(messageEvent.IsTyping)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalReceipt() {
+	payload := suite.LoadTestData("openmessaging-inbound-receipt-delivered.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageReceipt)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageReceipt, but was %T", message)
+	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
+	suite.Assert().Equal(uuid.MustParse("73cb7fb7-c2db-4996-88f3-0a83a4fea1da"), actual.Channel.ID)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Assert().False(actual.IsFailed(), "Receipt should not be failed")
+	suite.Assert().Equal("Delivered", actual.Status)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalReceiptWithErrors() {
+	payload := suite.LoadTestData("openmessaging-inbound-receipt-failure.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageReceipt)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageReceipt, but was %T", message)
+	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
+	suite.Assert().Equal(uuid.MustParse("73cb7fb7-c2db-4996-88f3-0a83a4fea1da"), actual.Channel.ID)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Assert().True(actual.IsFailed(), "Receipt should be failed")
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+
+	err = actual.AsError()
+	suite.Require().Error(err, "Receipt should be convert to an error")
+	suite.ErrorIs(err, gcloudcx.GeneralError, "Receipt should convert to a GeneralError")
+	suite.ErrorIs(err, gcloudcx.RateLimited, "Receipt should convert to a RateLimited")
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOutboundTypingEvent() {
+	payload := suite.LoadTestData("openmessaging-outbound-event-typing.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageEvents)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageEvents, but was %T", message)
+	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("73cb7fb7-c2db-4996-88f3-0a83a4fea1da"), actual.Channel.ID)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Require().Len(actual.Events, 1, "Unmarshaled message should have 1 event")
+
+	messageEvent, ok := actual.Events[0].(*gcloudcx.OpenMessageTypingEvent)
+	suite.Require().True(ok, "Unmarshaled message event should be of type *OpenMessageTypingEvent, but was %T", actual.Events[0])
+	suite.Assert().True(messageEvent.IsTyping)
+	suite.Assert().Equal(5*time.Second, messageEvent.Duration)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOutboundTextMessage() {
+	payload := suite.LoadTestData("openmessaging-outbound-text.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageText)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageText, but was %T", message)
+	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("Hello World", actual.Text)
+	suite.Assert().Equal("Outbound", actual.Direction)
+	suite.Assert().Equal("Human", actual.OriginatingEntity)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotification() {
+	payload := suite.LoadTestData("openmessaging-outbound-notification.json")
 	message, err := gcloudcx.UnmarshalOpenMessage(payload)
 	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
 	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
@@ -359,40 +466,38 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithParame
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
 	suite.Assert().Equal("68d79558191e6f93ee7e3c1f996994cd", actual.ID)
 	suite.Assert().Equal("Hi Happy, How can I help you?", actual.Text)
-	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
 
+	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
 	content := actual.Content[0]
 	suite.Require().NotNil(content, "Content should not be nil")
-	suite.Require().Equal("Notification", content.Type)
-	suite.Require().NotNil(content.Template, "Content Template should not be nil")
-	suite.Assert().Equal("Hi Happy, How can I help you?", content.Template.Text)
-	suite.Require().NotEmpty(content.Template.Parameters, "Content Template Parameters should not be empty")
-	value, found := content.Template.Parameters["name"]
-	suite.Require().True(found, "Content Template Parameters should contain 'name'")
+	suite.Require().Equal("Notification", content.GetType())
+
+	notification, ok := content.(*gcloudcx.OpenMessageNotificationContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageNotificationContent, but was %T", content)
+	suite.Require().NotNil(notification, "Notification should not be nil")
+
+	suite.Require().NotNil(notification.Header, "Notification Header should not be nil")
+	suite.Assert().Equal("Hello", notification.Header.Text)
+
+	suite.Assert().Equal("Hi Happy, How can I help you?", notification.Body.Text)
+	suite.Require().NotEmpty(notification.Body.Parameters, "Notification Body Parameters should not be empty")
+	value, found := notification.Body.Parameters["name"]
+	suite.Require().True(found, "Notification Body Parameters should contain 'name'")
 	suite.Assert().Equal("Happy", value)
+
+	suite.Require().NotEmpty(notification.Footer, "Notification Footer should not be empty")
+	suite.Assert().Equal("Goodbye", notification.Footer.Text)
 }
 
-func (suite *OpenMessagingSuite) TestCanUnmarshalReceipt() {
-	var receipt gcloudcx.OpenMessageReceipt
-	err := suite.UnmarshalData("response-inbound-receipt.json", &receipt)
-	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageReceipt. %s", err)
-	suite.Assert().False(receipt.IsFailed(), "Receipt should not be failed")
-	suite.Assert().Equal("Delivered", receipt.Status)
-	suite.Assert().Equal("Outbound", receipt.Direction)
-	suite.Assert().Equal("c8e53e498891dfc9400c79a278cc1863", receipt.ID)
-}
-
-func (suite *OpenMessagingSuite) TestCanUnmarshalReceiptWithErrors() {
-	var receipt gcloudcx.OpenMessageReceipt
-	err := suite.UnmarshalData("response-inbound-receipt-errors.json", &receipt)
-	suite.Require().NoErrorf(err, "Failed to unmarshal OpenMessageReceipt. %s", err)
-	suite.Assert().True(receipt.IsFailed(), "Receipt should be failed")
-	suite.Assert().Equal("Outbound", receipt.Direction)
-	suite.Assert().Equal("c8e53e498891dfc9400c79a278cc1863", receipt.ID)
-	err = receipt.AsError()
-	suite.Require().Error(err, "Receipt should be convert to an error")
-	suite.ErrorIs(err, gcloudcx.GeneralError, "Receipt should convert to a GeneralError")
-	suite.ErrorIs(err, gcloudcx.RateLimited, "Receipt should convert to a RateLimited")
+func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
+	id := uuid.New()
+	integration := gcloudcx.OpenMessagingIntegration{
+		ID:   id,
+		Name: "Hello",
+	}
+	suite.Assert().Equal("Hello", integration.String())
+	integration.Name = ""
+	suite.Assert().Equal(id.String(), integration.String())
 }
 
 func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
@@ -552,6 +657,14 @@ func (suite *OpenMessagingSuite) TestCanRedactOpenMessageMetadata() {
 	})
 }
 
+func (suite *OpenMessagingSuite) TestShouldNotUnmarshalIntegrationWithInvalidJSON() {
+	var err error
+
+	integration := gcloudcx.OpenMessagingIntegration{}
+	err = json.Unmarshal([]byte(`{"Name": 15}`), &integration)
+	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
+}
+
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalChannelWithInvalidJSON() {
 	var err error
 
@@ -571,59 +684,4 @@ func (suite *OpenMessagingSuite) TestShouldNotUnmarshalFromWithInvalidJSON() {
 func (suite *OpenMessagingSuite) TestShouldNotUnmarshalMessageWithInvalidJSON() {
 	_, err := gcloudcx.UnmarshalOpenMessage([]byte(`{"Direction": 6}`))
 	suite.Assert().Error(err, "Data should not have been unmarshaled successfully")
-}
-
-func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
-	id := uuid.New()
-	integration := gcloudcx.OpenMessagingIntegration{
-		ID:   id,
-		Name: "Hello",
-	}
-	suite.Assert().Equal("Hello", integration.String())
-	integration.Name = ""
-	suite.Assert().Equal(id.String(), integration.String())
-}
-
-func (suite *OpenMessagingSuite) TestCanMarshalTypingEvent() {
-	event := gcloudcx.OpenMessageEvents{
-		Channel: gcloudcx.OpenMessageChannel{
-			Platform: "Open",
-			Type:     "Private",
-			From: &gcloudcx.OpenMessageFrom{
-				ID:        "abcdef12345",
-				Type:      "Email",
-				Firstname: "Bob",
-				Lastname:  "Minion",
-				Nickname:  "Bobby",
-			},
-			Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
-		},
-		Events: []gcloudcx.OpenMessageEvent{
-			gcloudcx.OpenMessageTypingEvent{IsTyping: true},
-		},
-	}
-	payload, err := json.Marshal(event)
-	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageEvents. %s", err)
-	expected := suite.LoadTestData("openmessaging-event-typing.json")
-	suite.Require().JSONEq(string(expected), string(payload))
-}
-
-func (suite *OpenMessagingSuite) TestCanUnmarshalTypingEvent() {
-	payload := suite.LoadTestData("inbound-openmessaging-event-typing.json")
-	message, err := gcloudcx.UnmarshalOpenMessage(payload)
-	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
-	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
-
-	actual, ok := message.(*gcloudcx.OpenMessageEvents)
-	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageEvents, but was %T", message)
-	suite.Require().NotNil(actual, "Unmarshaled message should not be nil")
-	suite.Assert().Equal("6ffd815bca1570e46251fcc71c103837", actual.ID)
-	suite.Assert().Equal(uuid.MustParse("1af69355-f1b0-477e-8ed9-66baff370209"), actual.Channel.ID)
-	suite.Assert().Equal("Outbound", actual.Direction)
-	suite.Require().Len(actual.Events, 1, "Unmarshaled message should have 1 event")
-
-	messageEvent, ok := actual.Events[0].(*gcloudcx.OpenMessageTypingEvent)
-	suite.Require().True(ok, "Unmarshaled message event should be of type *OpenMessageTypingEvent, but was %T", actual.Events[0])
-	suite.Assert().True(messageEvent.IsTyping)
-	suite.Assert().Equal(5*time.Second, messageEvent.Duration)
 }

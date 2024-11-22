@@ -1,26 +1,32 @@
 {
   "id": "68d79558191e6f93ee7e3c1f996994cd",
   "channel": {
-    "id": "dcc7275a-147e-4e58-aadd-b3c9362697d2",
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "messageId": "6ffd815bca1570e46251fcc71c103837",
     "platform": "Open",
     "type": "Private",
     "to": {
-      "id": "52b5eb487cebd87aa1dd4a5522852996|14157386102"
-    },
-    "from": {
-      "nickname": "PrezSandbox-Vonage",
-      "id": "dcc7275a-147e-4e58-aadd-b3c9362697d2",
+      "id": "abcdef12345@socialmedia",
       "idType": "Opaque"
     },
-    "time": "2023-08-01T08:06:36.999Z",
-    "messageId": "68d79558191e6f93ee7e3c1f996994cd"
+    "from": {
+      "nickName": "Open Messaging Integration",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+      "idType": "Opaque"
+    },
+    "time": "2021-02-01T15:04:05.123Z"
   },
+  "direction": "Outbound",
+  "originatingEntity": "Human",
   "type": "Structured",
   "text": "Hi Happy, How can I help you?",
   "content": [
     {
       "contentType": "Notification",
       "template": {
+        "header": {
+          "text": "Hello"
+        },
         "body": {
           "text": "Hi Happy, How can I help you?",
           "parameters": [
@@ -29,10 +35,11 @@
               "text": "Happy"
             }
           ]
+        },
+        "footer": {
+          "text": "Goodbye"
         }
       }
     }
-  ],
-  "originatingEntity": "Human",
-  "direction": "Outbound"
+  ]
 }

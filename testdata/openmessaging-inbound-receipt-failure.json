@@ -1,18 +1,18 @@
 {
-  "id": "c8e53e498891dfc9400c79a278cc1863",
+  "id": "c327c2078ca056db130c55ce648d9fa2",
   "channel": {
-    "id": "a9d478ff-da37-4d41-88e8-01536aee464a",
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
     "platform": "Open",
     "type": "Private",
     "messageId": "c8e53e498891dfc9400c79a278cc1863",
     "to": {
-      "id": "52b5eb487cebd87aa1dd4a5522852996|97147047050"
+      "id": "abcdef12345@socialmedia"
     },
     "from": {
-      "id": "a9d478ff-da37-4d41-88e8-01536aee464a",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
       "idType": "Opaque"
     },
-    "time": "2023-08-03T13:06:05Z",
+    "time": "2021-02-01T15:04:05.123Z",
     "metadata": {
       "customAttributes": {
         "gum-tenantId": "722320d4-5ff7-4bd8-9cbb-94b7445b8273"

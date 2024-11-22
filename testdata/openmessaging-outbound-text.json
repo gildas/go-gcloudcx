@@ -1,24 +1,25 @@
 {
-  "id": "8745f89b040b2468aa491eea6df6949d",
+  "id": "c327c2078ca056db130c55ce648d9fa2",
   "channel": {
     "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
     "platform": "Open",
     "type": "Private",
     "to": {
-      "id": "gildas@kkt"
+      "id": "abcdef12345@socialmedia",
+      "idType": "Opaque"
     },
     "from": {
       "nickName": "Open Messaging Integration",
       "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
       "idType": "Opaque"
     },
-    "time": "2021-04-09T04:43:33.100Z"
+    "time": "2021-02-01T15:04:05.123Z"
   },
+  "direction": "Outbound",
+  "originatingEntity": "Human",
   "type": "Text",
-  "text": "Hello From GCloud via the middleware",
-  "originatingIdentity": "Human",
+  "text": "Hello World",
   "content": [],
   "reasons": [],
-  "direction": "Outbound",
   "relatedMessages": []
 }
