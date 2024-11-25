@@ -464,7 +464,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 
 	actual, ok := message.(*gcloudcx.OpenMessageStructured)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
-	suite.Assert().Equal("68d79558191e6f93ee7e3c1f996994cd", actual.ID)
+	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
 	suite.Assert().Equal("Hi Happy, How can I help you?", actual.Text)
 
 	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
