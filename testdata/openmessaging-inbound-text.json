@@ -1,7 +1,6 @@
 {
-  "id": "c327c2078ca056db130c55ce648d9fa2",
   "channel": {
-    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "messageId": "c327c2078ca056db130c55ce648d9fa2",
     "platform": "Open",
     "type": "Private",
     "from": {
@@ -17,8 +16,6 @@
     "time": "2021-02-01T15:04:05.123Z"
   },
   "direction": "Inbound",
-	"type": "Event",
-  "events": [
-		{ "eventType": "Typing" }
-	]
+	"type": "Text",
+	"text": "Hello World"
 }
