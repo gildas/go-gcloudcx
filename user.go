@@ -16,6 +16,7 @@ type User struct {
 	ID                  uuid.UUID                `json:"id"`
 	Name                string                   `json:"name,omitempty"`
 	UserName            string                   `json:"username,omitempty"`
+	PreferredName       string                   `json:"preferredName,omitempty"`
 	Department          string                   `json:"department,omitempty"`
 	Title               string                   `json:"title,omitempty"`
 	Division            *Division                `json:"division,omitempty"`
