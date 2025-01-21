@@ -95,12 +95,22 @@ func (message *OpenMessageText) UnmarshalJSON(data []byte) (err error) {
 	}
 	*message = OpenMessageText(inner.surrogate)
 	message.KeysToRedact = append(message.KeysToRedact, inner.KeysToRedact...)
+	unmarshalMode := core.GetEnvAsString("JSON_UNMARSHAL_MODE", "strict") // "strict" or "ignore_unknown_keys"
+	isUnmarshalIgnoreUnknownKeys := unmarshalMode == "ignore_unknown_keys"
 	if len(inner.Content) > 0 {
-		message.Content = make([]OpenMessageContent, len(inner.Content))
-		for i, content := range inner.Content {
-			if message.Content[i], err = UnmarshalOpenMessageContent(content); err != nil {
+		message.Content = make([]OpenMessageContent, 0, len(inner.Content))
+		for _, content := range inner.Content {
+			content, err := UnmarshalOpenMessageContent(content)
+			if errors.Is(err, errors.InvalidType) && isUnmarshalIgnoreUnknownKeys {
+				continue
+			} else if errors.Is(err, errors.ArgumentMissing) {
+				return err
+			} else if errors.Is(err, errors.JSONUnmarshalError) {
+				return err
+			} else if err != nil {
 				return errors.JSONUnmarshalError.Wrap(err)
 			}
+			message.Content = append(message.Content, content)
 		}
 	}
 	return
