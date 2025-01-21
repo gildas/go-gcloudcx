@@ -1,0 +1,653 @@
+{
+  "$id" : "OpenOutboundNormalizedMessage.json",
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "title" : "OpenOutboundNormalizedMessage",
+  "description" : "Open Messaging Outbound rich media message structure",
+  "additionalProperties" : true,
+  "readOnly" : false,
+  "required" : [ ],
+  "properties" : {
+    "originatingEntity" : {
+      "type" : "string",
+      "description" : "Specifies if this message was sent by a human agent or bot. The platform may use this to apply appropriate provider policies.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "javaEnums" : [ {
+        "name" : "Human",
+        "description" : "Message was sent by a human agent."
+      }, {
+        "name" : "Bot",
+        "description" : "Message was sent by a bot."
+      } ],
+      "enum" : [ "Human", "Bot" ]
+    },
+    "reasons" : {
+      "type" : "array",
+      "description" : "List of reasons for a message receipt that indicates the message has failed. Only used with Failed status.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "items" : {
+        "$id" : "Reason.json",
+        "$schema" : "http://json-schema.org/draft-07/schema#",
+        "type" : "object",
+        "title" : "Reason",
+        "description" : "Reasons for a failed message receipt.",
+        "additionalProperties" : true,
+        "readOnly" : false,
+        "required" : [ "message" ],
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "The reason code for the failed message receipt.",
+            "additionalProperties" : true,
+            "readOnly" : false,
+            "javaEnums" : [ {
+              "name" : "MediaTypeNotAllowed",
+              "description" : "Media type for media attached to message not allowed."
+            }, {
+              "name" : "ServerError",
+              "description" : "Message failed due to a server error."
+            }, {
+              "name" : "MessageNotAllowed",
+              "description" : "Message was not allowed."
+            }, {
+              "name" : "UnsupportedMessage",
+              "description" : "Message unsupported by provider."
+            }, {
+              "name" : "InvalidMessageStructure",
+              "description" : "Message has an invalid structure."
+            }, {
+              "name" : "RateLimited",
+              "description" : "Message failed due to rate limiting."
+            }, {
+              "name" : "RecipientOptedOut",
+              "description" : "The person you are trying to message has opted out of receiving messages from your channel."
+            }, {
+              "name" : "MessageExpired",
+              "description" : "Message expired."
+            }, {
+              "name" : "GeneralError",
+              "description" : "Message failed due to a general error."
+            }, {
+              "name" : "InvalidDestination",
+              "description" : "Message destination invalid."
+            }, {
+              "name" : "UnknownMessage",
+              "description" : "Message was unknown."
+            }, {
+              "name" : "InvalidMediaContentLength",
+              "description" : "Media content length for media attached to message is too long."
+            } ],
+            "enum" : [ "MessageExpired", "RateLimited", "MessageNotAllowed", "GeneralError", "UnsupportedMessage", "UnknownMessage", "InvalidMessageStructure", "InvalidDestination", "ServerError", "MediaTypeNotAllowed", "InvalidMediaContentLength", "RecipientOptedOut" ]
+          },
+          "message" : {
+            "type" : "string",
+            "description" : "Description of the reason for the failed message receipt.",
+            "additionalProperties" : true,
+            "readOnly" : false
+          }
+        }
+      }
+    },
+    "isFinalReceipt" : {
+      "type" : "boolean",
+      "description" : "Indicates if this is the last message receipt for this message, or if another message receipt can be expected.",
+      "additionalProperties" : true,
+      "readOnly" : true
+    },
+    "channel" : {
+      "$id" : "OpenOutboundMessagingChannel.json",
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "type" : "object",
+      "title" : "OpenOutboundMessagingChannel",
+      "description" : "Channel-specific information that describes the message and the message channel/provider.",
+      "additionalProperties" : true,
+      "readOnly" : false,
+      "required" : [ ],
+      "properties" : {
+        "messageId" : {
+          "type" : "string",
+          "description" : "Unique provider ID of the message such as a Facebook message ID.",
+          "additionalProperties" : true,
+          "readOnly" : true
+        },
+        "from" : {
+          "$id" : "OpenOutboundMessagingFromRecipient.json",
+          "$schema" : "http://json-schema.org/draft-07/schema#",
+          "type" : "object",
+          "title" : "OpenOutboundMessagingFromRecipient",
+          "description" : "Information about the recipient the message is received from.",
+          "additionalProperties" : true,
+          "readOnly" : false,
+          "required" : [ ],
+          "properties" : {
+            "firstName" : {
+              "type" : "string",
+              "description" : "First name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "lastName" : {
+              "type" : "string",
+              "description" : "Last name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "idType" : {
+              "type" : "string",
+              "description" : "The recipient ID type. This is used to indicate the format used for the ID.",
+              "additionalProperties" : true,
+              "readOnly" : true,
+              "javaEnums" : [ {
+                "name" : "Email",
+                "description" : "An e-mail address."
+              }, {
+                "name" : "Phone",
+                "description" : "An e.164 phone number."
+              }, {
+                "name" : "Opaque",
+                "description" : "An ID with no specific format."
+              } ],
+              "enum" : [ "Email", "Phone", "Opaque" ]
+            },
+            "nickname" : {
+              "type" : "string",
+              "description" : "Nickname or display name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "id" : {
+              "type" : "string",
+              "description" : "The recipient ID specific to the provider.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            }
+          }
+        },
+        "to" : {
+          "$id" : "OpenOutboundMessagingToRecipient.json",
+          "$schema" : "http://json-schema.org/draft-07/schema#",
+          "type" : "object",
+          "title" : "OpenOutboundMessagingToRecipient",
+          "description" : "Information about the recipient the message is sent to.",
+          "additionalProperties" : true,
+          "readOnly" : false,
+          "required" : [ ],
+          "properties" : {
+            "firstName" : {
+              "type" : "string",
+              "description" : "First name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "lastName" : {
+              "type" : "string",
+              "description" : "Last name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "idType" : {
+              "type" : "string",
+              "description" : "The recipient ID type. This is used to indicate the format used for the ID.",
+              "additionalProperties" : true,
+              "readOnly" : true,
+              "javaEnums" : [ {
+                "name" : "Email",
+                "description" : "An e-mail address."
+              }, {
+                "name" : "Phone",
+                "description" : "An e.164 phone number."
+              }, {
+                "name" : "Opaque",
+                "description" : "An ID with no specific format."
+              } ],
+              "enum" : [ "Email", "Phone", "Opaque" ]
+            },
+            "nickname" : {
+              "type" : "string",
+              "description" : "Nickname or display name of the recipient.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            },
+            "id" : {
+              "type" : "string",
+              "description" : "The recipient ID specific to the provider.",
+              "additionalProperties" : true,
+              "readOnly" : true
+            }
+          }
+        },
+        "id" : {
+          "type" : "string",
+          "description" : "The Messaging Platform integration ID.",
+          "additionalProperties" : true,
+          "readOnly" : true
+        },
+        "time" : {
+          "type" : "string",
+          "description" : "Original time of the event.",
+          "additionalProperties" : true,
+          "readOnly" : true
+        },
+        "type" : {
+          "type" : "string",
+          "description" : "Specifies if this message is part of a private or public conversation.",
+          "additionalProperties" : true,
+          "readOnly" : true,
+          "javaEnums" : [ {
+            "name" : "Private",
+            "description" : "Private message."
+          } ],
+          "enum" : [ "Private" ]
+        },
+        "platform" : {
+          "type" : "string",
+          "description" : "The provider type.",
+          "additionalProperties" : true,
+          "readOnly" : true,
+          "javaEnums" : [ {
+            "name" : "Open",
+            "description" : "Open Messaging (https://developer.genesys.cloud/api/digital/openmessaging/)."
+          } ],
+          "enum" : [ "Open" ]
+        }
+      }
+    },
+    "id" : {
+      "type" : "string",
+      "description" : "Unique ID of the message. This ID is generated by Messaging Platform. Message receipts will have the same ID as the message they reference.",
+      "additionalProperties" : true,
+      "readOnly" : true
+    },
+    "text" : {
+      "type" : "string",
+      "description" : "Message text.",
+      "additionalProperties" : true,
+      "readOnly" : true
+    },
+    "type" : {
+      "type" : "string",
+      "description" : "Message type.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "javaEnums" : [ {
+        "name" : "Receipt",
+        "description" : "A message receipt that has information about the status of the message it references."
+      }, {
+        "name" : "Text",
+        "description" : "A text message that could contain text only or text with attachments."
+      }, {
+        "name" : "Structured",
+        "description" : "A structured message that contains rich message features such as quick replies or templated messages."
+      } ],
+      "enum" : [ "Text", "Structured", "Receipt" ]
+    },
+    "content" : {
+      "type" : "array",
+      "description" : "List of content elements.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "items" : {
+        "$id" : "OpenOutboundMessageContent.json",
+        "$schema" : "http://json-schema.org/draft-07/schema#",
+        "type" : "object",
+        "title" : "OpenOutboundMessageContent",
+        "description" : "Message content element.",
+        "additionalProperties" : true,
+        "readOnly" : false,
+        "required" : [ ],
+        "properties" : {
+          "template" : {
+            "$id" : "ContentNotificationTemplate.json",
+            "$schema" : "http://json-schema.org/draft-07/schema#",
+            "type" : "object",
+            "title" : "ContentNotificationTemplate",
+            "description" : "Template notification object.",
+            "additionalProperties" : true,
+            "readOnly" : false,
+            "required" : [ "body" ],
+            "properties" : {
+              "footer" : {
+                "$id" : "NotificationTemplateFooter.json",
+                "$schema" : "http://json-schema.org/draft-07/schema#",
+                "type" : "object",
+                "title" : "NotificationTemplateFooter",
+                "description" : "Template footer object.",
+                "additionalProperties" : true,
+                "readOnly" : false,
+                "required" : [ ],
+                "properties" : {
+                  "text" : {
+                    "type" : "string",
+                    "description" : "Footer text. For WhatsApp, ignored.",
+                    "additionalProperties" : true,
+                    "readOnly" : false
+                  }
+                }
+              },
+              "header" : {
+                "$id" : "NotificationTemplateHeader.json",
+                "$schema" : "http://json-schema.org/draft-07/schema#",
+                "type" : "object",
+                "title" : "NotificationTemplateHeader",
+                "description" : "Template header object.",
+                "additionalProperties" : true,
+                "readOnly" : false,
+                "required" : [ "type" ],
+                "properties" : {
+                  "media" : {
+                    "$id" : "ContentAttachment.json",
+                    "$schema" : "http://json-schema.org/draft-07/schema#",
+                    "type" : "object",
+                    "title" : "ContentAttachment",
+                    "description" : "Attachment object.",
+                    "additionalProperties" : true,
+                    "readOnly" : false,
+                    "required" : [ "mediaType" ],
+                    "properties" : {
+                      "filename" : {
+                        "type" : "string",
+                        "description" : "Suggested file name for attachment.",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      },
+                      "sha256" : {
+                        "type" : "string",
+                        "description" : "Secure hash of the attachment content.",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      },
+                      "mime" : {
+                        "type" : "string",
+                        "description" : "Attachment mime type (https://www.iana.org/assignments/media-types/media-types.xhtml).",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      },
+                      "mediaType" : {
+                        "type" : "string",
+                        "description" : "The type of attachment this instance represents.",
+                        "additionalProperties" : true,
+                        "readOnly" : false,
+                        "javaEnums" : [ {
+                          "name" : "Video",
+                          "description" : "A video such as MP4 or MOV."
+                        }, {
+                          "name" : "Image",
+                          "description" : "An image such as PNG or JPG."
+                        }, {
+                          "name" : "Audio",
+                          "description" : "An audio sample such as MP3 or OGG."
+                        }, {
+                          "name" : "File",
+                          "description" : "A file such as PDF or DOC."
+                        }, {
+                          "name" : "Link",
+                          "description" : "A link to a website or other online resource."
+                        } ],
+                        "enum" : [ "Image", "Video", "Audio", "File", "Link" ]
+                      },
+                      "id" : {
+                        "type" : "string",
+                        "description" : "Provider specific ID for attachment. For example, a LINE sticker ID.",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      },
+                      "text" : {
+                        "type" : "string",
+                        "description" : "Text associated with attachment such as an image caption.",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      },
+                      "url" : {
+                        "type" : "string",
+                        "description" : "URL of the attachment.",
+                        "additionalProperties" : true,
+                        "readOnly" : false
+                      }
+                    }
+                  },
+                  "text" : {
+                    "type" : "string",
+                    "description" : "Header text. For WhatsApp, ignored.",
+                    "additionalProperties" : true,
+                    "readOnly" : false
+                  },
+                  "type" : {
+                    "type" : "string",
+                    "description" : "Template header type.",
+                    "additionalProperties" : true,
+                    "readOnly" : false,
+                    "javaEnums" : [ {
+                      "name" : "Media",
+                      "description" : "A media template header."
+                    }, {
+                      "name" : "Text",
+                      "description" : "A text template header."
+                    } ],
+                    "enum" : [ "Text", "Media" ]
+                  },
+                  "parameters" : {
+                    "type" : "array",
+                    "description" : "Template parameters for placeholders in template.",
+                    "additionalProperties" : true,
+                    "readOnly" : false,
+                    "items" : {
+                      "$id" : "NotificationTemplateParameter.json",
+                      "$schema" : "http://json-schema.org/draft-07/schema#",
+                      "type" : "object",
+                      "title" : "NotificationTemplateParameter",
+                      "description" : "Template parameters for placeholders in template.",
+                      "additionalProperties" : true,
+                      "readOnly" : false,
+                      "required" : [ "text" ],
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "description" : "Parameter name.",
+                          "additionalProperties" : true,
+                          "readOnly" : false
+                        },
+                        "text" : {
+                          "type" : "string",
+                          "description" : "Parameter text value.",
+                          "additionalProperties" : true,
+                          "readOnly" : false
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "language" : {
+                "type" : "string",
+                "description" : "Template language.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "id" : {
+                "type" : "string",
+                "description" : "The messaging provider template ID. For WhatsApp, 'namespace@name'.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "body" : {
+                "$id" : "NotificationTemplateBody.json",
+                "$schema" : "http://json-schema.org/draft-07/schema#",
+                "type" : "object",
+                "title" : "NotificationTemplateBody",
+                "description" : "Template body object.",
+                "additionalProperties" : true,
+                "readOnly" : false,
+                "required" : [ "parameters" ],
+                "properties" : {
+                  "text" : {
+                    "type" : "string",
+                    "description" : "Body text. For WhatsApp, ignored.",
+                    "additionalProperties" : true,
+                    "readOnly" : false
+                  },
+                  "parameters" : {
+                    "type" : "array",
+                    "description" : "Template parameters for placeholders in template.",
+                    "additionalProperties" : true,
+                    "readOnly" : false,
+                    "items" : {
+                      "$id" : "NotificationTemplateParameter.json",
+                      "$schema" : "http://json-schema.org/draft-07/schema#",
+                      "type" : "object",
+                      "title" : "NotificationTemplateParameter",
+                      "description" : "Template parameters for placeholders in template.",
+                      "additionalProperties" : true,
+                      "readOnly" : false,
+                      "required" : [ "text" ],
+                      "properties" : {
+                        "name" : {
+                          "type" : "string",
+                          "description" : "Parameter name.",
+                          "additionalProperties" : true,
+                          "readOnly" : false
+                        },
+                        "text" : {
+                          "type" : "string",
+                          "description" : "Parameter text value.",
+                          "additionalProperties" : true,
+                          "readOnly" : false
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "attachment" : {
+            "$id" : "ContentAttachment.json",
+            "$schema" : "http://json-schema.org/draft-07/schema#",
+            "type" : "object",
+            "title" : "ContentAttachment",
+            "description" : "Attachment object.",
+            "additionalProperties" : true,
+            "readOnly" : false,
+            "required" : [ "mediaType" ],
+            "properties" : {
+              "filename" : {
+                "type" : "string",
+                "description" : "Suggested file name for attachment.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "sha256" : {
+                "type" : "string",
+                "description" : "Secure hash of the attachment content.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "mime" : {
+                "type" : "string",
+                "description" : "Attachment mime type (https://www.iana.org/assignments/media-types/media-types.xhtml).",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "mediaType" : {
+                "type" : "string",
+                "description" : "The type of attachment this instance represents.",
+                "additionalProperties" : true,
+                "readOnly" : false,
+                "javaEnums" : [ {
+                  "name" : "Video",
+                  "description" : "A video such as MP4 or MOV."
+                }, {
+                  "name" : "Image",
+                  "description" : "An image such as PNG or JPG."
+                }, {
+                  "name" : "Audio",
+                  "description" : "An audio sample such as MP3 or OGG."
+                }, {
+                  "name" : "File",
+                  "description" : "A file such as PDF or DOC."
+                }, {
+                  "name" : "Link",
+                  "description" : "A link to a website or other online resource."
+                } ],
+                "enum" : [ "Image", "Video", "Audio", "File", "Link" ]
+              },
+              "id" : {
+                "type" : "string",
+                "description" : "Provider specific ID for attachment. For example, a LINE sticker ID.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "text" : {
+                "type" : "string",
+                "description" : "Text associated with attachment such as an image caption.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              },
+              "url" : {
+                "type" : "string",
+                "description" : "URL of the attachment.",
+                "additionalProperties" : true,
+                "readOnly" : false
+              }
+            }
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "Type of this content element. If contentType = \"Attachment\" only one item is allowed.",
+            "additionalProperties" : true,
+            "readOnly" : true,
+            "javaEnums" : [ {
+              "name" : "Attachment",
+              "description" : "An attachment such as an Image."
+            }, {
+              "name" : "Notification",
+              "description" : "A notification template."
+            } ],
+            "enum" : [ "Attachment", "Notification" ]
+          }
+        }
+      }
+    },
+    "direction" : {
+      "type" : "string",
+      "description" : "The direction of the message.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "javaEnums" : [ {
+        "name" : "Outbound",
+        "description" : "Message sent from platform out to provider."
+      }, {
+        "name" : "Inbound",
+        "description" : "Message received from provider into platform."
+      } ],
+      "enum" : [ "Inbound", "Outbound" ]
+    },
+    "status" : {
+      "type" : "string",
+      "description" : "Message receipt status, only used with type Receipt.",
+      "additionalProperties" : true,
+      "readOnly" : true,
+      "javaEnums" : [ {
+        "name" : "Read",
+        "description" : "Message was read by end user."
+      }, {
+        "name" : "Delivered",
+        "description" : "Message was delivered to end user."
+      }, {
+        "name" : "Failed",
+        "description" : "Message failed to send. See reasons for more information."
+      }, {
+        "name" : "Published",
+        "description" : "Message has been published to provider."
+      }, {
+        "name" : "Removed",
+        "description" : "Message was removed."
+      }, {
+        "name" : "Sent",
+        "description" : "Message was sent."
+      } ],
+      "enum" : [ "Sent", "Delivered", "Read", "Failed", "Published", "Removed" ]
+    }
+  }
+}

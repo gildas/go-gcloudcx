@@ -1,0 +1,33 @@
+{
+  "channel": {
+    "messageId": "c327c2078ca056db130c55ce648d9fa2",
+    "platform": "Open",
+    "type": "Private",
+    "from": {
+      "id": "abcdef12345@socialmedia",
+			"idType": "Email",
+			"firstName": "Bob",
+			"lastName": "Minion",
+			"nickname": "Bobby"
+    },
+    "to": {
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da"
+    },
+    "time": "2021-02-01T15:04:05.123Z"
+  },
+  "direction": "Inbound",
+  "type": "Text",
+  "text": "image.jpg",
+  "content": [
+    {
+      "contentType": "Attachment",
+      "attachment": {
+        "mediaType": "Image",
+        "url": "https://d3123134sdf42l.cloudfront.net/43234f645d310b58-20241125T031701Z-file.jpg",
+        "mime": "image/jpeg",
+        "filename": "image.jpg",
+        "text": "image.jpg"
+      }
+    }
+  ]
+}

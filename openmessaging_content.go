@@ -1,33 +1,41 @@
 package gcloudcx
 
 import (
-	"encoding/json"
+	"strings"
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 )
 
-type OpenMessageContent struct {
-	Type       string                 `json:"contentType"` // Attachment, Location, QuickReply, ButtonResponse, Notification, GenericTemplate, ListTemplate, Postback, Reactions, Mention
-	Template   *OpenMessageTemplate   `json:"template,omitempty"`
-	Attachment *OpenMessageAttachment `json:"attachment,omitempty"`
+type OpenMessageContent interface {
+	core.TypeCarrier
 }
 
-// UnmarshalJSON unmarshals JSON into this
-func (content *OpenMessageContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageContent
-	var inner surrogate
+var openMessageContentRegistry = core.TypeRegistry{}
 
-	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.JSONUnmarshalError.Wrap(err)
+func UnmarshalOpenMessageContent(payload []byte) (OpenMessageContent, error) {
+	content, err := openMessageContentRegistry.UnmarshalJSON(payload, "contentType")
+	if err == nil {
+		return content.(OpenMessageContent), nil
 	}
-	*content = OpenMessageContent(inner)
+	if strings.HasPrefix(err.Error(), "Missing JSON Property") {
+		return nil, errors.JSONUnmarshalError.Wrap(errors.ArgumentMissing.With("contentType"))
+	}
 	// if !Contains([]string{"Attachment", "Location", "QuickReply", "ButtonResponse", "Notification", "GenericTemplate", "ListTemplate", "Postback", "Reactions", "Mention"}, content.Type) {
-	if !core.Contains([]string{"Attachment", "Notification"}, content.Type) {
-		return errors.ArgumentInvalid.With("contentType", content.Type)
+	if strings.HasPrefix(err.Error(), "Unsupported Type") {
+		supportedTypes := make([]string, 0, len(openMessageContentRegistry))
+		for key := range openMessageContentRegistry {
+			supportedTypes = append(supportedTypes, key)
+		}
+		return nil, errors.JSONUnmarshalError.Wrap(
+			errors.InvalidType.With(
+				strings.TrimSuffix(strings.TrimPrefix(err.Error(), `Unsupported Type "`), `"`),
+				strings.Join(supportedTypes, ","),
+			),
+		)
 	}
-	if content.Template == nil && content.Attachment == nil {
-		return errors.ArgumentMissing.With("template/attachment")
+	if errors.Is(err, errors.JSONUnmarshalError) {
+		return nil, err
 	}
-	return
+	return nil, errors.JSONUnmarshalError.Wrap(err)
 }

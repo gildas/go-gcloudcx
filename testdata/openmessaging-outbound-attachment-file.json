@@ -1,0 +1,35 @@
+{
+  "id": "c327c2078ca056db130c55ce648d9fa2",
+  "channel": {
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "messageId": "c327c2078ca056db130c55ce648d9fa2",
+    "platform": "Open",
+    "type": "Private",
+    "to": {
+      "id": "abcdef12345@socialmedia",
+      "idType": "Opaque"
+    },
+    "from": {
+      "nickName": "Open Messaging Integration",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+      "idType": "Opaque"
+    },
+    "time": "2021-02-01T15:04:05.123Z"
+  },
+  "direction": "Outbound",
+  "originatingEntity": "Human",
+  "type": "Text",
+  "content": [
+    {
+      "contentType": "Attachment",
+      "attachment": {
+        "id": "8b36304e-ad42-4e7d-ac35-978a019514eb",
+        "mediaType": "File",
+        "url": "https://api-downloads.usw2.pure.cloud/api/v2/downloads/pce1234456",
+        "mime": "application/pdf",
+        "filename": "file.pdf",
+        "contentSizeBytes": 10240
+      }
+    }
+  ]
+}
