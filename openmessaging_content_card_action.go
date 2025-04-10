@@ -16,6 +16,13 @@ type OpenMessageCardAction struct {
 	URL        *url.URL `json:"url,omitempty"`
 }
 
+// GetType tells the type of this OpenMessageContent
+//
+// implements core.TypeCarrier
+func (action OpenMessageCardAction) GetType() string {
+	return action.ActionType
+}
+
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
