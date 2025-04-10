@@ -254,8 +254,8 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 		Name:         "TEST-GO-PURECLOUD",
 		WebhookURL:   core.Must(url.Parse("https://www.acme.com/gcloudcx")),
 		WebhookToken: "DEADBEEF",
-		SupportedContent: &gcloudcx.AddressableEntityRef{
-			ID:      uuid.MustParse("832066dd-6030-46b1-baeb-b89b681c6636"),
+		SupportedContent: &gcloudcx.OpenMessagingSupportedContent{
+			ID:      "MessaagingDefault",
 			SelfURI: "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636",
 		},
 		DateCreated: time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
@@ -347,6 +347,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
 	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
 	suite.Require().NotNil(integration.WebhookURL)
 	suite.Assert().Equal("https://www.acme.com/gcloudcx", integration.WebhookURL.String())
+	suite.Require().NotNil(integration.SupportedContent)
+	suite.Assert().Equal("webMessagingDefault", integration.SupportedContent.ID)
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
