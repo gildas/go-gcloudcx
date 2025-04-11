@@ -1,0 +1,42 @@
+{
+	"id": "c327c2078ca056db130c55ce648d9fa2",
+  "channel": {
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "platform": "Open",
+    "type": "Private",
+    "messageId": "c327c2078ca056db130c55ce648d9fa2",
+    "from": {
+      "nickname": "GUM-INTEGRATION",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+      "idType": "Opaque"
+    },
+    "to": {
+      "id": "abcdef12345@socialmedia",
+      "idType": "Opaque"
+    },
+    "time": "2025-04-10T13:52:08.807Z"
+  },
+  "conversationId": "d06cb41e-f938-4dcf-b823-c8af1a39d7e5",
+  "originatingEntity": "Bot",
+  "direction": "Outbound",
+  "type": "Structured",
+  "text": "Do you want to proceed?",
+  "content": [
+    {
+      "contentType": "QuickReply",
+      "quickReply": {
+        "text": "Yes",
+        "payload": "Yes",
+        "action": "Message"
+      }
+    },
+    {
+      "contentType": "QuickReply",
+      "quickReply": {
+        "text": "No",
+        "payload": "No",
+        "action": "Message"
+      }
+    }
+  ]
+}

@@ -562,6 +562,41 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 	suite.Assert().Equal("Option9", card3.Actions[2].Payload)
 }
 
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickReply() {
+	payload := suite.LoadTestData("openmessaging-inbound-quickreply.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageStructured)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
+	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("Do you want to proceed?", actual.Text)
+	suite.Require().Len(actual.Content, 2, "Content should 2 items")
+
+	content := actual.Content[0]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("QuickReply", content.GetType())
+
+	quickreply, ok := content.(*gcloudcx.OpenMessageQuickReplyContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
+	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
+	suite.Assert().Equal("Yes", quickreply.Text)
+	suite.Assert().Equal("Yes", quickreply.Payload)
+	suite.Assert().Equal("Message", quickreply.Action)
+
+	content = actual.Content[1]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("QuickReply", content.GetType())
+
+	quickreply, ok = content.(*gcloudcx.OpenMessageQuickReplyContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
+	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
+	suite.Assert().Equal("No", quickreply.Text)
+	suite.Assert().Equal("No", quickreply.Payload)
+	suite.Assert().Equal("Message", quickreply.Action)
+}
+
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 	id := uuid.New()
 	integration := gcloudcx.OpenMessagingIntegration{
