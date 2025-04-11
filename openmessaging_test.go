@@ -452,7 +452,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOutboundTextMessage() {
 
 	actual, ok := message.(*gcloudcx.OpenMessageText)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageText, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Assert().Equal("Hello World", actual.Text)
 	suite.Assert().Equal("Outbound", actual.Direction)
 	suite.Assert().Equal("Human", actual.OriginatingEntity)
@@ -466,7 +467,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 
 	actual, ok := message.(*gcloudcx.OpenMessageStructured)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Assert().Equal("Hi Happy, How can I help you?", actual.Text)
 
 	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
@@ -499,10 +501,10 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 
 	actual, ok := message.(*gcloudcx.OpenMessageStructured)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
 
-	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
 	content := actual.Content[0]
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("Carousel", content.GetType())
@@ -570,7 +572,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 
 	actual, ok := message.(*gcloudcx.OpenMessageStructured)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Assert().Equal("Do you want to proceed?", actual.Text)
 	suite.Require().Len(actual.Content, 2, "Content should 2 items")
 

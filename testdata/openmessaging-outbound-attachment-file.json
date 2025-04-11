@@ -16,6 +16,7 @@
     },
     "time": "2021-02-01T15:04:05.123Z"
   },
+  "conversationId": "d06cb41e-f938-4dcf-b823-c8af1a39d7e5",
   "direction": "Outbound",
   "originatingEntity": "Human",
   "type": "Text",
