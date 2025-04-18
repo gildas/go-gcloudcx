@@ -2,8 +2,8 @@
   "id": "34071108-1569-4cb0-9137-a326b8a9e815",
   "name": "TEST-GO-PURECLOUD",
   "supportedContent": {
-    "id": "832066dd-6030-46b1-baeb-b89b681c6636",
-    "selfUri": "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636"
+    "id": "webMessagingDefault",
+    "selfUri": "/api/v2/conversations/messaging/supportedcontent/webMessagingDefault"
   },
   "outboundNotificationWebhookUrl": "https://www.acme.com/gcloudcx",
   "outboundNotificationWebhookSignatureSecretToken": "DEADBEEF",

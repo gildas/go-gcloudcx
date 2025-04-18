@@ -6,6 +6,7 @@ import (
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // OpenMessageStructed describes a structured message
@@ -19,6 +20,7 @@ type OpenMessageStructured struct {
 	Content           []OpenMessageContent `json:"content,omitempty"`
 	OriginatingEntity string               `json:"originatingEntity,omitempty"` // Bot or Human
 	Metadata          map[string]string    `json:"metadata,omitempty"`
+	ConversationID    uuid.UUID            `json:"conversationId,omitempty"`
 	KeysToRedact      []string             `json:"-"`
 }
 
@@ -82,9 +84,10 @@ func (message *OpenMessageStructured) UnmarshalJSON(data []byte) (err error) {
 	type surrogate OpenMessageStructured
 	var inner struct {
 		surrogate
-		Type         string            `json:"type"`
-		KeysToRedact []string          `json:"keysToRedact"`
-		Content      []json.RawMessage `json:"content,omitempty"`
+		Type           string            `json:"type"`
+		KeysToRedact   []string          `json:"keysToRedact"`
+		Content        []json.RawMessage `json:"content,omitempty"`
+		ConversationID core.UUID         `json:"conversationId,omitempty"`
 	}
 
 	if err = json.Unmarshal(data, &inner); err != nil {
@@ -94,6 +97,7 @@ func (message *OpenMessageStructured) UnmarshalJSON(data []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(errors.InvalidType.With(inner.Type))
 	}
 	*message = OpenMessageStructured(inner.surrogate)
+	message.ConversationID = uuid.UUID(inner.ConversationID)
 	message.KeysToRedact = append(message.KeysToRedact, inner.KeysToRedact...)
 	unmarshalMode := core.GetEnvAsString("JSON_UNMARSHAL_MODE", "strict") // "strict" or "ignore_unknown_keys"
 	isUnmarshalIgnoreUnknownKeys := unmarshalMode == "ignore_unknown_keys"

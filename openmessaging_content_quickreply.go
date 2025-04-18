@@ -12,7 +12,7 @@ type OpenMessageQuickReplyContent struct {
 	Text     string   `json:"text"`
 	Payload  string   `json:"payload"`
 	ImageURL *url.URL `json:"image,omitempty"`
-	Action   string   `json:"action,omitempty"`
+	Action   string   `json:"action,omitempty"` // Message
 }
 
 func init() {

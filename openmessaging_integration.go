@@ -16,22 +16,27 @@ import (
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging
 type OpenMessagingIntegration struct {
-	ID               uuid.UUID             `json:"id"`
-	Name             string                `json:"name"`
-	WebhookURL       *url.URL              `json:"-"`
-	WebhookToken     string                `json:"outboundNotificationWebhookSignatureSecretToken"`
-	WebhookHeaders   map[string]string     `json:"webhookHeaders,omitempty"`
-	Recipient        *DomainEntityRef      `json:"recipient,omitempty"`
-	SupportedContent *AddressableEntityRef `json:"supportedContent,omitempty"`
-	DateCreated      time.Time             `json:"dateCreated,omitempty"`
-	CreatedBy        *DomainEntityRef      `json:"createdBy,omitempty"`
-	DateModified     time.Time             `json:"dateModified,omitempty"`
-	ModifiedBy       *DomainEntityRef      `json:"modifiedBy,omitempty"`
-	CreateStatus     string                `json:"createStatus,omitempty"` // Initiated, Completed, Error
-	CreateError      *ErrorBody            `json:"createError,omitempty"`
-	Status           string                `json:"status,omitempty"` // Active, Inactive
-	Client           *Client               `json:"-"`
-	logger           *logger.Logger        `json:"-"`
+	ID               uuid.UUID                      `json:"id"`
+	Name             string                         `json:"name"`
+	WebhookURL       *url.URL                       `json:"-"`
+	WebhookToken     string                         `json:"outboundNotificationWebhookSignatureSecretToken"`
+	WebhookHeaders   map[string]string              `json:"webhookHeaders,omitempty"`
+	Recipient        *DomainEntityRef               `json:"recipient,omitempty"`
+	SupportedContent *OpenMessagingSupportedContent `json:"supportedContent,omitempty"`
+	DateCreated      time.Time                      `json:"dateCreated,omitempty"`
+	CreatedBy        *DomainEntityRef               `json:"createdBy,omitempty"`
+	DateModified     time.Time                      `json:"dateModified,omitempty"`
+	ModifiedBy       *DomainEntityRef               `json:"modifiedBy,omitempty"`
+	CreateStatus     string                         `json:"createStatus,omitempty"` // Initiated, Completed, Error
+	CreateError      *ErrorBody                     `json:"createError,omitempty"`
+	Status           string                         `json:"status,omitempty"` // Active, Inactive
+	Client           *Client                        `json:"-"`
+	logger           *logger.Logger                 `json:"-"`
+}
+
+type OpenMessagingSupportedContent struct {
+	ID      string `json:"id"`
+	SelfURI URI    `json:"selfUri,omitempty"`
 }
 
 // IsCreated tells if this OpenMessagingIntegration has been created successfully

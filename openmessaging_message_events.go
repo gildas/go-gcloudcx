@@ -3,20 +3,23 @@ package gcloudcx
 import (
 	"encoding/json"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/google/uuid"
 )
 
 // OpenMessageText is a text message sent or received by the Open Messaging API
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundEventMessages
 type OpenMessageEvents struct {
-	ID           string             `json:"id,omitempty"` // Can be anything
-	Channel      OpenMessageChannel `json:"channel"`
-	Direction    string             `json:"direction,omitempty"` // Can be "Inbound" or "Outbound"
-	Events       []OpenMessageEvent `json:"events"`
-	Metadata     map[string]string  `json:"metadata,omitempty"`
-	KeysToRedact []string           `json:"-"`
+	ID             string             `json:"id,omitempty"` // Can be anything
+	Channel        OpenMessageChannel `json:"channel"`
+	Direction      string             `json:"direction,omitempty"` // Can be "Inbound" or "Outbound"
+	Events         []OpenMessageEvent `json:"events"`
+	Metadata       map[string]string  `json:"metadata,omitempty"`
+	ConversationID uuid.UUID          `json:"conversationId,omitempty"`
+	KeysToRedact   []string           `json:"-"`
 }
 
 // init initializes this type
@@ -80,8 +83,9 @@ func (message *OpenMessageEvents) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate OpenMessageEvents
 	var inner struct {
 		surrogate
-		Events       []json.RawMessage `json:"events"`
-		KeysToRedact []string          `json:"keysToRedact"`
+		Events         []json.RawMessage `json:"events"`
+		KeysToRedact   []string          `json:"keysToRedact"`
+		ConversationID core.UUID         `json:"conversationId,omitempty"`
 	}
 	if err = json.Unmarshal(payload, &inner); errors.Is(err, errors.JSONUnmarshalError) {
 		return err
@@ -89,6 +93,7 @@ func (message *OpenMessageEvents) UnmarshalJSON(payload []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*message = OpenMessageEvents(inner.surrogate)
+	message.ConversationID = uuid.UUID(inner.ConversationID)
 
 	message.Events = make([]OpenMessageEvent, 0, len(inner.Events))
 	for _, raw := range inner.Events {

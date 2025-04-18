@@ -254,8 +254,8 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 		Name:         "TEST-GO-PURECLOUD",
 		WebhookURL:   core.Must(url.Parse("https://www.acme.com/gcloudcx")),
 		WebhookToken: "DEADBEEF",
-		SupportedContent: &gcloudcx.AddressableEntityRef{
-			ID:      uuid.MustParse("832066dd-6030-46b1-baeb-b89b681c6636"),
+		SupportedContent: &gcloudcx.OpenMessagingSupportedContent{
+			ID:      "MessaagingDefault",
 			SelfURI: "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636",
 		},
 		DateCreated: time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
@@ -347,6 +347,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalIntegration() {
 	suite.Assert().Equal("DEADBEEF", integration.WebhookToken)
 	suite.Require().NotNil(integration.WebhookURL)
 	suite.Assert().Equal("https://www.acme.com/gcloudcx", integration.WebhookURL.String())
+	suite.Require().NotNil(integration.SupportedContent)
+	suite.Assert().Equal("webMessagingDefault", integration.SupportedContent.ID)
 }
 
 func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageChannel() {
@@ -450,7 +452,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOutboundTextMessage() {
 
 	actual, ok := message.(*gcloudcx.OpenMessageText)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageText, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Assert().Equal("Hello World", actual.Text)
 	suite.Assert().Equal("Outbound", actual.Direction)
 	suite.Assert().Equal("Human", actual.OriginatingEntity)
@@ -464,7 +467,8 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 
 	actual, ok := message.(*gcloudcx.OpenMessageStructured)
 	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
-	suite.Require().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
 	suite.Assert().Equal("Hi Happy, How can I help you?", actual.Text)
 
 	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
@@ -487,6 +491,113 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 
 	suite.Require().NotEmpty(notification.Footer, "Notification Footer should not be empty")
 	suite.Assert().Equal("Goodbye", notification.Footer.Text)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarousel() {
+	payload := suite.LoadTestData("openmessaging-inbound-carousel.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageStructured)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
+	suite.Require().NotEmpty(actual.Content, "Content should not be empty")
+
+	content := actual.Content[0]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("Carousel", content.GetType())
+
+	carousel, ok := content.(*gcloudcx.OpenMessageCarouselContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageCarouselContent, but was %T", content)
+	suite.Require().NotNil(carousel, "Carousel should not be nil")
+
+	suite.Require().Len(carousel.Cards, 3, "Carousel should contain 3 cards")
+
+	card1 := carousel.Cards[0]
+	suite.Require().NotNil(card1, "Card 1 should not be nil")
+	suite.Assert().Equal("Card 1", card1.Title)
+	suite.Assert().Equal("", card1.Description)
+	suite.Require().NotNil(card1.ImageURL, "Card 1 ImageURL should not be nil")
+	suite.Assert().Equal("https://www.acme.com/image1.png", card1.ImageURL.String())
+	suite.Assert().Nil(card1.VideoURL)
+	suite.Require().Len(card1.Actions, 3, "Card 1 should have 3 actions")
+	suite.Assert().Equal("Postback", card1.Actions[0].GetType())
+	suite.Assert().Equal("Option1", card1.Actions[0].Text)
+	suite.Assert().Equal("Option1", card1.Actions[0].Payload)
+	suite.Assert().Equal("Postback", card1.Actions[1].GetType())
+	suite.Assert().Equal("Option2", card1.Actions[1].Text)
+	suite.Assert().Equal("Option2", card1.Actions[1].Payload)
+	suite.Assert().Equal("Postback", card1.Actions[2].GetType())
+	suite.Assert().Equal("Option3", card1.Actions[2].Text)
+	suite.Assert().Equal("Option3", card1.Actions[2].Payload)
+
+	card2 := carousel.Cards[1]
+	suite.Assert().Equal("Card 2", card2.Title)
+	suite.Assert().Nil(card2.ImageURL, "Card 2 ImageURL should be nil")
+	suite.Assert().Nil(card2.VideoURL, "Card 2 VideoURL should be nil")
+	suite.Require().Len(card2.Actions, 3, "Card 2 should have 3 actions")
+	suite.Assert().Equal("Postback", card2.Actions[0].GetType())
+	suite.Assert().Equal("Option4", card2.Actions[0].Text)
+	suite.Assert().Equal("Option4", card2.Actions[0].Payload)
+	suite.Assert().Equal("Postback", card2.Actions[1].GetType())
+	suite.Assert().Equal("Option5", card2.Actions[1].Text)
+	suite.Assert().Equal("Option5", card2.Actions[1].Payload)
+	suite.Assert().Equal("Postback", card2.Actions[2].GetType())
+	suite.Assert().Equal("Option6", card2.Actions[2].Text)
+	suite.Assert().Equal("Option6", card2.Actions[2].Payload)
+
+	card3 := carousel.Cards[2]
+	suite.Assert().Equal("Card 3", card3.Title)
+	suite.Assert().Nil(card3.ImageURL, "Card 3 ImageURL should be nil")
+	suite.Assert().Nil(card3.VideoURL, "Card 3 VideoURL should be nil")
+	suite.Require().Len(card3.Actions, 3, "Card 3 should have 3 actions")
+	suite.Assert().Equal("Postback", card3.Actions[0].GetType())
+	suite.Assert().Equal("Option7", card3.Actions[0].Text)
+	suite.Assert().Equal("Option7", card3.Actions[0].Payload)
+	suite.Assert().Equal("Postback", card3.Actions[1].GetType())
+	suite.Assert().Equal("Option8", card3.Actions[1].Text)
+	suite.Assert().Equal("Option8", card3.Actions[1].Payload)
+	suite.Assert().Equal("Postback", card3.Actions[2].GetType())
+	suite.Assert().Equal("Option9", card3.Actions[2].Text)
+	suite.Assert().Equal("Option9", card3.Actions[2].Payload)
+}
+
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickReply() {
+	payload := suite.LoadTestData("openmessaging-inbound-quickreply.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageStructured)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
+	suite.Assert().Equal("Do you want to proceed?", actual.Text)
+	suite.Require().Len(actual.Content, 2, "Content should 2 items")
+
+	content := actual.Content[0]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("QuickReply", content.GetType())
+
+	quickreply, ok := content.(*gcloudcx.OpenMessageQuickReplyContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
+	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
+	suite.Assert().Equal("Yes", quickreply.Text)
+	suite.Assert().Equal("Yes", quickreply.Payload)
+	suite.Assert().Equal("Message", quickreply.Action)
+
+	content = actual.Content[1]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("QuickReply", content.GetType())
+
+	quickreply, ok = content.(*gcloudcx.OpenMessageQuickReplyContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
+	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
+	suite.Assert().Equal("No", quickreply.Text)
+	suite.Assert().Equal("No", quickreply.Payload)
+	suite.Assert().Equal("Message", quickreply.Action)
 }
 
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
