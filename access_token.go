@@ -16,10 +16,11 @@ import (
 //
 // It must be obtained via an AuthorizationGrant
 type AccessToken struct {
-	ID        uuid.UUID `json:"id" db:"key"`
-	Type      string    `json:"tokenType"`
-	Token     string    `json:"token"`
-	ExpiresOn time.Time `json:"expiresOn"` // UTC!
+	ID               uuid.UUID `json:"id" db:"key"`
+	Type             string    `json:"tokenType"`
+	Token            string    `json:"token"`
+	ExpiresOn        time.Time `json:"expiresOn"` // UTC!
+	AuthorizedScopes []string  `json:"authorizedScopes"`
 }
 
 // UpdatedAccessToken describes an updated Access Token
