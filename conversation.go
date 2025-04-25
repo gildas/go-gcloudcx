@@ -208,11 +208,13 @@ func (conversation Conversation) FetchRecordings(context context.Context) (recor
 	log.Infof("Fetching recordings for conversation %s", conversation.ID)
 	err = conversation.client.SendRequest(
 		context,
-		NewURI("/api/v2/conversations/%s/recordings", conversation.ID),
+		NewURI("/api/v2/conversations/%s/recordings?maxWaitMs=60000", conversation.ID),
 		&request.Options{
-			Attempts:          120,
-			InterAttemptDelay: 5 * time.Second,
-			Timeout:           1 * time.Minute, // Recordings can take a while to be available
+			Attempts:                    120,
+			InterAttemptDelay:           5 * time.Second,
+			Timeout:                     1 * time.Minute, // Recordings can take a while to be available
+			InterAttemptUseRetryAfter:   true,
+			InterAttemptBackoffInterval: 5 * time.Second,
 			RetryableStatusCodes: []int{
 				http.StatusAccepted,
 				http.StatusForbidden,
