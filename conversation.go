@@ -142,7 +142,7 @@ func (conversation Conversation) Disconnect(context context.Context, identifiabl
 	}
 
 	return conversation.client.Patch(
-		conversation.logger.ToContext(context),
+		context,
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: "disconnected"},
 		nil,
@@ -154,7 +154,7 @@ func (conversation Conversation) Disconnect(context context.Context, identifiabl
 // implements StateUpdater
 func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) error {
 	return conversation.client.Patch(
-		conversation.logger.ToContext(context),
+		context,
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
 		nil,
@@ -200,11 +200,10 @@ func (conversation Conversation) AssociateExternalContact(context context.Contex
 
 // FetchRecordings fetches the recordings of this conversation
 func (conversation Conversation) FetchRecordings(context context.Context) (recordings []Recording, err error) {
-	log := logger.Must(logger.FromContext(context)).Child("conversation", "getrecordings", "conversation", conversation.ID)
-
 	if conversation.client == nil {
 		return nil, errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
 	}
+	log := conversation.client.GetLogger(context).Child("conversation", "getrecordings", "conversation", conversation.ID)
 
 	log.Infof("Fetching recordings for conversation %s", conversation.ID)
 	err = conversation.client.SendRequest(
