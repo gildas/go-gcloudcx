@@ -74,14 +74,18 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 			options.Authorization = client.Grant.AccessToken().String()
 		}
 	}
+	if options.Timeout == 0 {
+		options.Timeout = client.RequestTimeout
+	}
+	if len(options.RetryableStatusCodes) == 0 {
+		options.RetryableStatusCodes = []int{http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout}
+	}
 
 	options.Context = context
 	options.Proxy = client.Proxy
 	options.UserAgent = APP + " " + VERSION
 	options.Logger = log
 	options.ResponseBodyLogSize = 4096
-	options.Timeout = client.RequestTimeout
-	options.RetryableStatusCodes = []int{http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout}
 	options.InterAttemptUseRetryAfter = true
 
 	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)

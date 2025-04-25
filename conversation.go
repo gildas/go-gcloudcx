@@ -2,11 +2,13 @@ package gcloudcx
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/gildas/go-request"
 	"github.com/google/uuid"
 )
 
@@ -135,6 +137,10 @@ func (conversation Conversation) String() string {
 //
 // implements Disconnecter
 func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) error {
+	if conversation.client == nil {
+		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+
 	return conversation.client.Patch(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
@@ -167,6 +173,10 @@ func (conversation Conversation) GetParticipantByPurpose(purpose string) (partic
 
 // AssociateExternalContact associates an ExternalContact to this Conversation
 func (conversation Conversation) AssociateExternalContact(context context.Context, contact *ExternalContact, communicationID uuid.UUID, mediaType string) error {
+	if conversation.client == nil {
+		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+
 	if contact == nil {
 		return errors.ArgumentMissing.With("contact")
 	}
@@ -186,4 +196,44 @@ func (conversation Conversation) AssociateExternalContact(context context.Contex
 		},
 		nil,
 	)
+}
+
+// FetchRecordings fetches the recordings of this conversation
+func (conversation Conversation) FetchRecordings(context context.Context) (recordings []Recording, err error) {
+	log := logger.Must(logger.FromContext(context)).Child("conversation", "getrecordings", "conversation", conversation.ID)
+
+	if conversation.client == nil {
+		return nil, errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+
+	log.Infof("Fetching recordings for conversation %s", conversation.ID)
+	err = conversation.client.SendRequest(
+		context,
+		NewURI("/api/v2/conversations/%s/recordings", conversation.ID),
+		&request.Options{
+			Attempts:          120,
+			InterAttemptDelay: 5 * time.Second,
+			Timeout:           1 * time.Minute, // Recordings can take a while to be available
+			RetryableStatusCodes: []int{
+				http.StatusAccepted,
+				http.StatusForbidden,
+				http.StatusTooManyRequests,
+				http.StatusBadGateway,
+				http.StatusServiceUnavailable,
+				http.StatusGatewayTimeout,
+			},
+		},
+		&recordings,
+	)
+	if err != nil {
+		log.Errorf("Failed to send request: %s", err)
+		return nil, err
+	}
+	log.Debugf("Received response for %d recordings", len(recordings))
+
+	// Stitching Conversation to recordings
+	for i := range recordings {
+		recordings[i].Conversation = &conversation
+	}
+	return
 }
