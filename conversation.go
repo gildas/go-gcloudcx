@@ -60,7 +60,7 @@ type Segment struct {
 // DisconnectReason describes the reason of a disconnect
 type DisconnectReason struct {
 	Type   string `json:"type"`
-	Code   string `json:"code"`
+	Code   int    `json:"code"`
 	Phrase string `json:"phrase"`
 }
 
