@@ -10,21 +10,21 @@ import (
 )
 
 type RecordingAnnotation struct {
-	ID                uuid.UUID     `json:"id"`
-	Name              string        `json:"name"`
-	Type              string        `json:"type"`
-	Description       string        `json:"description"`
-	Reason            string        `json:"reason"`
-	User              *User         `json:"user,omitempty"`
-	Annotations       []string      `json:"annotations"`
-	Location          time.Duration `json:"location"` // Offset from start of recording
-	Duration          time.Duration `json:"-"`
-	AbsoluteLocation  time.Duration `json:"absoluteLocation"` // Offset from start of recording, after removing the cumulative duration of all pauses
-	AbsoluteDuration  time.Duration `json:"absoluteDuration"`
-	RecordingLocation time.Duration `json:"recordingLocation"` // Offset from start of recording, adjusted for any recording cuts
-	RecordingDuration time.Duration `json:"recordingDuration"` // Duration of annotation, adjusted for any recording cuts
-	RealtimeLocation  time.Duration `json:"realtimeLocation"`  // Offset from start of recording, before removing the cumulative duration of all pauses before this annotation
-	SelfURI           string        `json:"selfUri"`
+	ID                uuid.UUID             `json:"id"`
+	Name              string                `json:"name"`
+	Type              string                `json:"type"`
+	Description       string                `json:"description"`
+	Reason            string                `json:"reason"`
+	User              *User                 `json:"user,omitempty"`
+	Annotations       []RecordingAnnotation `json:"annotations"`
+	Location          time.Duration         `json:"location"` // Offset from start of recording
+	Duration          time.Duration         `json:"-"`
+	AbsoluteLocation  time.Duration         `json:"-"` // Offset from start of recording, after removing the cumulative duration of all pauses
+	AbsoluteDuration  time.Duration         `json:"-"`
+	RecordingLocation time.Duration         `json:"-"` // Offset from start of recording, adjusted for any recording cuts
+	RecordingDuration time.Duration         `json:"-"` // Duration of annotation, adjusted for any recording cuts
+	RealtimeLocation  time.Duration         `json:"-"` // Offset from start of recording, before removing the cumulative duration of all pauses before this annotation
+	SelfURI           string                `json:"selfUri"`
 }
 
 // UnmarshalJSON unmarshals the annotation from JSON
