@@ -5,8 +5,17 @@
     "id": "webMessagingDefault",
     "selfUri": "/api/v2/conversations/messaging/supportedcontent/webMessagingDefault"
   },
+  "messagingSetting": {
+    "id": "f61e2044-d338-4582-a2ed-0fbda7139aeb",
+    "selfUri": "/api/v2/conversations/messaging/settings/f61e2044-d338-4582-a2ed-0fbda7139aeb"
+  },
   "outboundNotificationWebhookUrl": "https://www.acme.com/gcloudcx",
   "outboundNotificationWebhookSignatureSecretToken": "DEADBEEF",
+  "status": "active",
+  "recipient": {
+    "id": "6a55dd3c-e148-481f-abc4-249db2939fa3",
+    "selfUri": "/api/v2/routing/message/recipients/6a55dd3c-e148-481f-abc4-249db2939fa3"
+  },
   "dateCreated": "2021-04-08T03:12:07.888Z",
   "dateModified": "2021-04-08T03:12:07.888Z",
   "createdBy": {
@@ -17,6 +26,6 @@
     "id": "3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
     "selfUri": "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e"
   },
-  "createStatus": "Initiated",
+  "createStatus": "Completed",
   "selfUri": "/api/v2/conversations/messaging/integrations/open/34071108-1569-4cb0-9137-a326b8a9e815"
 }

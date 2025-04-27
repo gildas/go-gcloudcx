@@ -1,0 +1,427 @@
+{
+  "id": "bac4b442-9875-4a24-a9a0-336abb0af0d0",
+  "startTime": "2025-04-10T13:31:49.570Z",
+  "endTime": "2025-04-10T13:32:40.944Z",
+  "address": "tel:+17145766640",
+  "participants": [
+    {
+      "id": "04f65819-53ce-4a13-a964-3f63516d0b90",
+      "startTime": "2025-04-10T13:31:49.570Z",
+      "endTime": "2025-04-10T13:32:40.944Z",
+      "connectedTime": "2025-04-10T13:31:49.722Z",
+      "name": "John Doe",
+      "externalContactId": "0778af41-946e-40f2-b374-dbfa32411b5f",
+      "externalContactInitialDivisionId": "*",
+      "queueId": "155200d1-dead-beef-bead-2ae576232893",
+      "queueName": "Test",
+      "purpose": "customer",
+      "participantType": "External",
+      "address": "tel:+13718723000",
+      "ani": "tel:+13718723000",
+      "aniName": "John Doe",
+      "dnis": "tel:+13718723000",
+      "wrapupRequired": false,
+      "mediaRoles": [
+        "full"
+      ],
+      "attributes": {
+        "CrmData": " .communicationText:  .contactDateTime:  .contactDirection: Incoming .contactMedia: Telephone .contactPatientId:  .contactPatientIdType:  .entryDateTime:  .ResolutionReason:  .sourceId:  .sourceIdType:  .sourceName:  .sourceType:  .subjectId:  .SubjectIdType:  .subjectType:  .subtopic:  .topic: ",
+        "ic-customerdata": "123412341234",
+        "CrmFailure": " Error Code: INVALID_SCHEMA Status 400"
+      },
+      "calls": [
+        {
+          "state": "terminated",
+          "initialState": "offering",
+          "id": "647f93e0-5bae-3530-9cf9-e4855f3a909b",
+          "direction": "inbound",
+          "recording": false,
+          "recordingState": "none",
+          "muted": false,
+          "confined": false,
+          "held": false,
+          "securePause": false,
+          "segments": [
+            {
+              "startTime": "2025-04-10T13:31:49.570Z",
+              "endTime": "2025-04-10T13:31:49.722Z",
+              "type": "System",
+              "howEnded": "Interact"
+            },
+            {
+              "startTime": "2025-04-10T13:31:49.722Z",
+              "endTime": "2025-04-10T13:32:40.944Z",
+              "type": "Interact",
+              "howEnded": "Disconnect",
+              "disconnectType": "peer"
+            }
+          ],
+          "disconnectType": "peer",
+          "connectedTime": "2025-04-10T13:31:49.722Z",
+          "disconnectedTime": "2025-04-10T13:32:40.944Z",
+          "disconnectReasons": [],
+          "provider": "Edge",
+          "self": {
+            "name": "Omaha NE",
+            "nameRaw": "",
+            "addressNormalized": "tel:+13718723000",
+            "addressRaw": "sip:+13718723000@10.87.222.66",
+            "addressDisplayable": "unavailable"
+          },
+          "other": {
+            "name": "Buena Park CA",
+            "nameRaw": "",
+            "addressNormalized": "tel:+17145766640",
+            "addressRaw": "sip:+17145766640@10.87.214.180:8140;transport=tcp",
+            "addressDisplayable": "unavailable"
+          },
+          "afterCallWork": {},
+          "afterCallWorkRequired": false,
+          "agentAssistantId": "7120f880-88cd-4545-b390-5733aa8d7c10"
+        }
+      ],
+      "callbacks": [],
+      "chats": [],
+      "cobrowsesessions": [],
+      "emails": [],
+      "messages": [],
+      "screenshares": [],
+      "socialExpressions": [],
+      "videos": [],
+      "internalMessages": []
+    },
+    {
+      "id": "98c25fa3-c925-4c14-9612-d17dbb847670",
+      "startTime": "2025-04-10T13:31:49.604Z",
+      "endTime": "2025-04-10T13:31:57.787Z",
+      "connectedTime": "2025-04-10T13:31:49.683Z",
+      "name": "AudioHook Testing ",
+      "purpose": "ivr",
+      "participantType": "IVR",
+      "address": "sip:281f4ee2-c585-4b61-a4a8-05a87b1d414b@127.0.0.1;language=en-US;user=ivr",
+      "ani": "tel:+14022032288",
+      "aniName": "Omaha NE",
+      "dnis": "sip:281f4ee2-c585-4b61-a4a8-05a87b1d414b@127.0.0.1;language=en-US;user=ivr",
+      "wrapupRequired": false,
+      "mediaRoles": [
+        "full"
+      ],
+      "attributes": {},
+      "calls": [
+        {
+          "state": "terminated",
+          "initialState": "offering",
+          "id": "9dfba46d-4fde-37f3-b85e-44baaad9ac93",
+          "direction": "inbound",
+          "recording": false,
+          "recordingState": "none",
+          "muted": false,
+          "confined": false,
+          "held": false,
+          "securePause": false,
+          "segments": [
+            {
+              "startTime": "2025-04-10T13:31:49.604Z",
+              "endTime": "2025-04-10T13:31:49.683Z",
+              "type": "System"
+            },
+            {
+              "startTime": "2025-04-10T13:31:49.683Z",
+              "endTime": "2025-04-10T13:31:57.787Z",
+              "type": "IVR",
+              "howEnded": "Disconnect",
+              "disconnectType": "transfer"
+            }
+          ],
+          "disconnectType": "transfer",
+          "connectedTime": "2025-04-10T13:31:49.683Z",
+          "disconnectedTime": "2025-04-10T13:31:57.787Z",
+          "disconnectReasons": [],
+          "provider": "Edge",
+          "peerId": "647f93e0-5bae-3530-9cf9-e4855f3a909b",
+          "self": {
+            "name": "Buena Park CA",
+            "nameRaw": "Buena Park CA",
+            "addressNormalized": "sip:281f4ee2-c585-4b61-a4a8-05a87b1d414b@127.0.0.1;language=en-US;user=ivr",
+            "addressRaw": "sip:281f4ee2-c585-4b61-a4a8-05a87b1d414b@127.0.0.1;language=en-US;user=ivr",
+            "addressDisplayable": "unavailable"
+          },
+          "other": {
+            "name": "Omaha NE",
+            "nameRaw": "Omaha NE",
+            "addressNormalized": "tel:+14022032288",
+            "addressRaw": "sip:+14022032288@10.87.214.180;user=phone",
+            "addressDisplayable": "unavailable"
+          },
+          "afterCallWork": {},
+          "afterCallWorkRequired": false
+        }
+      ],
+      "callbacks": [],
+      "chats": [],
+      "cobrowsesessions": [],
+      "emails": [],
+      "messages": [],
+      "screenshares": [],
+      "socialExpressions": [],
+      "videos": [],
+      "internalMessages": []
+    },
+    {
+      "id": "89e5f240-7af0-4a36-8a26-592a79a56c17",
+      "startTime": "2025-04-10T13:31:57.811Z",
+      "endTime": "2025-04-10T13:32:02.487Z",
+      "connectedTime": "2025-04-10T13:31:57.837Z",
+      "name": "GenForceTest",
+      "queueId": "155200d1-258d-4a64-a7e7-2ae576232893",
+      "queueName": "GenForceTest",
+      "purpose": "acd",
+      "participantType": "ACD",
+      "address": "sip:155200d1-258d-4a64-a7e7-2ae576232893@127.0.0.1;language=en-US;src=https://edge-proxy.usw2.pure.cloud/connector/v1/organizations/43a8e287-d8ed-4a89-828e-244f1152f051/defaults/ivr/c4b331e5-a77c-45d4-b97b-564f2f4992d5/defaultentrypoint.vxml;user=acd",
+      "ani": "tel:+14022032288",
+      "aniName": "Omaha NE",
+      "dnis": "sip:155200d1-258d-4a64-a7e7-2ae576232893@127.0.0.1;language=en-US;src=https://edge-proxy.usw2.pure.cloud/connector/v1/organizations/43a8e287-d8ed-4a89-828e-244f1152f051/defaults/ivr/c4b331e5-a77c-45d4-b97b-564f2f4992d5/defaultentrypoint.vxml;user=acd",
+      "wrapupRequired": false,
+      "mediaRoles": [
+        "full"
+      ],
+      "conversationRoutingData": {
+        "queue": {
+          "id": "155200d1-258d-4a64-a7e7-2ae576232893",
+          "selfUri": "/api/v2/routing/queues/155200d1-258d-4a64-a7e7-2ae576232893"
+        },
+        "priority": 0,
+        "skills": [],
+        "scoredAgents": [],
+        "label": "631f0939-be32-495a-baf9-970abb039192"
+      },
+      "attributes": {},
+      "calls": [
+        {
+          "state": "terminated",
+          "initialState": "offering",
+          "id": "1990337a-9873-30bb-82ea-4518ec0da47b",
+          "direction": "inbound",
+          "recording": false,
+          "recordingState": "none",
+          "muted": false,
+          "confined": false,
+          "held": false,
+          "securePause": false,
+          "segments": [
+            {
+              "startTime": "2025-04-10T13:31:57.811Z",
+              "endTime": "2025-04-10T13:31:57.837Z",
+              "type": "Delay"
+            },
+            {
+              "startTime": "2025-04-10T13:31:57.837Z",
+              "endTime": "2025-04-10T13:32:02.487Z",
+              "type": "Interact",
+              "howEnded": "Disconnect",
+              "disconnectType": "transfer"
+            }
+          ],
+          "disconnectType": "transfer",
+          "connectedTime": "2025-04-10T13:31:57.837Z",
+          "disconnectedTime": "2025-04-10T13:32:02.487Z",
+          "disconnectReasons": [
+            {
+              "type": "sip",
+              "code": 410,
+              "phrase": "Gone"
+            }
+          ],
+          "provider": "Edge",
+          "peerId": "647f93e0-5bae-3530-9cf9-e4855f3a909b",
+          "self": {
+            "name": "GenForceTest",
+            "nameRaw": "GenForceTest",
+            "addressNormalized": "sip:155200d1-258d-4a64-a7e7-2ae576232893@127.0.0.1;language=en-US;src=https://edge-proxy.usw2.pure.cloud/connector/v1/organizations/43a8e287-d8ed-4a89-828e-244f1152f051/defaults/ivr/c4b331e5-a77c-45d4-b97b-564f2f4992d5/defaultentrypoint.vxml;user=acd",
+            "addressRaw": "sip:155200d1-258d-4a64-a7e7-2ae576232893@127.0.0.1;language=en-US;src=https://edge-proxy.usw2.pure.cloud/connector/v1/organizations/43a8e287-d8ed-4a89-828e-244f1152f051/defaults/ivr/c4b331e5-a77c-45d4-b97b-564f2f4992d5/defaultentrypoint.vxml;user=acd",
+            "addressDisplayable": "unavailable"
+          },
+          "other": {
+            "name": "Omaha NE",
+            "nameRaw": "Omaha NE",
+            "addressNormalized": "tel:+14022032288",
+            "addressRaw": "sip:+14022032288@10.87.214.180;user=phone",
+            "addressDisplayable": "unavailable"
+          },
+          "afterCallWork": {},
+          "afterCallWorkRequired": false
+        }
+      ],
+      "callbacks": [],
+      "chats": [],
+      "cobrowsesessions": [],
+      "emails": [],
+      "messages": [],
+      "screenshares": [],
+      "socialExpressions": [],
+      "videos": [],
+      "internalMessages": []
+    },
+    {
+      "id": "ac384d46-55c5-48da-bdb5-a2ca3419c202",
+      "startTime": "2025-04-10T13:31:58.072Z",
+      "endTime": "2025-04-10T13:32:40.942Z",
+      "connectedTime": "2025-04-10T13:32:02.464Z",
+      "name": "Thanos",
+      "userUri": "/api/v2/users/bf8f5ba6-a928-4d3c-be86-4e760b9974d9",
+      "userId": "bf8f5ba6-a928-4d3c-be86-4e760b9974d9",
+      "queueId": "155200d1-258d-4a64-a7e7-2ae576232893",
+      "queueName": "Test",
+      "purpose": "agent",
+      "participantType": "Internal",
+      "address": "sip:65721c02582a721ac2957543+marvel.orgspan.com;tgrp=f17a8893-3f55-4403-ba43-e425d7af14ea;trunk-context=psinnovations@localhost",
+      "ani": "sip:+14022032288@10.87.214.180;user=phone",
+      "aniName": "Thanos",
+      "dnis": "sip:65721c02582a721ac2957543+marvel.orgspan.com;tgrp=f17a8893-3f55-4403-ba43-e425d7af14ea;trunk-context=psinnovations@localhost",
+      "wrapupRequired": false,
+      "wrapupPrompt": "agentRequested",
+      "wrapupTimeoutMs": 20000,
+      "mediaRoles": [
+        "full"
+      ],
+      "alertingTimeoutMs": 8000,
+      "attributes": {
+        "insight_upload_googleConversationId": "bac4b442-9875-4a24-a9a0-336abb0af0d0-gcx-1",
+        "Google_conversationId": "bac4b442-9875-4a24-a9a0-336abb0af0d0-gcx-1",
+        "ic-segment-label": "my-awesome-segment",
+        "PID": "ac384d46-55c5-48da-bdb5-a2ca3419c202",
+        "ic-PID": "ac384d46-55c5-48da-bdb5-a2ca3419c202",
+        "insight_upload_result": "Success",
+        "CID": "bac4b442-9875-4a24-a9a0-336abb0af0d0",
+        "ic-test-segmentlevel": "testvalue",
+        "insight_upload_details": "{\"status\":\"Success\",\"timestamp\":\"2025-04-25T13:18:13.940Z\",\"gcpStorage\":{\"success\":true,\"startTime\":\"1970-01-21T04:53:07.032Z\",\"endTime\":\"1970-01-21T04:53:07.033Z\",\"message\":\"Successfully uploaded file recordings/2025/04/10/09/bac4b442-9875-4a24-a9a0-336abb0af0d0/bac4b442-9875-4a24-a9a0-336abb0af0d0_call_segment_1_agent_bf8f5ba6-a928-4d3c-be86-4e760b9974d9.wav to recordings-for-insights/recordings/2025/04/10/09/bac4b442-9875-4a24-a9a0-336abb0af0d0/\"},\"insights\":{\"success\":true,\"startTime\":1745587033,\"endTime\":1745587093,\"message\":\"Operation completed successfully after 2 polls for conversation ID: bac4b442-9875-4a24-a9a0-336abb0af0d0\",\"googleConversationId\":\"bac4b442-9875-4a24-a9a0-336abb0af0d0-gcx-1\"}}"
+      },
+      "calls": [
+        {
+          "state": "terminated",
+          "initialState": "alerting",
+          "id": "1fef3992-bade-3006-b440-ca3c904218f8",
+          "direction": "inbound",
+          "recording": false,
+          "recordingState": "none",
+          "muted": false,
+          "confined": false,
+          "held": false,
+          "securePause": false,
+          "segments": [
+            {
+              "startTime": "2025-04-10T13:31:58.072Z",
+              "endTime": "2025-04-10T13:32:02.464Z",
+              "type": "Alert",
+              "howEnded": "Interact"
+            },
+            {
+              "startTime": "2025-04-10T13:32:02.464Z",
+              "endTime": "2025-04-10T13:32:40.942Z",
+              "type": "Interact",
+              "howEnded": "Disconnect",
+              "disconnectType": "client"
+            }
+          ],
+          "disconnectType": "client",
+          "startAlertingTime": "2025-04-10T13:31:58.072Z",
+          "connectedTime": "2025-04-10T13:32:02.464Z",
+          "disconnectedTime": "2025-04-10T13:32:40.942Z",
+          "disconnectReasons": [],
+          "provider": "Edge",
+          "peerId": "647f93e0-5bae-3530-9cf9-e4855f3a909b",
+          "self": {
+            "nameRaw": "thanos@marvel.com",
+            "addressNormalized": "sip:65721c02582a721ac2957543+psinnovations.orgspan.com;tgrp=f17a8893-3f55-4403-ba43-e425d7af14ea;trunk-context=psinnovations@localhost",
+            "addressRaw": "sip:65721c02582a721ac2957543+psinnovations.orgspan.com@10.87.214.180;language=en-US;user=station",
+            "addressDisplayable": "unavailable"
+          },
+          "other": {
+            "name": "Thanos",
+            "nameRaw": "Thanos",
+            "addressNormalized": "sip:+14022032288@10.87.214.180;user=phone",
+            "addressRaw": "sip:+14022032288@10.87.214.180;user=phone",
+            "addressDisplayable": "unavailable"
+          },
+          "afterCallWork": {
+            "startTime": "2025-04-10T13:32:40.942Z",
+            "endTime": "2025-04-10T13:32:40.942Z",
+            "state": "skipped"
+          },
+          "afterCallWorkRequired": false,
+          "agentAssistantId": "7120f880-88cd-4545-b390-5733aa8d7c10",
+          "queueMediaSettings": {
+            "alertingTimeoutSeconds": 8
+          }
+        }
+      ],
+      "callbacks": [],
+      "chats": [],
+      "cobrowsesessions": [],
+      "emails": [],
+      "messages": [],
+      "screenshares": [],
+      "socialExpressions": [],
+      "videos": [],
+      "startAcwTime": "2025-04-10T13:32:40.942Z",
+      "endAcwTime": "2025-04-10T13:32:40.942Z",
+      "internalMessages": []
+    }
+  ],
+  "recordingState": "NONE",
+  "divisions": [
+    {
+      "division": {
+        "id": "d7f32dad-a9c2-4032-976b-705ee4f5ba22",
+        "selfUri": "/api/v2/authorization/divisions/d7f32dad-a9c2-4032-976b-705ee4f5ba22"
+      },
+      "entities": [
+        {
+          "id": "0724b492-cbc3-4359-a522-6bef4306bed0",
+          "selfUri": "/api/v2/flows/0724b492-cbc3-4359-a522-6bef4306bed0",
+          "dateDivisionUpdated": "2025-04-10T13:31:49.719Z"
+        },
+        {
+          "id": "eedd5d30-a9aa-488e-87d1-98c19df77fde",
+          "selfUri": "/api/v2/flows/eedd5d30-a9aa-488e-87d1-98c19df77fde",
+          "dateDivisionUpdated": "2025-04-10T13:31:57.906Z"
+        },
+        {
+          "id": "155200d1-258d-4a64-a7e7-2ae576232893",
+          "selfUri": "/api/v2/routing/queues/155200d1-258d-4a64-a7e7-2ae576232893",
+          "dateDivisionUpdated": "2025-04-10T13:31:57.906Z"
+        }
+      ]
+    },
+    {
+      "division": {
+        "id": "0aa7b9b8-5fd1-4401-b7af-c8f1dfad38ea",
+        "selfUri": "/api/v2/authorization/divisions/0aa7b9b8-5fd1-4401-b7af-c8f1dfad38ea"
+      },
+      "entities": [
+        {
+          "id": "bf8f5ba6-a928-4d3c-be86-4e760b9974d9",
+          "selfUri": "/api/v2/users/bf8f5ba6-a928-4d3c-be86-4e760b9974d9",
+          "dateDivisionUpdated": "2025-04-10T13:31:58.342Z"
+        }
+      ]
+    }
+  ],
+  "recentTransfers": [
+    {
+      "id": "c40adc96-27f2-485e-810b-dbac3cf318e4",
+      "state": "Complete",
+      "dateIssued": "2025-04-10T13:31:58.022Z",
+      "initiator": {},
+      "modifiedBy": {},
+      "destination": {
+        "userId": "bf8f5ba6-a928-4d3c-be86-4e760b9974d9",
+        "address": "sip:thanos%40marvel.com@localhost"
+      },
+      "transferType": "Attended"
+    }
+  ],
+  "securePause": false,
+  "utilizationLabelId": "631f0939-be32-495a-baf9-970abb039192",
+  "selfUri": "/api/v2/conversations/bac4b442-9875-4a24-a9a0-336abb0af0d0"
+}

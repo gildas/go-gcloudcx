@@ -2,11 +2,13 @@ package gcloudcx
 
 import (
 	"context"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
+	"github.com/gildas/go-request"
 	"github.com/google/uuid"
 )
 
@@ -58,7 +60,7 @@ type Segment struct {
 // DisconnectReason describes the reason of a disconnect
 type DisconnectReason struct {
 	Type   string `json:"type"`
-	Code   string `json:"code"`
+	Code   int    `json:"code"`
 	Phrase string `json:"phrase"`
 }
 
@@ -135,8 +137,12 @@ func (conversation Conversation) String() string {
 //
 // implements Disconnecter
 func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) error {
+	if conversation.client == nil {
+		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+
 	return conversation.client.Patch(
-		conversation.logger.ToContext(context),
+		context,
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: "disconnected"},
 		nil,
@@ -148,7 +154,7 @@ func (conversation Conversation) Disconnect(context context.Context, identifiabl
 // implements StateUpdater
 func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) error {
 	return conversation.client.Patch(
-		conversation.logger.ToContext(context),
+		context,
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
 		MediaParticipantRequest{State: state},
 		nil,
@@ -167,6 +173,10 @@ func (conversation Conversation) GetParticipantByPurpose(purpose string) (partic
 
 // AssociateExternalContact associates an ExternalContact to this Conversation
 func (conversation Conversation) AssociateExternalContact(context context.Context, contact *ExternalContact, communicationID uuid.UUID, mediaType string) error {
+	if conversation.client == nil {
+		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+
 	if contact == nil {
 		return errors.ArgumentMissing.With("contact")
 	}
@@ -186,4 +196,45 @@ func (conversation Conversation) AssociateExternalContact(context context.Contex
 		},
 		nil,
 	)
+}
+
+// FetchRecordings fetches the recordings of this conversation
+func (conversation Conversation) FetchRecordings(context context.Context) (recordings []Recording, err error) {
+	if conversation.client == nil {
+		return nil, errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+	}
+	log := conversation.client.GetLogger(context).Child("conversation", "getrecordings", "conversation", conversation.ID)
+
+	log.Infof("Fetching recordings for conversation %s", conversation.ID)
+	err = conversation.client.SendRequest(
+		context,
+		NewURI("/api/v2/conversations/%s/recordings?maxWaitMs=60000", conversation.ID),
+		&request.Options{
+			Attempts:                    120,
+			InterAttemptDelay:           5 * time.Second,
+			Timeout:                     1 * time.Minute, // Recordings can take a while to be available
+			InterAttemptUseRetryAfter:   true,
+			InterAttemptBackoffInterval: 5 * time.Second,
+			RetryableStatusCodes: []int{
+				http.StatusAccepted,
+				http.StatusForbidden,
+				http.StatusTooManyRequests,
+				http.StatusBadGateway,
+				http.StatusServiceUnavailable,
+				http.StatusGatewayTimeout,
+			},
+		},
+		&recordings,
+	)
+	if err != nil {
+		log.Errorf("Failed to send request: %s", err)
+		return nil, err
+	}
+	log.Debugf("Received response for %d recordings", len(recordings))
+
+	// Stitching Conversation to recordings
+	for i := range recordings {
+		recordings[i].Conversation = &conversation
+	}
+	return
 }
