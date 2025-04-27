@@ -85,7 +85,7 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	options.Proxy = client.Proxy
 	options.UserAgent = APP + " " + VERSION
 	options.Logger = log
-	options.ResponseBodyLogSize = 8192
+	options.ResponseBodyLogSize = 32768
 	options.InterAttemptUseRetryAfter = true
 
 	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)
