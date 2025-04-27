@@ -21,6 +21,7 @@ type OpenMessagingIntegration struct {
 	WebhookURL       *url.URL                       `json:"-"`
 	WebhookToken     string                         `json:"outboundNotificationWebhookSignatureSecretToken"`
 	WebhookHeaders   map[string]string              `json:"webhookHeaders,omitempty"`
+	MessagingSetting *DomainEntityRef               `json:"messagingSetting,omitempty"`
 	Recipient        *DomainEntityRef               `json:"recipient,omitempty"`
 	SupportedContent *OpenMessagingSupportedContent `json:"supportedContent,omitempty"`
 	DateCreated      time.Time                      `json:"dateCreated,omitempty"`
