@@ -1,0 +1,42 @@
+{
+	"id": "c327c2078ca056db130c55ce648d9fa2",
+  "channel": {
+    "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+    "platform": "Open",
+    "type": "Private",
+    "messageId": "c327c2078ca056db130c55ce648d9fa2",
+    "to": {
+      "id": "spaces/3CeK98AAAAE",
+      "idType": "Opaque"
+    },
+    "from": {
+      "nickname": "GUM-INTEGRATION",
+      "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+      "idType": "Opaque"
+    },
+    "time": "2025-04-10T13:52:08.807Z"
+  },
+  "conversationId": "d06cb41e-f938-4dcf-b823-c8af1a39d7e5",
+  "originatingEntity": "Bot",
+  "direction": "Outbound",
+  "type": "Structured",
+  "content": [
+    {
+      "contentType": "DatePicker",
+      "datePicker": {
+        "title": "When would you be available?",
+        "subtitle": "Pick a date and time",
+        "availableTimes": [
+          {
+            "duration": 1800,
+            "dateTime": "2025-05-30T12:00:00.000Z"
+          },
+          {
+            "duration": 900,
+            "dateTime": "2025-06-30T13:00:00.000Z"
+          }
+        ]
+      }
+    }
+  ]
+}
