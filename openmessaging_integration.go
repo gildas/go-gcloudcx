@@ -233,6 +233,41 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	return result.ID, err
 }
 
+// SendInboundButtonResponse sends an Open Message button response from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+// See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-structured-response
+func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context context.Context, message OpenMessageButtonResponse) (id string, err error) {
+	if integration.ID == uuid.Nil {
+		return "", errors.ArgumentMissing.With("ID")
+	}
+	if len(message.Channel.ID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.ID")
+	}
+	if len(message.Channel.MessageID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.MessageID")
+	}
+	message.Channel.Platform = "Open"
+	message.Channel.Type = "Private"
+	message.Channel.Time = time.Now().UTC()
+	message.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
+	if err := message.Channel.Validate(); err != nil {
+		return "", err
+	}
+	message.Direction = "Inbound"
+	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
+
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
+	result := OpenMessageText{}
+	err = integration.Client.Post(
+		log.ToContext(context),
+		NewURI("/conversations/messages/%s/inbound/open/structured/response", integration.ID),
+		message,
+		&result,
+	)
+	return result.ID, err
+}
+
 // SendInboundReceipt sends a receipt from the middleware to GENESYS Cloud
 //
 // Valid status values are: Delivered, Failed.
