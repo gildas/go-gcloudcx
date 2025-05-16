@@ -600,6 +600,34 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 	suite.Assert().Equal("Message", quickreply.Action)
 }
 
+func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithDatePicker() {
+	payload := suite.LoadTestData("openmessaging-inbound-datepicker.json")
+	message, err := gcloudcx.UnmarshalOpenMessage(payload)
+	suite.Require().NoError(err, "Failed to unmarshal OpenMessage")
+	suite.Require().NotNil(message, "Unmarshaled message should not be nil")
+
+	actual, ok := message.(*gcloudcx.OpenMessageStructured)
+	suite.Require().True(ok, "Unmarshaled message should be of type OpenMessageStructured, but was %T", message)
+	suite.Assert().Equal("c327c2078ca056db130c55ce648d9fa2", actual.ID)
+	suite.Assert().Equal(uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"), actual.ConversationID)
+	suite.Require().Len(actual.Content, 1, "Content should 1 item")
+
+	content := actual.Content[0]
+	suite.Require().NotNil(content, "Content should not be nil")
+	suite.Require().Equal("DatePicker", content.GetType())
+
+	datepicker, ok := content.(*gcloudcx.OpenMessageDatePickerContent)
+	suite.Require().True(ok, "Content should be of type OpenMessageDatePickerContent, but was %T", content)
+	suite.Require().NotNil(datepicker, "DatePicker should not be nil")
+	suite.Assert().Equal("When would you be available?", datepicker.Title)
+	suite.Assert().Equal("Pick a date and time", datepicker.Subtitle)
+	suite.Require().Len(datepicker.AvailableTimes, 2, "DatePicker should have 2 available times")
+	suite.Assert().Equal("2025-05-30T12:00:00Z", datepicker.AvailableTimes[0].Time.Format(time.RFC3339))
+	suite.Assert().Equal(1800*time.Second, datepicker.AvailableTimes[0].Duration)
+	suite.Assert().Equal("2025-06-30T13:00:00Z", datepicker.AvailableTimes[1].Time.Format(time.RFC3339))
+	suite.Assert().Equal(900*time.Second, datepicker.AvailableTimes[1].Duration)
+}
+
 func (suite *OpenMessagingSuite) TestCanStringifyIntegration() {
 	id := uuid.New()
 	integration := gcloudcx.OpenMessagingIntegration{

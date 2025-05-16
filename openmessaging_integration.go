@@ -198,6 +198,7 @@ func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context 
 // SendInboundTextMessage sends an Open Message text message from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+// See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-message
 func (integration *OpenMessagingIntegration) SendInboundTextMessage(context context.Context, message OpenMessageText) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
@@ -232,6 +233,41 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 	return result.ID, err
 }
 
+// SendInboundButtonResponse sends an Open Message button response from the middleware to GENESYS Cloud
+//
+// See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
+// See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-structured-response
+func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context context.Context, message OpenMessageButtonResponse) (id string, err error) {
+	if integration.ID == uuid.Nil {
+		return "", errors.ArgumentMissing.With("ID")
+	}
+	if len(message.Channel.ID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.ID")
+	}
+	if len(message.Channel.MessageID) == 0 {
+		return "", errors.ArgumentMissing.With("channel.MessageID")
+	}
+	message.Channel.Platform = "Open"
+	message.Channel.Type = "Private"
+	message.Channel.Time = time.Now().UTC()
+	message.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
+	if err := message.Channel.Validate(); err != nil {
+		return "", err
+	}
+	message.Direction = "Inbound"
+	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
+
+	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
+	result := OpenMessageText{}
+	err = integration.Client.Post(
+		log.ToContext(context),
+		NewURI("/conversations/messages/%s/inbound/open/structured/response", integration.ID),
+		message,
+		&result,
+	)
+	return result.ID, err
+}
+
 // SendInboundReceipt sends a receipt from the middleware to GENESYS Cloud
 //
 // Valid status values are: Delivered, Failed.
@@ -239,6 +275,7 @@ func (integration *OpenMessagingIntegration) SendInboundTextMessage(context cont
 // Genesys Cloud will return a receipt from this request. If the returned receipt has a Failed status, the return error contains the reason(s) for the failure.
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundReceiptMessages
+// See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-receipt
 func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, receipt OpenMessageReceipt) (id string, err error) {
 	if integration.ID == uuid.Nil {
 		return "", errors.ArgumentMissing.With("ID")
@@ -314,6 +351,7 @@ func (integration *OpenMessagingIntegration) SendInboundEvents(context context.C
 // # This is mainly for debugging purposes
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
+// See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-event
 func (integration *OpenMessagingIntegration) SendOutboundMessage(context context.Context, destination, text string) (*AgentlessMessageResult, error) {
 	if integration.ID == uuid.Nil {
 		return nil, errors.ArgumentMissing.With("ID")
