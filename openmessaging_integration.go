@@ -258,7 +258,7 @@ func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context c
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
-	result := OpenMessageText{}
+	result := OpenMessageStructured{}
 	err = integration.Client.Post(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/structured/response", integration.ID),
