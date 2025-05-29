@@ -1,13 +1,5 @@
 package gcloudcx
 
-import (
-	"encoding/json"
-	"net/url"
-
-	"github.com/gildas/go-core"
-	"github.com/gildas/go-errors"
-)
-
 // LocationDefinition describes a location (office, etc)
 type LocationDefinition struct {
 	ID              string                   `json:"id"`
@@ -20,8 +12,8 @@ type LocationDefinition struct {
 	State           string                   `json:"state"`
 	Notes           string                   `json:"notes"`
 	Path            []string                 `json:"path"`
-	ProfileImage    []*LocationImage         `json:"profileImage"`
-	FloorplanImage  []*LocationImage         `json:"flooreImage"`
+	ProfileImage    []Image                  `json:"profileImage"`
+	FloorplanImage  []Image                  `json:"flooreImage"`
 	Version         int                      `json:"version"`
 }
 
@@ -43,12 +35,6 @@ type LocationAddress struct {
 	Street2     string `json:"street2"`
 }
 
-// LocationImage describes the image of a Location
-type LocationImage struct {
-	ImageURL   *url.URL `json:"-"`
-	Resolution string   `json:"resolution"`
-}
-
 // GeoLocation describes a location with coordinates
 type GeoLocation struct {
 	ID        string                `json:"id"`
@@ -64,34 +50,6 @@ type Location struct {
 	Coordinates        map[string]float64  `json:"coordinates"`
 	Notes              string              `json:"notes"`
 	LocationDefinition *LocationDefinition `json:"locationDefinition"`
-}
-
-// MarshalJSON marshals this into JSON
-func (locationImage LocationImage) MarshalJSON() ([]byte, error) {
-	type surrogate LocationImage
-	data, err := json.Marshal(struct {
-		surrogate
-		I *core.URL `json:"imageUrl"`
-	}{
-		surrogate: surrogate(locationImage),
-		I:         (*core.URL)(locationImage.ImageURL),
-	})
-	return data, errors.JSONMarshalError.Wrap(err)
-}
-
-// UnmarshalJSON unmarshals JSON into this
-func (locationImage *LocationImage) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate LocationImage
-	var inner struct {
-		surrogate
-		I *core.URL `json:"imageUrl"`
-	}
-	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.JSONUnmarshalError.Wrap(err)
-	}
-	*locationImage = LocationImage(inner.surrogate)
-	locationImage.ImageURL = (*url.URL)(inner.I)
-	return
 }
 
 // GetID gets the identifier of this
