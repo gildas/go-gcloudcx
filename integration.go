@@ -12,41 +12,34 @@ import (
 
 // Integration represents a GCloudCX integration.
 type Integration struct {
-	ID                        uuid.UUID                          `json:"id"`
-	Type                      IntegrationType                    `json:"integrationType"`
-	Name                      string                             `json:"name"`
-	Description               string                             `json:"description,omitempty"`
-	Config                    IntegrationConfigurationInfo       `json:"config"`
-	ConfigPropertiesSchemaURI *url.URL                           `json:"configPropertiesSchemaUri,omitempty"`
-	ConfigAdvancedSchemaURI   *url.URL                           `json:"configAdvancedSchemaUri,omitempty"`
-	HelpURI                   *url.URL                           `json:"helpUri,omitempty"`
-	TermsOfServiceURI         *url.URL                           `json:"termsOfServiceUri,omitempty"`
-	VendorName                string                             `json:"vendorName"`
-	VendorWebsiteURI          *url.URL                           `json:"vendorWebsiteUri,omitempty"`
-	MarketplaceURI            *url.URL                           `json:"marketplaceUri,omitempty"`
-	FAQURI                    *url.URL                           `json:"faqUri,omitempty"`
-	PrivacyPolicyURI          *url.URL                           `json:"privacyPolicyUri,omitempty"`
-	SupportContactURI         *url.URL                           `json:"supportContactUri,omitempty"`
-	SalesContactURI           *url.URL                           `json:"salesContactUri,omitempty"`
-	HelpLinks                 []HelpLink                         `json:"helpLinks,omitempty"`
-	Notes                     string                             `json:"notes,omitempty"`
-	IntendedState             string                             `json:"intendedState"`
-	NonInstallable            bool                               `json:"nonInstallable"`
-	MaxInstances              int                                `json:"maxInstances"`
-	Images                    []Image                            `json:"images"`
-	Attributes                map[string]interface{}             `json:"attributes"`
-	Credentials               map[string]CredentialSpecification `json:"credentials,omitempty"`
-	UserPermissions           []string                           `json:"userPermissions,omitempty"`
-	VendorOAUTHClientIDs      []string                           `json:"vendorOauthClientIds,omitempty"`
-	Client                    *Client                            `json:"-"`
-	logger                    *logger.Logger                     `json:"-"`
-}
-
-// CredentialSpecification represents a specification for a credential.
-type CredentialSpecification struct {
-	Title    string   `json:"title"`
-	Required bool     `json:"required"`
-	Types    []string `json:"credentialTypes"`
+	ID                        uuid.UUID                    `json:"id"`
+	Type                      IntegrationType              `json:"integrationType"`
+	Name                      string                       `json:"name"`
+	Description               string                       `json:"description,omitempty"`
+	Config                    IntegrationConfigurationInfo `json:"config,omitempty"`
+	ConfigPropertiesSchemaURI *url.URL                     `json:"configPropertiesSchemaUri,omitempty"`
+	ConfigAdvancedSchemaURI   *url.URL                     `json:"configAdvancedSchemaUri,omitempty"`
+	HelpURI                   *url.URL                     `json:"helpUri,omitempty"`
+	TermsOfServiceURI         *url.URL                     `json:"termsOfServiceUri,omitempty"`
+	VendorName                string                       `json:"vendorName,omitempty"`
+	VendorWebsiteURI          *url.URL                     `json:"vendorWebsiteUri,omitempty"`
+	MarketplaceURI            *url.URL                     `json:"marketplaceUri,omitempty"`
+	FAQURI                    *url.URL                     `json:"faqUri,omitempty"`
+	PrivacyPolicyURI          *url.URL                     `json:"privacyPolicyUri,omitempty"`
+	SupportContactURI         *url.URL                     `json:"supportContactUri,omitempty"`
+	SalesContactURI           *url.URL                     `json:"salesContactUri,omitempty"`
+	HelpLinks                 []HelpLink                   `json:"helpLinks,omitempty"`
+	Notes                     string                       `json:"notes,omitempty"`
+	IntendedState             string                       `json:"intendedState,omitempty"`
+	ReportedState             IntegrationState             `json:"reportedState,omitempty"`
+	NonInstallable            bool                         `json:"nonInstallable,omitempty"`
+	MaxInstances              int                          `json:"maxInstances,omitempty"`
+	Images                    []Image                      `json:"images,omitempty"`
+	Attributes                map[string]interface{}       `json:"attributes,omitempty"`
+	UserPermissions           []string                     `json:"userPermissions,omitempty"`
+	VendorOAUTHClientIDs      []string                     `json:"vendorOauthClientIds,omitempty"`
+	Client                    *Client                      `json:"-"`
+	logger                    *logger.Logger               `json:"-"`
 }
 
 // Initialize initializes the object

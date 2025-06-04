@@ -9,20 +9,20 @@ import (
 )
 
 // CrendentialType represents the type of credential
-type CredentialType struct {
+type IntegrationCredentialType struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
-	DisplayOrder []string  `json:"displayOrder"`
-	Required     []string  `json:"required"`
-	Properties   any       `json:"properties"`
+	DisplayOrder []string  `json:"displayOrder,omitempty"`
+	Required     []string  `json:"required,omitempty"`
+	Properties   any       `json:"properties,omitempty"`
 }
 
 // MarshalJSON customizes the JSON encoding of CredentialType
-func (credentialType CredentialType) MarshalJSON() ([]byte, error) {
-	type surrogate CredentialType
+func (credentialType IntegrationCredentialType) MarshalJSON() ([]byte, error) {
+	type surrogate IntegrationCredentialType
 	data, err := json.Marshal(struct {
 		surrogate
-		ID core.UUID `json:"id"`
+		ID core.UUID `json:"id,omitempty"`
 	}{
 		surrogate: surrogate(credentialType),
 		ID:        core.UUID(credentialType.ID),
@@ -31,8 +31,8 @@ func (credentialType CredentialType) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON customizes the JSON decoding of CredentialType
-func (credentialType *CredentialType) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate CredentialType
+func (credentialType *IntegrationCredentialType) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate IntegrationCredentialType
 	var inner struct {
 		surrogate
 		ID core.UUID `json:"id"`
@@ -40,7 +40,7 @@ func (credentialType *CredentialType) UnmarshalJSON(payload []byte) (err error) 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.WrapIfNotMe(err)
 	}
-	*credentialType = CredentialType(inner.surrogate)
+	*credentialType = IntegrationCredentialType(inner.surrogate)
 	credentialType.ID = uuid.UUID(inner.ID)
 	return nil
 }

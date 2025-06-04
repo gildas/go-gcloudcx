@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
@@ -37,6 +38,42 @@ func Fetch[T Fetchable, PT interface {
 		return &object, nil
 	}
 	if id != uuid.Nil {
+		var object T
+		if err := client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
+			return nil, err
+		}
+		PT(&object).Initialize(client, log)
+		return &object, nil
+	}
+	return nil, errors.NotFound.WithStack()
+}
+
+// FetchWithStringID fetches a resource from the Genesys Cloud API
+//
+// # The object must implement the Fetchable interface
+//
+// Resources can be fetched by their ID:
+//
+//	integrationType, err := Fetch[gcloudcx.IntegrationType](context, client, stringid)
+//
+// or by their URI:
+//
+//	integrationType, err := Fetch[gcloudcx.IntegrationType](context, client, gcloudcx.IntegrationType{}.GetURI(stringid))
+func FetchWithStringID[T FetchableByStringID, PT interface {
+	Initializable
+	*T
+}](context context.Context, client *Client, parameters ...any) (*T, error) {
+	id, query, selfURI, log := parseFetchParametersWithNamedID(context, client, parameters...)
+
+	if len(selfURI) > 0 {
+		var object T
+		if err := client.Get(context, selfURI.WithQuery(query), &object); err != nil {
+			return nil, err
+		}
+		PT(&object).Initialize(client, log)
+		return &object, nil
+	}
+	if id != "" {
 		var object T
 		if err := client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
 			return nil, err
@@ -172,6 +209,36 @@ func parseFetchParameters(context context.Context, client *Client, parameters ..
 			log = parameter
 		default:
 			if identifiable, ok := parameter.(Identifiable); ok {
+				id = identifiable.GetID()
+			} else if addressable, ok := parameter.(Addressable); ok {
+				uri = addressable.GetURI()
+			}
+		}
+	}
+	return id, query, uri, log
+}
+
+func parseFetchParametersWithNamedID(context context.Context, client *Client, parameters ...any) (string, Query, URI, *logger.Logger) {
+	var id string
+	var query Query
+	var uri URI
+	log, _ := logger.FromContext(context)
+
+	if log == nil {
+		log = client.Logger
+	}
+	for _, parameter := range parameters {
+		switch parameter := parameter.(type) {
+		case string:
+			id = parameter
+		case Query:
+			query = parameter
+		case URI:
+			uri = parameter
+		case *logger.Logger:
+			log = parameter
+		default:
+			if identifiable, ok := parameter.(core.StringIdentifiable); ok {
 				id = identifiable.GetID()
 			} else if addressable, ok := parameter.(Addressable); ok {
 				uri = addressable.GetURI()
