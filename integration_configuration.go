@@ -2,13 +2,13 @@ package gcloudcx
 
 // IntegrationConfiguration represents the configuration of an integration.
 type IntegrationConfiguration struct {
-	ID          string                             `json:"id"`
-	Name        string                             `json:"name"`
-	Version     string                             `json:"version"`
-	Notes       string                             `json:"notes"`
-	Properties  any                                `json:"properties"`
-	Advanced    any                                `json:"advanced"`
-	Credentials map[string]CredentialSpecification `json:"credentials,omitempty"`
+	ID          string                               `json:"id"`
+	Name        string                               `json:"name"`
+	Version     uint                                 `json:"version"`
+	Notes       string                               `json:"notes"`
+	Properties  map[string]any                       `json:"properties,omitempty"`
+	Advanced    map[string]any                       `json:"advanced"`
+	Credentials map[string]IntegrationCredentialInfo `json:"credentials,omitempty"`
 }
 
 // IntegrationConfigurationInfo represents the information about an integration configuration

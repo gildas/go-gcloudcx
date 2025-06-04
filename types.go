@@ -24,6 +24,18 @@ type Addressable interface {
 	GetURI(ids ...uuid.UUID) URI
 }
 
+// AddressableByStringID describes things that carry a URI (typically /api/v2/things/{{string}})
+type AddressableByStringID interface {
+	// GetURI gets the URI
+	//
+	// if ids are provided, they are used to replace the {{string}} in the URI.
+	//
+	// if no ids are provided and the Addressable has a UUID, it is used to replace the {{string}} in the URI.
+	//
+	// else, the pattern for the URI is returned ("/api/v2/things/%s")
+	GetURI(ids ...string) URI
+}
+
 // Initializable describes things that can be initialized
 type Initializable interface {
 	Initialize(parameters ...interface{})
@@ -33,6 +45,16 @@ type Initializable interface {
 type Fetchable interface {
 	Identifiable
 	Addressable
+}
+
+// FetchableByStringID describes things that can be fetched from the Genesys Cloud API
+//
+// These objects use a named ID instead of a UUID to fetch them.
+//
+// For example, IntegrationType uses a string ID like "genesyscloud-digital-bot-connector" or "amazon-lex-v2" instead of a UUID.
+type FetchableByStringID interface {
+	core.StringIdentifiable
+	AddressableByStringID
 }
 
 // StateUpdater describes objects than can update the state of an Identifiable
