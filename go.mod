@@ -6,7 +6,7 @@ toolchain go1.24.3
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/gildas/go-core v0.6.1
+	github.com/gildas/go-core v0.6.2
 	github.com/gildas/go-errors v0.4.0
 	github.com/gildas/go-logger v1.8.0
 	github.com/gildas/go-request v0.9.16
@@ -49,6 +49,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.36.0 // indirect
 	go.opentelemetry.io/otel/trace v1.36.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/exp v0.0.0-20250531010427-b6e5de432a8b // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
