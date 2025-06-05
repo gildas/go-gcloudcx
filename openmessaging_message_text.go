@@ -71,10 +71,12 @@ func (message OpenMessageText) MarshalJSON() ([]byte, error) {
 	type surrogate OpenMessageText
 	data, err := json.Marshal(struct {
 		surrogate
-		Type string `json:"type"`
+		Type           string    `json:"type"`
+		ConversationID core.UUID `json:"conversationId,omitempty"`
 	}{
-		surrogate: surrogate(message),
-		Type:      message.GetType(),
+		surrogate:      surrogate(message),
+		Type:           message.GetType(),
+		ConversationID: core.UUID(message.ConversationID),
 	})
 	return data, errors.JSONMarshalError.Wrap(err)
 }
