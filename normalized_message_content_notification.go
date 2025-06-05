@@ -6,8 +6,8 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageNotificationContent describes a Notification Content for an OpenMessage
-type OpenMessageNotificationContent struct {
+// NormalizedMessageNotificationContent describes a Notification Content for an OpenMessage
+type NormalizedMessageNotificationContent struct {
 	ID       string                         `json:"id,omitempty"`
 	Language string                         `json:"language"`
 	Header   *OpenMessageNotificationHeader `json:"header,omitempty"`
@@ -18,10 +18,10 @@ type OpenMessageNotificationContent struct {
 
 // OpenMessageNotificationHeader describes the Header of a Notification Content
 type OpenMessageNotificationHeader struct {
-	HeaderType string                            `json:"type"` // "Text", "Media"
-	Text       string                            `json:"text,omitempty"`
-	Media      *OpenMessageAttachmentContent     `json:"media,omitempty"`
-	Parameters OpenMessageNotificationParameters `json:"parameters,omitempty"`
+	HeaderType string                              `json:"type"` // "Text", "Media"
+	Text       string                              `json:"text,omitempty"`
+	Media      *NormalizedMessageAttachmentContent `json:"media,omitempty"`
+	Parameters OpenMessageNotificationParameters   `json:"parameters,omitempty"`
 }
 
 // OpenMessageNotificationBody describes the Body of a Notification Content
@@ -38,21 +38,21 @@ type OpenMessageNotificationFooter struct {
 type OpenMessageNotificationParameters map[string]string
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageNotificationContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageNotificationContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (template OpenMessageNotificationContent) GetType() string {
+func (template NormalizedMessageNotificationContent) GetType() string {
 	return "Notification"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (notification OpenMessageNotificationContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageNotificationContent
+func (notification NormalizedMessageNotificationContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageNotificationContent
 
 	data, err := json.Marshal(struct {
 		ContentType string    `json:"contentType"`
@@ -67,8 +67,8 @@ func (notification OpenMessageNotificationContent) MarshalJSON() ([]byte, error)
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (notification *OpenMessageNotificationContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageNotificationContent
+func (notification *NormalizedMessageNotificationContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageNotificationContent
 	var inner struct {
 		Template surrogate `json:"template"`
 	}
@@ -77,7 +77,7 @@ func (notification *OpenMessageNotificationContent) UnmarshalJSON(payload []byte
 	} else if err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*notification = OpenMessageNotificationContent(inner.Template)
+	*notification = NormalizedMessageNotificationContent(inner.Template)
 	return
 }
 

@@ -6,27 +6,27 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageTextContent describes the content of a Text Message
-type OpenMessageTextContent struct {
+// NormalizedMessageTextContent describes the content of a Text Message
+type NormalizedMessageTextContent struct {
 	Text string `json:"body"`
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageTextContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageTextContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (text OpenMessageTextContent) GetType() string {
+func (text NormalizedMessageTextContent) GetType() string {
 	return "Text"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (text OpenMessageTextContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageTextContent
+func (text NormalizedMessageTextContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageTextContent
 	type Text struct {
 		surrogate
 	}
@@ -45,8 +45,8 @@ func (text OpenMessageTextContent) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (text *OpenMessageTextContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageTextContent
+func (text *NormalizedMessageTextContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageTextContent
 	type Text struct {
 		surrogate
 	}
@@ -56,6 +56,6 @@ func (text *OpenMessageTextContent) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*text = OpenMessageTextContent(inner.Text.surrogate)
+	*text = NormalizedMessageTextContent(inner.Text.surrogate)
 	return
 }

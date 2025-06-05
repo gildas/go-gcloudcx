@@ -492,7 +492,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("Notification", content.GetType())
 
-	notification, ok := content.(*gcloudcx.OpenMessageNotificationContent)
+	notification, ok := content.(*gcloudcx.NormalizedMessageNotificationContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageNotificationContent, but was %T", content)
 	suite.Require().NotNil(notification, "Notification should not be nil")
 
@@ -525,7 +525,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("Carousel", content.GetType())
 
-	carousel, ok := content.(*gcloudcx.OpenMessageCarouselContent)
+	carousel, ok := content.(*gcloudcx.NormalizedMessageCarouselContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageCarouselContent, but was %T", content)
 	suite.Require().NotNil(carousel, "Carousel should not be nil")
 
@@ -597,7 +597,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("QuickReply", content.GetType())
 
-	quickreply, ok := content.(*gcloudcx.OpenMessageQuickReplyContent)
+	quickreply, ok := content.(*gcloudcx.NormalizedMessageQuickReplyContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
 	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
 	suite.Assert().Equal("Yes", quickreply.Text)
@@ -608,7 +608,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("QuickReply", content.GetType())
 
-	quickreply, ok = content.(*gcloudcx.OpenMessageQuickReplyContent)
+	quickreply, ok = content.(*gcloudcx.NormalizedMessageQuickReplyContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
 	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
 	suite.Assert().Equal("No", quickreply.Text)
@@ -632,7 +632,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithDatePi
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("DatePicker", content.GetType())
 
-	datepicker, ok := content.(*gcloudcx.OpenMessageDatePickerContent)
+	datepicker, ok := content.(*gcloudcx.NormalizedMessageDatePickerContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageDatePickerContent, but was %T", content)
 	suite.Require().NotNil(datepicker, "DatePicker should not be nil")
 	suite.Assert().Equal("When would you be available?", datepicker.Title)

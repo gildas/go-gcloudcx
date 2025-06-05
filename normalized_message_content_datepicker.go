@@ -9,8 +9,8 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageDatePickerContent describes the content of a DatePicker
-type OpenMessageDatePickerContent struct {
+// NormalizedMessageDatePickerContent describes the content of a DatePicker
+type NormalizedMessageDatePickerContent struct {
 	Title          string                     `json:"title,omitempty"`
 	Subtitle       string                     `json:"subtitle,omitempty"`
 	ImageURL       *url.URL                   `json:"imageUrl,omitempty"`
@@ -26,13 +26,13 @@ type OpenMessageAvailableTime struct {
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageDatePickerContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageDatePickerContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (datePicker OpenMessageDatePickerContent) GetType() string {
+func (datePicker NormalizedMessageDatePickerContent) GetType() string {
 	return "DatePicker"
 }
 
@@ -56,8 +56,8 @@ func (availableTime OpenMessageAvailableTime) MarshalJSON() ([]byte, error) {
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (datePicker OpenMessageDatePickerContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageDatePickerContent
+func (datePicker NormalizedMessageDatePickerContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageDatePickerContent
 	type DatePicker struct {
 		surrogate
 		ImageURL *core.URL  `json:"imageUrl,omitempty"`
@@ -101,8 +101,8 @@ func (availableTime *OpenMessageAvailableTime) UnmarshalJSON(payload []byte) (er
 // UnmarshalJSON unmarshals this from JSON
 //
 // implements json.Unmarshaler
-func (datePicker *OpenMessageDatePickerContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageDatePickerContent
+func (datePicker *NormalizedMessageDatePickerContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageDatePickerContent
 	type DatePicker struct {
 		surrogate
 		ImageURL *core.URL  `json:"imageUrl,omitempty"`
@@ -119,7 +119,7 @@ func (datePicker *OpenMessageDatePickerContent) UnmarshalJSON(payload []byte) (e
 	if inner.Type != datePicker.GetType() {
 		return errors.InvalidType.With(inner.Type, datePicker.GetType())
 	}
-	*datePicker = OpenMessageDatePickerContent(inner.DatePicker.surrogate)
+	*datePicker = NormalizedMessageDatePickerContent(inner.DatePicker.surrogate)
 	datePicker.ImageURL = (*url.URL)(inner.DatePicker.ImageURL)
 	datePicker.MinDate = (*time.Time)(inner.DatePicker.MinDate)
 	datePicker.MaxDate = (*time.Time)(inner.DatePicker.MaxDate)

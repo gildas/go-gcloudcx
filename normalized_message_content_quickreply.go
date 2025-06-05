@@ -8,7 +8,7 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-type OpenMessageQuickReplyContent struct {
+type NormalizedMessageQuickReplyContent struct {
 	Text     string   `json:"text"`
 	Payload  string   `json:"payload"`
 	ImageURL *url.URL `json:"image,omitempty"`
@@ -16,21 +16,21 @@ type OpenMessageQuickReplyContent struct {
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageQuickReplyContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageQuickReplyContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (quickReply OpenMessageQuickReplyContent) GetType() string {
+func (quickReply NormalizedMessageQuickReplyContent) GetType() string {
 	return "QuickReply"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (quickReply OpenMessageQuickReplyContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageQuickReplyContent
+func (quickReply NormalizedMessageQuickReplyContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageQuickReplyContent
 	type QuickReply struct {
 		surrogate
 		ImageURL *core.URL `json:"image,omitempty"`
@@ -51,8 +51,8 @@ func (quickReply OpenMessageQuickReplyContent) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (quickReply *OpenMessageQuickReplyContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageQuickReplyContent
+func (quickReply *NormalizedMessageQuickReplyContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageQuickReplyContent
 	type QuickReply struct {
 		surrogate
 		ImageURL *core.URL `json:"image"`
@@ -63,7 +63,7 @@ func (quickReply *OpenMessageQuickReplyContent) UnmarshalJSON(payload []byte) (e
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*quickReply = OpenMessageQuickReplyContent(inner.QuickReply.surrogate)
+	*quickReply = NormalizedMessageQuickReplyContent(inner.QuickReply.surrogate)
 	quickReply.ImageURL = (*url.URL)(inner.QuickReply.ImageURL)
 	return nil
 }

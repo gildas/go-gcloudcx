@@ -1,0 +1,27 @@
+{
+  "botId": "11095674-46cc-4a87-b0bb-385b317ad000",
+  "botVersion": "Delta",
+  "botSessionId": "462064bd-820f-4806-a04b-8bdc915dba3e",
+  "messageId": "aa30d0f5-a7de-4949-a59d-b527eddb7a78",
+  "inputMessage": {
+    "type": "Structured",
+    "text": "Message sent to bot",
+    "content": [
+      {
+        "contentType": "ButtonResponse",
+        "buttonResponse": {
+          "type": "QuickReply",
+          "text": "Button Response Text",
+          "payload": "cookie"
+        }
+      }
+    ]
+  },
+  "languageCode": "en-us",
+  "botSessionTimeout": 60,
+  "genesysConversationId": "31408724-1e03-44ca-a698-31da56dd08f4",
+  "parameters": {
+    "parameter1": "value1",
+    "parameter2": "value2"
+  }
+}

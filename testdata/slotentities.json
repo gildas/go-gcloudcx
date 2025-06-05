@@ -1,0 +1,102 @@
+[
+  {
+    "name": "ProductName",
+    "type": "String",
+    "value": "Chocolate Chip Cookie"
+  },
+  {
+    "name": "Size",
+    "type": "Integer",
+    "value": "12"
+  },
+  {
+    "name": "Weight",
+    "type": "Decimal",
+    "value": "85.6"
+  },
+  {
+    "name": "ConsumeBefore",
+    "type": "Duration",
+    "value": "P16D"
+  },
+  {
+    "name": "Diet",
+    "type": "Boolean",
+    "value": "false"
+  },
+  {
+    "name": "CurrentPrice",
+    "type": "Currency",
+    "value": "{\"amount\": 3.49, \"code\": \"USD\"}"
+  },
+  {
+    "name": "ExpiryDate",
+    "type": "Datetime",
+    "value": "2024-03-15T23:59:59Z"
+  },
+  {
+    "name": "Ingredients",
+    "type": "StringCollection",
+    "values": [
+      "flour",
+      "sugar",
+      "butter",
+      "chocolate chips",
+      "eggs"
+    ]
+  },
+  {
+    "name": "Presentations",
+    "type": "IntegerCollection",
+    "values": [
+      "6",
+      "12",
+      "24"
+    ]
+  },
+  {
+    "name": "AvailableWeights",
+    "type": "DecimalCollection",
+    "values": [
+      "50",
+      "85.5",
+      "100"
+    ]
+  },
+  {
+    "name": "ShelLifeOptions",
+    "type": "DurationCollection",
+    "values": [
+      "P7D",
+      "P15D",
+      "P27D"
+    ]
+  },
+  {
+    "name": "ProductAttributes",
+    "type": "BooleanCollection",
+    "values": [
+      "true",
+      "false",
+      "true"
+    ]
+  },
+  {
+    "name": "PreviousPrices",
+    "type": "CurrencyCollection",
+    "values": [
+      "{\"amount\": 3.49, \"code\": \"USD\"}",
+      "{\"amount\": 3.29, \"code\": \"USD\"}",
+      "{\"amount\": 2.99, \"code\": \"USD\"}"
+    ]
+  },
+  {
+    "name": "BatchProductionDates",
+    "type": "DatetimeCollection",
+    "values": [
+      "2024-02-01T10:00:00Z",
+      "2024-02-02T10:00:00Z",
+      "2024-02-03T10:00:00Z"
+    ]
+  }
+]

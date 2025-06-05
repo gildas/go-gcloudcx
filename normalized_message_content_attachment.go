@@ -13,8 +13,8 @@ import (
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
-// OpenMessageAttachmentContent describes an Attachment Content for an OpenMessage
-type OpenMessageAttachmentContent struct {
+// NormalizedMessageAttachmentContent describes an Attachment Content for an OpenMessage
+type NormalizedMessageAttachmentContent struct {
 	ID        string   `json:"id,omitempty"`
 	MediaType string   `json:"mediaType"` // Audio, File, Image, Link, Video
 	URL       *url.URL `json:"-"`
@@ -26,18 +26,18 @@ type OpenMessageAttachmentContent struct {
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageAttachmentContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageAttachmentContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (attachment OpenMessageAttachmentContent) GetType() string {
+func (attachment NormalizedMessageAttachmentContent) GetType() string {
 	return "Attachment"
 }
 
 // WithContent sets the content of this Attachment from a request.Content
-func (attachment OpenMessageAttachmentContent) WithContent(content *request.Content) *OpenMessageAttachmentContent {
+func (attachment NormalizedMessageAttachmentContent) WithContent(content *request.Content) *NormalizedMessageAttachmentContent {
 	var attachmentType string
 	switch {
 	case len(content.Type) == 0:
@@ -73,8 +73,8 @@ func (attachment OpenMessageAttachmentContent) WithContent(content *request.Cont
 }
 
 // MarshalJSON marshals this into JSON
-func (attachment OpenMessageAttachmentContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageAttachmentContent
+func (attachment NormalizedMessageAttachmentContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageAttachmentContent
 	type Attachment struct {
 		surrogate
 		URL *core.URL `json:"url"`
@@ -93,8 +93,8 @@ func (attachment OpenMessageAttachmentContent) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON unmarshals JSON into this
-func (attachment *OpenMessageAttachmentContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageAttachmentContent
+func (attachment *NormalizedMessageAttachmentContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageAttachmentContent
 	var inner struct {
 		ContentType string `json:"contentType"`
 		Attachment  struct {
@@ -106,7 +106,7 @@ func (attachment *OpenMessageAttachmentContent) UnmarshalJSON(payload []byte) (e
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*attachment = OpenMessageAttachmentContent(inner.Attachment.surrogate)
+	*attachment = NormalizedMessageAttachmentContent(inner.Attachment.surrogate)
 	attachment.URL = (*url.URL)(inner.Attachment.URL)
 	validMediaTypes := []string{"Audio", "File", "Image", "Link", "Video"}
 	if !core.Contains(validMediaTypes, attachment.MediaType) {
