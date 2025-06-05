@@ -14,11 +14,12 @@
     "to": {
       "id": "73cb7fb7-c2db-4996-88f3-0a83a4fea1da"
     },
-    "time": "2021-02-01T15:04:05.123Z"
+    "time": "2021-02-01T15:04:05Z"
   },
   "direction": "Inbound",
 	"type": "Event",
   "events": [
 		{ "eventType": "Typing" }
-	]
+	],
+  "conversationId": "d06cb41e-f938-4dcf-b823-c8af1a39d7e5"
 }
