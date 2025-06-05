@@ -6,28 +6,28 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageQuickReplyV2Content describes the content of a QuickReplyV2
-type OpenMessageQuickReplyV2Content struct {
-	Title   string                          `json:"title"`
-	Actions []OpenMessageQuickReplyV2Action `json:"actions"`
+// NormalizedMessageQuickReplyV2Content describes the content of a QuickReplyV2
+type NormalizedMessageQuickReplyV2Content struct {
+	Title   string                                `json:"title"`
+	Actions []NormalizedMessageQuickReplyV2Action `json:"actions"`
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageQuickReplyV2Content{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageQuickReplyV2Content{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (quickReply OpenMessageQuickReplyV2Content) GetType() string {
+func (quickReply NormalizedMessageQuickReplyV2Content) GetType() string {
 	return "QuickReplyV2"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (quickReply OpenMessageQuickReplyV2Content) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageQuickReplyV2Content
+func (quickReply NormalizedMessageQuickReplyV2Content) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageQuickReplyV2Content
 	type QuickReplyV2 struct {
 		surrogate
 	}
@@ -46,8 +46,8 @@ func (quickReply OpenMessageQuickReplyV2Content) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (quickReply *OpenMessageQuickReplyV2Content) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageQuickReplyV2Content
+func (quickReply *NormalizedMessageQuickReplyV2Content) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageQuickReplyV2Content
 	type QuickReplyV2 struct {
 		surrogate
 	}
@@ -57,6 +57,6 @@ func (quickReply *OpenMessageQuickReplyV2Content) UnmarshalJSON(payload []byte) 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*quickReply = OpenMessageQuickReplyV2Content(inner.QuickReplyV2.surrogate)
+	*quickReply = NormalizedMessageQuickReplyV2Content(inner.QuickReplyV2.surrogate)
 	return
 }

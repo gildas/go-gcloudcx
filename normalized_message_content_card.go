@@ -8,32 +8,32 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageCardContent describes the content of a Card
-type OpenMessageCardContent struct {
-	Title         string                  `json:"title"`
-	Description   string                  `json:"description,omitempty"`
-	ImageURL      *url.URL                `json:"image,omitempty"`
-	VideoURL      *url.URL                `json:"video,omitempty"`
-	DefaultAction *OpenMessageCardAction  `json:"defaultAction,omitempty"`
-	Actions       []OpenMessageCardAction `json:"actions,omitempty"`
+// NormalizedMessageCardContent describes the content of a Card
+type NormalizedMessageCardContent struct {
+	Title         string                        `json:"title"`
+	Description   string                        `json:"description,omitempty"`
+	ImageURL      *url.URL                      `json:"image,omitempty"`
+	VideoURL      *url.URL                      `json:"video,omitempty"`
+	DefaultAction *NormalizedMessageCardAction  `json:"defaultAction,omitempty"`
+	Actions       []NormalizedMessageCardAction `json:"actions,omitempty"`
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageCardContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageCardContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (card OpenMessageCardContent) GetType() string {
+func (card NormalizedMessageCardContent) GetType() string {
 	return "Card"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (card OpenMessageCardContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageCardContent
+func (card NormalizedMessageCardContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageCardContent
 	type Card struct {
 		surrogate
 		ImageURL *core.URL `json:"image,omitempty"`
@@ -56,8 +56,8 @@ func (card OpenMessageCardContent) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (card *OpenMessageCardContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageCardContent
+func (card *NormalizedMessageCardContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageCardContent
 	type Card struct {
 		surrogate
 		ImageURL *core.URL `json:"image"`
@@ -69,7 +69,7 @@ func (card *OpenMessageCardContent) UnmarshalJSON(payload []byte) (err error) {
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*card = OpenMessageCardContent(inner.Card.surrogate)
+	*card = NormalizedMessageCardContent(inner.Card.surrogate)
 	card.ImageURL = (*url.URL)(inner.Card.ImageURL)
 	card.VideoURL = (*url.URL)(inner.Card.VideoURL)
 	return

@@ -255,9 +255,18 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 		WebhookURL:   core.Must(url.Parse("https://www.acme.com/gcloudcx")),
 		WebhookToken: "DEADBEEF",
 		SupportedContent: &gcloudcx.OpenMessagingSupportedContent{
-			ID:      "MessaagingDefault",
-			SelfURI: "/api/v2/conversations/messaging/supportedcontent/832066dd-6030-46b1-baeb-b89b681c6636",
+			ID:      "webMessagingDefault",
+			SelfURI: "/api/v2/conversations/messaging/supportedcontent/webMessagingDefault",
 		},
+		MessagingSetting: &gcloudcx.DomainEntityRef{
+			ID:      uuid.MustParse("f61e2044-d338-4582-a2ed-0fbda7139aeb"),
+			SelfURI: "/api/v2/conversations/messaging/settings/f61e2044-d338-4582-a2ed-0fbda7139aeb",
+		},
+		Recipient: &gcloudcx.DomainEntityRef{
+			ID:      uuid.MustParse("6a55dd3c-e148-481f-abc4-249db2939fa3"),
+			SelfURI: "/api/v2/routing/message/recipients/6a55dd3c-e148-481f-abc4-249db2939fa3",
+		},
+		Status:      "active",
 		DateCreated: time.Date(2021, time.April, 8, 3, 12, 7, 888000000, time.UTC),
 		CreatedBy: &gcloudcx.DomainEntityRef{
 			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
@@ -268,7 +277,7 @@ func (suite *OpenMessagingSuite) TestCanMarshalIntegration() {
 			ID:      uuid.MustParse("3e23b1b3-325f-4fbd-8fe0-e88416850c0e"),
 			SelfURI: "/api/v2/users/3e23b1b3-325f-4fbd-8fe0-e88416850c0e",
 		},
-		CreateStatus: "Initiated",
+		CreateStatus: "Completed",
 	}
 
 	data, err := json.Marshal(integration)
@@ -302,21 +311,28 @@ func (suite *OpenMessagingSuite) TestCanMarshalOpenMessageChannel() {
 
 func (suite *OpenMessagingSuite) TestCanMarshalTypingEvent() {
 	event := gcloudcx.OpenMessageEvents{
+		ID: "c327c2078ca056db130c55ce648d9fa2",
 		Channel: gcloudcx.OpenMessageChannel{
+			ID:       uuid.MustParse("73cb7fb7-c2db-4996-88f3-0a83a4fea1da"),
 			Platform: "Open",
 			Type:     "Private",
 			From: &gcloudcx.OpenMessageFrom{
-				ID:        "abcdef12345",
+				ID:        "abcdef12345@socialmedia",
 				Type:      "Email",
 				Firstname: "Bob",
 				Lastname:  "Minion",
 				Nickname:  "Bobby",
 			},
-			Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
+			To: &gcloudcx.OpenMessageTo{
+				ID: "73cb7fb7-c2db-4996-88f3-0a83a4fea1da",
+			},
+			Time: time.Date(2021, 2, 1, 15, 4, 5, 0, time.UTC),
 		},
+		Direction: "Inbound",
 		Events: []gcloudcx.OpenMessageEvent{
 			gcloudcx.OpenMessageTypingEvent{IsTyping: true},
 		},
+		ConversationID: uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"),
 	}
 	payload, err := json.Marshal(event)
 	suite.Require().NoErrorf(err, "Failed to marshal OpenMessageEvents. %s", err)
@@ -476,7 +492,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithNotifi
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("Notification", content.GetType())
 
-	notification, ok := content.(*gcloudcx.OpenMessageNotificationContent)
+	notification, ok := content.(*gcloudcx.NormalizedMessageNotificationContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageNotificationContent, but was %T", content)
 	suite.Require().NotNil(notification, "Notification should not be nil")
 
@@ -509,7 +525,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("Carousel", content.GetType())
 
-	carousel, ok := content.(*gcloudcx.OpenMessageCarouselContent)
+	carousel, ok := content.(*gcloudcx.NormalizedMessageCarouselContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageCarouselContent, but was %T", content)
 	suite.Require().NotNil(carousel, "Carousel should not be nil")
 
@@ -581,7 +597,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("QuickReply", content.GetType())
 
-	quickreply, ok := content.(*gcloudcx.OpenMessageQuickReplyContent)
+	quickreply, ok := content.(*gcloudcx.NormalizedMessageQuickReplyContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
 	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
 	suite.Assert().Equal("Yes", quickreply.Text)
@@ -592,7 +608,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithQuickR
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("QuickReply", content.GetType())
 
-	quickreply, ok = content.(*gcloudcx.OpenMessageQuickReplyContent)
+	quickreply, ok = content.(*gcloudcx.NormalizedMessageQuickReplyContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageQuickReplyContent, but was %T", content)
 	suite.Require().NotNil(quickreply, "QuickReply should not be nil")
 	suite.Assert().Equal("No", quickreply.Text)
@@ -616,7 +632,7 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithDatePi
 	suite.Require().NotNil(content, "Content should not be nil")
 	suite.Require().Equal("DatePicker", content.GetType())
 
-	datepicker, ok := content.(*gcloudcx.OpenMessageDatePickerContent)
+	datepicker, ok := content.(*gcloudcx.NormalizedMessageDatePickerContent)
 	suite.Require().True(ok, "Content should be of type OpenMessageDatePickerContent, but was %T", content)
 	suite.Require().NotNil(datepicker, "DatePicker should not be nil")
 	suite.Assert().Equal("When would you be available?", datepicker.Title)
@@ -660,8 +676,9 @@ func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
 				},
 				Time: time.Date(2021, 4, 9, 4, 43, 33, 0, time.UTC),
 			},
-			Direction: "inbound",
-			Text:      "text message",
+			Direction:      "inbound",
+			Text:           "text message",
+			ConversationID: uuid.MustParse("d06cb41e-f938-4dcf-b823-c8af1a39d7e5"),
 		}
 
 		suite.Logger.Record("message", message).Infof("message")
@@ -672,7 +689,7 @@ func (suite *OpenMessagingSuite) TestCanRedactOpenMessage() {
 	lines = lines[0 : len(lines)-1] // remove the last empty line
 	suite.Require().Len(lines, 1, "There should be 1 line in the log output, found %d", len(lines))
 	suite.LogLineEqual(lines[0], map[string]string{
-		"message":  `map\[channel:map\[from:map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\] messageId:gmAy9zNkhf4ermFvHH9mB5 platform:Open time:2021-04-09T04:43:33Z to:map\[id:edce4efa-4abf-468b-ada7-cd6d35e7bbaf\] type:Private\] direction:inbound id:12345678 text:REDACTED-[0-9a-f]+ type:Text\]`,
+		"message":  `map\[channel:map\[from:map\[firstName:REDACTED-[0-9a-f]+ id:abcdef12345 idType:Email lastName:REDACTED-[0-9a-f]+ nickname:REDACTED-[0-9a-f]+\] messageId:gmAy9zNkhf4ermFvHH9mB5 platform:Open time:2021-04-09T04:43:33Z to:map\[id:edce4efa-4abf-468b-ada7-cd6d35e7bbaf\] type:Private\] conversationId:d06cb41e-f938-4dcf-b823-c8af1a39d7e5 direction:inbound id:12345678 text:REDACTED-[0-9a-f]+ type:Text\]`,
 		"hostname": `[a-zA-Z_0-9\-\.]+`,
 		"level":    "30",
 		"msg":      "message",

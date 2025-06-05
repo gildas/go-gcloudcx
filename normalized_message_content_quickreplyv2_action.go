@@ -8,8 +8,8 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-// OpenMessageQuickReplyV2Action describes the action of a QuickReplyV2
-type OpenMessageQuickReplyV2Action struct {
+// NormalizedMessageQuickReplyV2Action describes the action of a QuickReplyV2
+type NormalizedMessageQuickReplyV2Action struct {
 	Action   string   `json:"action,omitempty"` // "Message"
 	Text     string   `json:"text"`
 	Payload  string   `json:"payload"`
@@ -19,8 +19,8 @@ type OpenMessageQuickReplyV2Action struct {
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (action OpenMessageQuickReplyV2Action) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageQuickReplyV2Action
+func (action NormalizedMessageQuickReplyV2Action) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageQuickReplyV2Action
 
 	data, err := json.Marshal(struct {
 		surrogate
@@ -35,8 +35,8 @@ func (action OpenMessageQuickReplyV2Action) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (action *OpenMessageQuickReplyV2Action) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageQuickReplyV2Action
+func (action *NormalizedMessageQuickReplyV2Action) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageQuickReplyV2Action
 
 	var inner struct {
 		surrogate
@@ -45,7 +45,7 @@ func (action *OpenMessageQuickReplyV2Action) UnmarshalJSON(payload []byte) (err 
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*action = OpenMessageQuickReplyV2Action(inner.surrogate)
+	*action = NormalizedMessageQuickReplyV2Action(inner.surrogate)
 	action.ImageURL = (*url.URL)(inner.ImageURL)
 	return
 }

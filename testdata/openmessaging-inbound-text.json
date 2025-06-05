@@ -17,5 +17,6 @@
   },
   "direction": "Inbound",
 	"type": "Text",
-	"text": "Hello World"
+	"text": "Hello World",
+  "conversationId": "d06cb41e-f938-4dcf-b823-c8af1a39d7e5"
 }

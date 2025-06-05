@@ -20,7 +20,7 @@ type AccessToken struct {
 	Type             string    `json:"tokenType"`
 	Token            string    `json:"token"`
 	ExpiresOn        time.Time `json:"expiresOn"` // UTC!
-	AuthorizedScopes []string  `json:"authorizedScopes"`
+	AuthorizedScopes []string  `json:"authorizedScopes,omitempty"`
 }
 
 // UpdatedAccessToken describes an updated Access Token

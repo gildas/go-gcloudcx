@@ -6,28 +6,28 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-type OpenMessageButtonResponseContent struct {
+type NormalizedMessageButtonResponseContent struct {
 	ButtonType string `json:"type,omitempty"` // "Button", "QuickReply"
 	Text       string `json:"text"`
 	Payload    string `json:"payload"`
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageButtonResponseContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageButtonResponseContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (buttonResponse OpenMessageButtonResponseContent) GetType() string {
+func (buttonResponse NormalizedMessageButtonResponseContent) GetType() string {
 	return "ButtonResponse"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (buttonResponse OpenMessageButtonResponseContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageButtonResponseContent
+func (buttonResponse NormalizedMessageButtonResponseContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageButtonResponseContent
 	type ButtonResponse struct {
 		surrogate
 	}
@@ -46,8 +46,8 @@ func (buttonResponse OpenMessageButtonResponseContent) MarshalJSON() ([]byte, er
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (buttonResponse *OpenMessageButtonResponseContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageButtonResponseContent
+func (buttonResponse *NormalizedMessageButtonResponseContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageButtonResponseContent
 	type ButtonResponse struct {
 		surrogate
 	}
@@ -57,6 +57,6 @@ func (buttonResponse *OpenMessageButtonResponseContent) UnmarshalJSON(payload []
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*buttonResponse = OpenMessageButtonResponseContent(inner.ButtonResponse.surrogate)
+	*buttonResponse = NormalizedMessageButtonResponseContent(inner.ButtonResponse.surrogate)
 	return
 }

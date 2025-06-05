@@ -13,15 +13,15 @@ import (
 //
 // See: https://developer.genesys.cloud/api/rest/v2/conversations/#post-api-v2-conversations-messages-inbound-open
 type OpenMessageStructured struct {
-	ID                string               `json:"id,omitempty"` // Can be anything
-	Channel           OpenMessageChannel   `json:"channel"`
-	Direction         string               `json:"direction"` // inbound or outbound
-	Text              string               `json:"text"`
-	Content           []OpenMessageContent `json:"content,omitempty"`
-	OriginatingEntity string               `json:"originatingEntity,omitempty"` // Bot or Human
-	Metadata          map[string]string    `json:"metadata,omitempty"`
-	ConversationID    uuid.UUID            `json:"conversationId,omitempty"`
-	KeysToRedact      []string             `json:"-"`
+	ID                string                     `json:"id,omitempty"` // Can be anything
+	Channel           OpenMessageChannel         `json:"channel"`
+	Direction         string                     `json:"direction"` // inbound or outbound
+	Text              string                     `json:"text"`
+	Content           []NormalizedMessageContent `json:"content,omitempty"`
+	OriginatingEntity string                     `json:"originatingEntity,omitempty"` // Bot or Human
+	Metadata          map[string]string          `json:"metadata,omitempty"`
+	ConversationID    uuid.UUID                  `json:"conversationId,omitempty"`
+	KeysToRedact      []string                   `json:"-"`
 }
 
 // init initializes this type
@@ -52,10 +52,10 @@ func (message OpenMessageStructured) Redact() interface{} {
 	if core.GetEnvAsBool("REDACT_MESSAGE_TEXT", true) && len(message.Text) > 0 {
 		redacted.Text = logger.RedactWithHash(message.Text)
 	}
-	redacted.Content = make([]OpenMessageContent, 0, len(message.Content))
+	redacted.Content = make([]NormalizedMessageContent, 0, len(message.Content))
 	for _, content := range message.Content {
 		if redactable, ok := content.(logger.Redactable); ok {
-			redacted.Content = append(redacted.Content, redactable.Redact().(OpenMessageContent))
+			redacted.Content = append(redacted.Content, redactable.Redact().(NormalizedMessageContent))
 		}
 	}
 	for _, key := range message.KeysToRedact {
@@ -102,7 +102,7 @@ func (message *OpenMessageStructured) UnmarshalJSON(data []byte) (err error) {
 	unmarshalMode := core.GetEnvAsString("JSON_UNMARSHAL_MODE", "strict") // "strict" or "ignore_unknown_keys"
 	isUnmarshalIgnoreUnknownKeys := unmarshalMode == "ignore_unknown_keys"
 	if len(inner.Content) > 0 {
-		message.Content = make([]OpenMessageContent, 0, len(inner.Content))
+		message.Content = make([]NormalizedMessageContent, 0, len(inner.Content))
 		for _, content := range inner.Content {
 			content, err := UnmarshalOpenMessageContent(content)
 			if errors.Is(err, errors.InvalidType) && isUnmarshalIgnoreUnknownKeys {

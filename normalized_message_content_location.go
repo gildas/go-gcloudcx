@@ -8,7 +8,7 @@ import (
 	"github.com/gildas/go-errors"
 )
 
-type OpenMessageLocationContent struct {
+type NormalizedMessageLocationContent struct {
 	Text      string   `json:"text"`
 	URL       *url.URL `json:"url"`
 	Address   string   `json:"address"`
@@ -17,21 +17,21 @@ type OpenMessageLocationContent struct {
 }
 
 func init() {
-	openMessageContentRegistry.Add(OpenMessageLocationContent{})
+	normalizedMessageContentRegistry.Add(NormalizedMessageLocationContent{})
 }
 
 // GetType tells the type of this OpenMessageContent
 //
 // implements core.TypeCarrier
-func (location OpenMessageLocationContent) GetType() string {
+func (location NormalizedMessageLocationContent) GetType() string {
 	return "Location"
 }
 
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
-func (location OpenMessageLocationContent) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageLocationContent
+func (location NormalizedMessageLocationContent) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageLocationContent
 	type Location struct {
 		surrogate
 		URL *core.URL `json:"url"`
@@ -52,8 +52,8 @@ func (location OpenMessageLocationContent) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals JSON into this
 //
 // implements json.Unmarshaler
-func (location *OpenMessageLocationContent) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageLocationContent
+func (location *NormalizedMessageLocationContent) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedMessageLocationContent
 	type Location struct {
 		surrogate
 		URL *core.URL `json:"url"`
@@ -64,7 +64,7 @@ func (location *OpenMessageLocationContent) UnmarshalJSON(payload []byte) (err e
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*location = OpenMessageLocationContent(inner.Location.surrogate)
+	*location = NormalizedMessageLocationContent(inner.Location.surrogate)
 	location.URL = (*url.URL)(inner.Location.URL)
 	return nil
 }
