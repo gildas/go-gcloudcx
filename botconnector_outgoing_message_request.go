@@ -64,10 +64,6 @@ func (request *BotConnectorOutgoingMessageRequest) Validate() error {
 func (request BotConnectorOutgoingMessageRequest) MarshalJSON() ([]byte, error) {
 	type surrogate BotConnectorOutgoingMessageRequest
 
-	if err := request.Validate(); err != nil {
-		return nil, errors.JSONMarshalError.Wrap(err)
-	}
-
 	var confidence *float64
 	if request.Confidence != 0 {
 		confidence = &request.Confidence
@@ -96,9 +92,10 @@ func (request *BotConnectorOutgoingMessageRequest) UnmarshalJSON(data []byte) er
 	type surrogate BotConnectorOutgoingMessageRequest
 	var inner struct {
 		surrogate
-		BotID        core.UUID `json:"botId"`
-		BotSessionID core.UUID `json:"botSessionId"`
-		MessageID    core.UUID `json:"messageId"`
+		BotID        core.UUID         `json:"botId"`
+		BotSessionID core.UUID         `json:"botSessionId"`
+		MessageID    core.UUID         `json:"messageId"`
+		Entities     []json.RawMessage `json:"entities"`
 	}
 	if err := json.Unmarshal(data, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
@@ -107,6 +104,16 @@ func (request *BotConnectorOutgoingMessageRequest) UnmarshalJSON(data []byte) er
 	request.BotID = uuid.UUID(inner.BotID)
 	request.BotSessionID = uuid.UUID(inner.BotSessionID)
 	request.MessageID = uuid.UUID(inner.MessageID)
+	if len(inner.Entities) > 0 {
+		request.Entities = make([]SlotEntity, 0, len(inner.Entities))
+		for _, raw := range inner.Entities {
+			entity, err := UnmarshalSlotEntity(raw)
+			if err != nil {
+				return errors.JSONUnmarshalError.Wrap(err)
+			}
+			request.Entities = append(request.Entities, entity)
+		}
+	}
 	if request.Parameters == nil {
 		request.Parameters = make(map[string]string)
 	}
