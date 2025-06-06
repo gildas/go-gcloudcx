@@ -41,7 +41,7 @@ func (message *NormalizedMessage) Validate() error {
 		merr.Append(errors.ArgumentInvalid.With("inputMessage.type", message.Type, "Text, Structured"))
 	}
 
-	if message.Type == NormalizedMessageTypeText && len(message.Text) == 0 {
+	if message.Type == NormalizedMessageTypeText && len(message.Text) == 0 && len(message.Content) == 0 {
 		merr.Append(errors.ArgumentMissing.With("inputMessage.text"))
 	}
 
