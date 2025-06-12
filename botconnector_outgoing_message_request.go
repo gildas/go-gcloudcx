@@ -21,6 +21,7 @@ type BotConnectorOutgoingMessageRequest struct {
 	ReplyMessages []NormalizedMessage `json:"replyMessages,omitempty"` // List of reply messages to be sent back, optional
 	Parameters    map[string]string   `json:"parameters,omitempty"`    // Message Parameters, optional
 	ErrorInfo     *APIError           `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
+	CorrelationID string              `json:"correlationId,omitempty"` // Optional correlation ID for tracking purposes
 }
 
 // Validate validates the outgoing message request
