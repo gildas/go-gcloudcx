@@ -21,6 +21,7 @@ type BotConnectorIncomingMessageRequest struct {
 	BotSessionTimeout int64             `json:"botSessionTimeout"`
 	Message           NormalizedMessage `json:"inputMessage"`
 	Parameters        map[string]string `json:"parameters"`
+	CorrelationID     string            `json:"correlationId,omitempty"` // Optional correlation ID for tracking purposes
 }
 
 // GetType returns the type of the message
