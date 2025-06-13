@@ -95,7 +95,10 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	log = log.Record("duration", duration)
 	correlationID := ""
 	if res != nil {
-		correlationID = res.Headers.Get("Inin-Correlation-Id")
+		correlationID = res.Headers.Get("Genesys-Correlation-Id") // The new way
+		if len(correlationID) == 0 {
+			correlationID = res.Headers.Get("Inin-Correlation-Id") //The old way, back in the Interactiove Intelligence days
+		}
 		log = log.Record("gcloudcx-correlationId", correlationID)
 	}
 	if err != nil {
@@ -158,6 +161,6 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 		}
 		return errors.WithStack(err)
 	}
-	log.Debugf("Successfuly sent request in %s", duration)
+	log.Debugf("Successfuly sent request in %s, correlation ID: %s", duration, correlationID)
 	return nil
 }
