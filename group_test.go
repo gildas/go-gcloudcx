@@ -94,8 +94,9 @@ func (suite *GroupSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -111,8 +112,9 @@ func (suite *GroupSuite) AfterTest(suiteName, testName string) {
 // *****************************************************************************
 
 func (suite *GroupSuite) TestCanFetchByID() {
-	group, err := gcloudcx.Fetch[gcloudcx.Group](context.Background(), suite.Client, suite.GroupID)
+	group, correlationID, err := gcloudcx.Fetch[gcloudcx.Group](context.Background(), suite.Client, suite.GroupID)
 	suite.Require().NoErrorf(err, "Failed to fetch Group %s. %s", suite.GroupID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.GroupID, group.ID)
 	suite.Assert().Equal(suite.GroupName, group.Name)
 	suite.Assert().Equal("public", group.Visibility)
@@ -122,8 +124,9 @@ func (suite *GroupSuite) TestCanFetchByName() {
 	match := func(group gcloudcx.Group) bool {
 		return group.Name == suite.GroupName
 	}
-	group, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	group, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch Group %s. %s", suite.GroupName, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.GroupID, group.ID)
 	suite.Assert().Equal(suite.GroupName, group.Name)
 	suite.Assert().Equal("public", group.Visibility)

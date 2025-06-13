@@ -7,7 +7,7 @@ import (
 
 // Logout logs out a Client from GCloud
 func (client *Client) Logout(context context.Context) {
-	_ = client.Delete(context, "/tokens/me", nil) // we don't care much about the error as we are logging out
+	_, _ = client.Delete(context, "/tokens/me", nil) // we don't care much about the error as we are logging out
 	if client.Grant != nil {
 		client.Grant.AccessToken().Reset()
 	}

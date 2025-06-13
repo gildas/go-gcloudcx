@@ -34,20 +34,20 @@ func (grant *AuthorizationCodeGrant) GetID() uuid.UUID {
 // Authorize this Grant with Gcloud
 //
 // Implements Authorizable
-func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *Client) (err error) {
+func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *Client) (correlationID string, err error) {
 	log := client.GetLogger(context).Child(nil, "authorize", "grant", "authorization_code")
 
 	log.Infof("Authenticating with %s using Authorization Code grant", client.Region)
 
 	// Validates the Grant
 	if grant.ClientID == uuid.Nil {
-		return errors.ArgumentMissing.With("ClientID")
+		return "", errors.ArgumentMissing.With("ClientID")
 	}
 	if len(grant.Secret) == 0 {
-		return errors.ArgumentMissing.With("Secret")
+		return "", errors.ArgumentMissing.With("Secret")
 	}
 	if len(grant.Code) == 0 {
-		return errors.ArgumentMissing.With("Code")
+		return "", errors.ArgumentMissing.With("Code")
 	}
 
 	// Resets the token before authenticating
@@ -59,7 +59,7 @@ func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *
 		Error       string `json:"error,omitempty"`
 	}{}
 
-	err = client.SendRequest(
+	correlationID, err = client.SendRequest(
 		context,
 		NewURI("%s/oauth/token", client.LoginURL),
 		&request.Options{
@@ -74,7 +74,7 @@ func (grant *AuthorizationCodeGrant) Authorize(context context.Context, client *
 		&response,
 	)
 	if err != nil {
-		return err
+		return correlationID, err
 	}
 
 	// Saves the token

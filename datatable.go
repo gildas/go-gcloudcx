@@ -87,9 +87,9 @@ func (table DataTable) GetURI(ids ...uuid.UUID) URI {
 }
 
 // AddRow adds a row to this table
-func (table DataTable) AddRow(context context.Context, key string, row DataTableRow) (err error) {
+func (table DataTable) AddRow(context context.Context, key string, row DataTableRow) (correlationID string, err error) {
 	if row == nil {
-		return errors.ArgumentMissing.With("row")
+		return "", errors.ArgumentMissing.With("row")
 	}
 	row["key"] = key
 	return table.client.SendRequest(
@@ -105,9 +105,9 @@ func (table DataTable) AddRow(context context.Context, key string, row DataTable
 }
 
 // UpdateRow updates a row to this table
-func (table DataTable) UpdateRow(context context.Context, key string, row DataTableRow) (err error) {
+func (table DataTable) UpdateRow(context context.Context, key string, row DataTableRow) (correlationID string, err error) {
 	if row == nil {
-		return errors.ArgumentMissing.With("row")
+		return "", errors.ArgumentMissing.With("row")
 	}
 	row["key"] = key
 	return table.client.SendRequest(
@@ -123,12 +123,12 @@ func (table DataTable) UpdateRow(context context.Context, key string, row DataTa
 }
 
 // DeleteRow deletes a row from this table
-func (table DataTable) DeleteRow(context context.Context, key string) error {
+func (table DataTable) DeleteRow(context context.Context, key string) (correlationID string, err error) {
 	return table.client.Delete(context, NewURI("%s/rows/%s", table.GetURI(), key), nil)
 }
 
 // GetRows gets the rows of this table
-func (table DataTable) GetRows(context context.Context) (rows []DataTableRow, err error) {
+func (table DataTable) GetRows(context context.Context) (rows []DataTableRow, correlationID string, err error) {
 	rows = make([]DataTableRow, 0)
 
 	entities := Entities{}
@@ -136,13 +136,13 @@ func (table DataTable) GetRows(context context.Context) (rows []DataTableRow, er
 
 	for {
 		uri := NewURI("%s/rows", table.GetURI()).WithQuery(Query{"pageNumber": page}).WithQuery(Query{"showbrief": false})
-		if err = table.client.Get(context, uri, &entities); err != nil {
-			return []DataTableRow{}, err
+		if correlationID, err = table.client.Get(context, uri, &entities); err != nil {
+			return []DataTableRow{}, correlationID, err
 		}
 		for _, entity := range entities.Entities {
 			var row DataTableRow
 			if err = json.Unmarshal(entity, &row); err != nil {
-				return []DataTableRow{}, err
+				return []DataTableRow{}, correlationID, err
 			}
 			rows = append(rows, row)
 		}
@@ -151,17 +151,17 @@ func (table DataTable) GetRows(context context.Context) (rows []DataTableRow, er
 		}
 	}
 
-	return rows, nil
+	return rows, correlationID, nil
 }
 
 // GetRow gets a row from this table
-func (table DataTable) GetRow(context context.Context, key string) (row DataTableRow, err error) {
+func (table DataTable) GetRow(context context.Context, key string) (row DataTableRow, correlationID string, err error) {
 	uri := NewURI("%s/rows/%s", table.GetURI(), key).WithQuery(Query{"showbrief": false})
 
-	if err = table.client.Get(context, uri, &row); err != nil {
-		return nil, errors.WrapErrors(NotFoundError.With("row.key", key), err)
+	if correlationID, err = table.client.Get(context, uri, &row); err != nil {
+		return nil, correlationID, errors.WrapErrors(NotFoundError.With("row.key", key), err)
 	}
-	return row, nil
+	return row, correlationID, nil
 }
 
 // String gets a string representation of this

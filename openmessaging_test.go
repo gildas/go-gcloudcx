@@ -98,8 +98,9 @@ func (suite *OpenMessagingSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -186,8 +187,9 @@ func CaptureStdout(f func()) string {
 func (suite *OpenMessagingSuite) TestCan00CreateIntegration() {
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
-	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), suite.IntegrationName, webhookURL, webhookToken, nil)
+	integration, correlationID, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), suite.IntegrationName, webhookURL, webhookToken, nil)
 	suite.Require().NoError(err, "Failed to create integration")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
 		if integration.IsCreated() {
@@ -195,15 +197,17 @@ func (suite *OpenMessagingSuite) TestCan00CreateIntegration() {
 		}
 		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
 		time.Sleep(time.Second)
-		err = integration.Refresh(context.Background())
+		correlationID, err = integration.Refresh(context.Background())
 		suite.Require().NoError(err, "Failed to refresh integration")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 	}
 	suite.IntegrationID = integration.ID
 }
 
 func (suite *OpenMessagingSuite) TestCanFetchByID() {
-	integration, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
+	integration, correlationID, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().NoErrorf(err, "Failed to fetch Open Messaging Integration %s. %s", suite.IntegrationID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.IntegrationID, integration.ID)
 	suite.Assert().Equal(suite.IntegrationName, integration.Name)
 }
@@ -212,15 +216,17 @@ func (suite *OpenMessagingSuite) TestCanFetchByName() {
 	match := func(integration gcloudcx.OpenMessagingIntegration) bool {
 		return integration.Name == suite.IntegrationName
 	}
-	integration, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	integration, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch Open Messaging Integration %s. %s", suite.IntegrationName, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.IntegrationID, integration.ID)
 	suite.Assert().Equal(suite.IntegrationName, integration.Name)
 }
 
 func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
-	integrations, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client)
+	integrations, correlationID, err := gcloudcx.FetchAll[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client)
 	suite.Require().NoError(err, "Failed to fetch OpenMessaging Integrations")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if len(integrations) > 0 {
 		for _, integration := range integrations {
 			suite.Logger.Record("integration", integration).Infof("Got a integration")
@@ -233,14 +239,17 @@ func (suite *OpenMessagingSuite) TestCanFetchIntegrations() {
 
 func (suite *OpenMessagingSuite) TestCanZZDeleteIntegration() {
 	suite.Require().NotNil(suite.IntegrationID, "IntegrationID should not be nil (TestCanCreateIntegration should run before this test)")
-	integration, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
+	integration, correlationID, err := gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().NoErrorf(err, "Failed to fetch integration %s, Error: %s", suite.IntegrationID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("integration", integration).Infof("Got a integration")
 	suite.Require().True(integration.IsCreated(), "Integration should be created")
-	err = integration.Delete(context.Background())
+	correlationID, err = integration.Delete(context.Background())
 	suite.Require().NoErrorf(err, "Failed to delete integration %s, Error: %s", suite.IntegrationID, err)
-	_, err = gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
+	suite.Logger.Infof("Correlation: %s", correlationID)
+	_, correlationID, err = gcloudcx.Fetch[gcloudcx.OpenMessagingIntegration](context.Background(), suite.Client, suite.IntegrationID)
 	suite.Require().Error(err, "Integration should not exist anymore")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().ErrorIsf(err, gcloudcx.NotFoundError, "Expected NotFoundError, got %s", err)
 	suite.Assert().Truef(errors.Is(err, gcloudcx.NotFoundError), "Expected NotFoundError, got %s", err)
 	details := gcloudcx.NotFoundError.Clone()

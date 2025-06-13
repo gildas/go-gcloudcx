@@ -39,7 +39,7 @@ var notificationTopicRegistry = core.TypeRegistry{}
 //
 //	properties is one of more properties that should be expanded
 //	see https://developer.mypurecloud.com/api/rest/v2/notifications/#get-api-v2-notifications-availabletopics
-func (client *Client) GetAvailableNotificationTopics(context context.Context, properties ...string) ([]NotificationTopicDefinition, error) {
+func (client *Client) GetAvailableNotificationTopics(context context.Context, properties ...string) (definitions []NotificationTopicDefinition, correlationID string, err error) {
 	query := url.Values{}
 	if len(properties) > 0 {
 		query.Add("expand", strings.Join(properties, ","))
@@ -47,10 +47,10 @@ func (client *Client) GetAvailableNotificationTopics(context context.Context, pr
 	results := &struct {
 		Entities []NotificationTopicDefinition `json:"entities"`
 	}{}
-	if err := client.Get(context, NewURI("/notifications/availabletopics?%s", query.Encode()), &results); err != nil {
-		return []NotificationTopicDefinition{}, err
+	if correlationID, err = client.Get(context, NewURI("/notifications/availabletopics?%s", query.Encode()), &results); err != nil {
+		return []NotificationTopicDefinition{}, correlationID, err
 	}
-	return results.Entities, nil
+	return results.Entities, correlationID, nil
 }
 
 // topicNameWith builds the topicName for the given identifiables

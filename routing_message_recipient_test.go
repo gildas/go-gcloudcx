@@ -90,8 +90,9 @@ func (suite *RoutingMessageRecipientSuite) BeforeTest(suiteName, testName string
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().Nil(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -157,8 +158,9 @@ func (suite *RoutingMessageRecipientSuite) TestCanUnmarshal() {
 
 func (suite *RoutingMessageRecipientSuite) TestCanFetchByID() {
 	id := uuid.MustParse("968acd86-f5eb-4565-94da-6c2873e02b2c")
-	recipient, err := gcloudcx.Fetch[gcloudcx.RoutingMessageRecipient](context.Background(), suite.Client, id)
+	recipient, correlationID, err := gcloudcx.Fetch[gcloudcx.RoutingMessageRecipient](context.Background(), suite.Client, id)
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", id, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(id, recipient.GetID())
 	suite.Assert().Equal("GILDAS-OpenMessaging Integration Test-Viber", recipient.Name)
 	suite.Assert().Equal("open", recipient.MessengerType)
@@ -171,8 +173,9 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByName() {
 	match := func(recipient gcloudcx.RoutingMessageRecipient) bool {
 		return recipient.Name == name
 	}
-	recipient, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	recipient, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", name, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(uuid.MustParse("968acd86-f5eb-4565-94da-6c2873e02b2c"), recipient.GetID())
 	suite.Assert().Equal(name, recipient.Name)
 	suite.Assert().Equal("open", recipient.MessengerType)
@@ -181,9 +184,10 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByName() {
 }
 
 func (suite *RoutingMessageRecipientSuite) TestCanFetchAll() {
-	recipients, err := gcloudcx.FetchAll[gcloudcx.RoutingMessageRecipient](context.Background(), suite.Client, gcloudcx.Query{"messengerType": "open"})
+	recipients, correlationID, err := gcloudcx.FetchAll[gcloudcx.RoutingMessageRecipient](context.Background(), suite.Client, gcloudcx.Query{"messengerType": "open"})
 	suite.Require().NoError(err, "Failed to fetch Routing Message Recipients")
 	suite.Require().NotEmpty(recipients, "No Routing Message Recipients")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Infof("Found %d Routing Message Recipients", len(recipients))
 	suite.Assert().Greater(len(recipients), 25, "Not enough Routing Message Recipients")
 	for _, recipient := range recipients {
@@ -197,8 +201,9 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchAll() {
 func (suite *RoutingMessageRecipientSuite) TestCanFetchByIntegration() {
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
-	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
+	integration, correlationID, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
 	suite.Require().NoError(err, "Failed to create integration")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
 		if integration.IsCreated() {
@@ -206,18 +211,20 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByIntegration() {
 		}
 		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
 		time.Sleep(time.Second)
-		err = integration.Refresh(context.Background())
+		correlationID, err = integration.Refresh(context.Background())
 		suite.Require().NoError(err, "Failed to refresh integration")
 	}
 	defer func(integration *gcloudcx.OpenMessagingIntegration) {
 		if integration != nil && integration.IsCreated() {
-			err := integration.Delete(context.Background())
+			correlationID, err := integration.Delete(context.Background())
 			suite.Require().NoError(err, "Failed to delete integration")
+			suite.Logger.Infof("Correlation: %s", correlationID)
 		}
 	}(integration)
 	suite.Logger.Infof("Fetching Recipient for Integration %s", integration.GetID())
-	recipient, err := integration.GetRoutingMessageRecipient(context.Background())
+	recipient, correlationID, err := integration.GetRoutingMessageRecipient(context.Background())
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(integration.GetID(), recipient.GetID())
 	suite.Assert().Nil(recipient.Flow, "Recipient should not have a Flow")
 	suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
@@ -226,8 +233,9 @@ func (suite *RoutingMessageRecipientSuite) TestCanFetchByIntegration() {
 func (suite *RoutingMessageRecipientSuite) TestCanUpdateFlow() {
 	webhookURL, _ := url.Parse("https://www.genesys.com/gcloudcx")
 	webhookToken := "DEADBEEF"
-	integration, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
+	integration, correlationID, err := suite.Client.CreateOpenMessagingIntegration(context.Background(), "UNITTEST-go-gcloudcx", webhookURL, webhookToken, nil)
 	suite.Require().NoError(err, "Failed to create integration")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("integration", integration).Infof("Created a integration")
 	for {
 		if integration.IsCreated() {
@@ -235,22 +243,25 @@ func (suite *RoutingMessageRecipientSuite) TestCanUpdateFlow() {
 		}
 		suite.Logger.Warnf("Integration %s is still in status: %s, waiting a bit", integration.ID, integration.CreateStatus)
 		time.Sleep(time.Second)
-		err = integration.Refresh(context.Background())
+		correlationID, err = integration.Refresh(context.Background())
 		suite.Require().NoError(err, "Failed to refresh integration")
 	}
 	defer func(integration *gcloudcx.OpenMessagingIntegration) {
 		if integration != nil && integration.IsCreated() {
 			suite.Logger.Infof("Deleting integration %s", integration.GetID())
-			recipient, _ := integration.GetRoutingMessageRecipient(context.Background())
-			err := recipient.DeleteFlow(context.Background())
+			recipient, _, _ := integration.GetRoutingMessageRecipient(context.Background())
+			correlationID, err := recipient.DeleteFlow(context.Background())
 			suite.Require().NoError(err, "Failed to delete flow")
-			err = integration.Delete(context.Background())
+			suite.Logger.Infof("Correlation: %s", correlationID)
+			correlationID, err = integration.Delete(context.Background())
 			suite.Require().NoError(err, "Failed to delete integration")
+			suite.Logger.Infof("Correlation: %s", correlationID)
 		}
 	}(integration)
 	suite.Logger.Infof("Fetching Recipient for Integration %s", integration.GetID())
-	recipient, err := integration.GetRoutingMessageRecipient(context.Background())
+	recipient, correlationID, err := integration.GetRoutingMessageRecipient(context.Background())
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(integration.GetID(), recipient.GetID())
 	suite.Assert().Nil(recipient.Flow, "Recipient should not have a Flow")
 	suite.Logger.Record("recipient", recipient).Infof("Got a Routing Message Recipient")
@@ -262,11 +273,13 @@ func (suite *RoutingMessageRecipientSuite) TestCanUpdateFlow() {
 	}
 
 	suite.Logger.Infof("Updating Recipient %s's flow to %s", recipient.GetID(), flow.Name)
-	err = recipient.UpdateFlow(context.Background(), &flow)
+	correlationID, err = recipient.UpdateFlow(context.Background(), &flow)
 	suite.Require().NoErrorf(err, "Failed to update Routing Message Recipient %s. %s", recipient.GetID(), err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 
-	verify, err := integration.GetRoutingMessageRecipient(context.Background())
+	verify, correlationID, err := integration.GetRoutingMessageRecipient(context.Background())
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(integration.GetID(), verify.GetID())
 	suite.Assert().NotNil(verify.Flow, "Recipient should have a Flow")
 	suite.Assert().Equal(flow.Name, verify.Flow.Name)
@@ -279,10 +292,10 @@ func (suite *RoutingMessageRecipientSuite) TestCanUpdateFlow() {
 	}
 
 	suite.Logger.Infof("Updating Recipient %s's flow to %s", recipient.GetID(), flow.Name)
-	err = recipient.UpdateFlow(context.Background(), &flow)
+	correlationID, err = recipient.UpdateFlow(context.Background(), &flow)
 	suite.Require().NoErrorf(err, "Failed to update Routing Message Recipient %s. %s", recipient.GetID(), err)
 
-	verify, err = integration.GetRoutingMessageRecipient(context.Background())
+	verify, correlationID, err = integration.GetRoutingMessageRecipient(context.Background())
 	suite.Require().NoErrorf(err, "Failed to fetch Routing Message Recipient %s. %s", integration.GetID(), err)
 	suite.Assert().Equal(integration.GetID(), verify.GetID())
 	suite.Assert().NotNil(verify.Flow, "Recipient should have a Flow")

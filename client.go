@@ -102,21 +102,21 @@ func (client *Client) IsAuthorized() bool {
 // CheckScopes checks if the current client allows/denies the given scopes
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
-func (client *Client) CheckScopes(context context.Context, scopes ...string) (permitted []string, denied []string, err error) {
+func (client *Client) CheckScopes(context context.Context, scopes ...string) (permitted []string, denied []string, correlationID string, err error) {
 	return client.CheckScopesWithID(context, client.Grant, scopes...)
 }
 
 // CheckScopesWithID checks if the given grant allows/denies the given scopes
 //
 // See https://developer.genesys.cloud/authorization/platform-auth/scopes#scope-descriptions
-func (client *Client) CheckScopesWithID(context context.Context, id core.Identifiable, scopes ...string) (permitted []string, denied []string, err error) {
+func (client *Client) CheckScopesWithID(context context.Context, id core.Identifiable, scopes ...string) (permitted []string, denied []string, correlationID string, err error) {
 	if id.GetID() == uuid.Nil {
-		return nil, nil, errors.ArgumentMissing.With("id")
+		return nil, nil, "", errors.ArgumentMissing.With("id")
 	}
-	subject, err := Fetch[AuthorizationSubject](context, client, id)
+	subject, correlationID, err := Fetch[AuthorizationSubject](context, client, id)
 	if err != nil {
-		return []string{}, scopes, err
+		return []string{}, scopes, correlationID, err
 	}
 	permitted, denied = subject.CheckScopes(scopes...)
-	return permitted, denied, nil
+	return permitted, denied, correlationID, nil
 }

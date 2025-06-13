@@ -97,8 +97,9 @@ func (suite *UserSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -182,8 +183,9 @@ func (suite *UserSuite) TestCanInstantiate() {
 }
 
 func (suite *UserSuite) TestCanFetchByID() {
-	user, err := gcloudcx.Fetch[gcloudcx.User](context.Background(), suite.Client, suite.UserID)
+	user, correlationID, err := gcloudcx.Fetch[gcloudcx.User](context.Background(), suite.Client, suite.UserID)
 	suite.Require().NoErrorf(err, "Failed to fetch User %s. %s", suite.UserID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.UserID, user.ID)
 	suite.Assert().Equal(suite.UserName, user.Name)
 }
@@ -192,8 +194,9 @@ func (suite *UserSuite) TestCanFetchByName() {
 	match := func(user gcloudcx.User) bool {
 		return user.Name == suite.UserName
 	}
-	user, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	user, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch User %s. %s", suite.UserName, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.UserID, user.ID)
 	suite.Assert().Equal(suite.UserName, user.Name)
 }

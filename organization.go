@@ -27,14 +27,13 @@ type Organization struct {
 }
 
 // GetMyOrganization retrives the current Organization
-func (client *Client) GetMyOrganization(context context.Context) (*Organization, error) {
-	organization := &Organization{}
-	if err := client.Get(context, "/organizations/me", &organization); err != nil {
-		return nil, err
+func (client *Client) GetMyOrganization(context context.Context) (organization *Organization, correlationID string, err error) {
+	if correlationID, err = client.Get(context, "/organizations/me", &organization); err != nil {
+		return nil, correlationID, err
 	}
 	organization.client = client
 	organization.logger = client.Logger.Child("organization", "organization", "id", organization.ID)
-	return organization, nil
+	return organization, correlationID, nil
 }
 
 // Initialize initializes the object
