@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -29,9 +30,39 @@ func (entity DurationCollectionSlotEntity) GetName() string {
 	return entity.Name
 }
 
+// ParseValue parses the value and returns a new SlotEntity instance
+func (entity DurationCollectionSlotEntity) ParseValue(value string) (SlotEntity, error) {
+	var values []time.Duration
+	for index, raw := range strings.Split(value, ",") {
+		duration, err := core.ParseDuration(strings.TrimSpace(raw))
+		if err != nil {
+			return nil, errors.ArgumentInvalid.With(fmt.Sprintf("value[%d]", index), value)
+		}
+		values = append(values, duration)
+	}
+	return &DurationCollectionSlotEntity{
+		Name:   entity.Name,
+		Values: values,
+	}, nil
+}
+
 // DurationCollection returns the string representation of the slot entity's value
 func (entity DurationCollectionSlotEntity) String() string {
 	return strings.Join(core.Map(entity.Values, func(duration time.Duration) string { return core.Duration(duration).ToISO8601() }), ",")
+}
+
+// Validate checks if the slot entity is valid
+func (entity *DurationCollectionSlotEntity) Validate() error {
+	var merr errors.MultiError
+
+	if len(entity.Name) == 0 {
+		merr.Append(errors.ArgumentMissing.With("entity.name"))
+	}
+	if len(entity.Name) > 100 {
+		merr.Append(errors.ArgumentInvalid.With("entity.name", "must be less than 100 characters"))
+	}
+
+	return merr.AsError()
 }
 
 // MarshalJSON marshals the slot entity to JSON
@@ -72,5 +103,5 @@ func (entity *DurationCollectionSlotEntity) UnmarshalJSON(data []byte) (err erro
 		}
 		return duration
 	})
-	return nil
+	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }
