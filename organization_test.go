@@ -108,9 +108,9 @@ func (suite *OrganizationSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
-		suite.Logger.Infof("Client is now logged in...")
+		suite.Logger.Record("correlation", correlationID).Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
 	}
@@ -125,9 +125,9 @@ func (suite *OrganizationSuite) AfterTest(suiteName, testName string) {
 // *****************************************************************************
 
 func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
-	organization, err := suite.Client.GetMyOrganization(context.Background())
+	organization, correlationID, err := suite.Client.GetMyOrganization(context.Background())
 	if err != nil {
-		suite.Logger.Errorf("Failed", err)
+		suite.Logger.Record("correlation", correlationID).Errorf("Failed", err)
 	}
 	suite.Require().NoError(err, "Failed to fetch my Organization")
 	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
@@ -138,9 +138,9 @@ func (suite *OrganizationSuite) TestCanFetchMyOrganization() {
 }
 
 func (suite *OrganizationSuite) TestCanFetchOrganizationByID() {
-	organization, err := gcloudcx.Fetch[gcloudcx.Organization](context.Background(), suite.Client, suite.OrganizationID)
+	organization, correlationID, err := gcloudcx.Fetch[gcloudcx.Organization](context.Background(), suite.Client, suite.OrganizationID)
 	if err != nil {
-		suite.Logger.Errorf("Failed", err)
+		suite.Logger.Record("correlation", correlationID).Errorf("Failed", err)
 	}
 	suite.Require().NoError(err, "Failed to fetch my Organization")
 	suite.Assert().Equal(suite.OrganizationID, organization.GetID(), "Client's Organization ID is not the same")
