@@ -68,6 +68,7 @@ func (config *AppConfig) HttpHandler() func(http.Handler) http.Handler {
 
 // Initialize configures this AppConfig by calling GCloud as needed
 func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Client) (err error) {
+	var correlationID string
 	config.Logger = client.Logger.Topic("config")
 	log := config.Logger.Scope("initialize")
 	if config.AgentQueue == nil {
@@ -79,7 +80,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 		}
 	}
 	if len(config.AgentQueue.ID) == 0 {
-		config.AgentQueue, err = gcloudcx.FetchBy(context, client, match(config.AgentQueue.Name))
+		config.AgentQueue, correlationID, err = gcloudcx.FetchBy(context, client, match(config.AgentQueue.Name))
 		if err != nil {
 			return errors.Wrapf(err, "Failed to retrieve the Agent Queue %s", config.AgentQueue.Name)
 		}
@@ -88,7 +89,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 		return errors.ArgumentMissing.With("Bot Queue")
 	}
 	if len(config.BotQueue.ID) == 0 {
-		config.BotQueue, err = gcloudcx.FetchBy(context, client, match(config.BotQueue.Name))
+		config.BotQueue, correlationID, err = gcloudcx.FetchBy(context, client, match(config.BotQueue.Name))
 		if err != nil {
 			return errors.Wrapf(err, "Failed to retrieve the Bot Queue %s", config.BotQueue.Name)
 		}
@@ -101,19 +102,19 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 	}
 	log.Infof("Current User: %s", config.User)
 
-	config.NotificationChannel, err = client.CreateNotificationChannel(context)
+	config.NotificationChannel, correlationID, err = client.CreateNotificationChannel(context)
 	if err != nil {
-		log.Errorf("Failed to create a notification channel", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to create a notification channel", err)
 		return
 	}
 
-	topics, err := config.NotificationChannel.Subscribe(
+	topics, correlationID, err := config.NotificationChannel.Subscribe(
 		context,
 		gcloudcx.UserPresenceTopic{}.With(config.User),
 		gcloudcx.UserConversationChatTopic{}.With(config.User),
 	)
 	if err != nil {
-		log.Errorf("Failed to subscribe to topics", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to subscribe to topics", err)
 		return
 	}
 	log.Infof("Subscribed to topics: [%v]", topics)
@@ -130,9 +131,9 @@ func (config *AppConfig) Reset(context context.Context) (err error) {
 
 	if config.NotificationChannel != nil {
 		log.Debugf("Closing Notification Channel %s", config.NotificationChannel)
-		err = config.NotificationChannel.Close(context)
+		correlationID, err := config.NotificationChannel.Close(context)
 		if err != nil {
-			config.NotificationChannel.Logger.Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
+			config.NotificationChannel.Logger.Record("genesys-correlation", correlationID).Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
 			return err
 		}
 		log.Infof("Closed Notification Channel %s", config.NotificationChannel)

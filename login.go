@@ -23,17 +23,17 @@ type Authorization struct {
 // Login logs in a Client to Gcloud
 //
 //	Uses the credentials stored in the Client
-func (client *Client) Login(context context.Context) error {
+func (client *Client) Login(context context.Context) (correlationID string, err error) {
 	return client.LoginWithAuthorizationGrant(context, client.Grant)
 }
 
 // LoginWithAuthorizationGrant logs in a Client to Gcloud with given authorization Grant
-func (client *Client) LoginWithAuthorizationGrant(context context.Context, grant Authorizable) (err error) {
+func (client *Client) LoginWithAuthorizationGrant(context context.Context, grant Authorizable) (correlationID string, err error) {
 	if grant == nil {
-		return errors.ArgumentMissing.With("Authorization Grant")
+		return "", errors.ArgumentMissing.With("Authorization Grant")
 	}
-	if err = grant.Authorize(context, client); err != nil {
-		return err
+	if correlationID, err = grant.Authorize(context, client); err != nil {
+		return
 	}
 	return
 }
@@ -82,8 +82,8 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			params := r.URL.Query()
 			grant.Code = params.Get("code")
 			log.Tracef("Authorization Code: %s", grant.Code)
-			if err := client.Login(r.Context()); err != nil {
-				log.Errorf("Failed to Authorize Grant", err)
+			if correlationID, err := client.Login(r.Context()); err != nil {
+				log.Record("gcloudcx-correlation", correlationID).Errorf("Failed to Authorize Grant", err)
 				core.RespondWithError(w, http.StatusInternalServerError, err)
 				return
 			}

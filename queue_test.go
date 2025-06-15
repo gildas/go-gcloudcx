@@ -97,8 +97,9 @@ func (suite *QueueSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -175,8 +176,9 @@ func (suite *QueueSuite) TestCanMarshal() {
 }
 
 func (suite *QueueSuite) TestCanFetchByID() {
-	queue, err := gcloudcx.Fetch[gcloudcx.Queue](context.Background(), suite.Client, suite.QueueID)
+	queue, correlationID, err := gcloudcx.Fetch[gcloudcx.Queue](context.Background(), suite.Client, suite.QueueID)
 	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.QueueID, queue.ID)
 	suite.Assert().Equal(suite.QueueName, queue.Name)
 }
@@ -185,8 +187,9 @@ func (suite *QueueSuite) TestCanFetchByNameSlow() {
 	match := func(queue gcloudcx.Queue) bool {
 		return queue.Name == suite.QueueName
 	}
-	queue, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	queue, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueID, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.QueueID, queue.ID)
 	suite.Assert().Equal(suite.QueueName, queue.Name)
 }
@@ -196,8 +199,9 @@ func (suite *QueueSuite) TestCanFetchByName() {
 	match := func(recipient gcloudcx.Queue) bool {
 		return true
 	}
-	queue, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"name": suite.QueueName})
+	queue, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"name": suite.QueueName})
 	suite.Require().NoErrorf(err, "Failed to fetch Queue %s. %s", suite.QueueName, err)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.QueueID, queue.ID)
 	suite.Assert().Equal(suite.QueueName, queue.Name)
 }

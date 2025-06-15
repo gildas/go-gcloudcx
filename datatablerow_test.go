@@ -57,9 +57,10 @@ func (suite *DataTableRowSuite) SetupSuite() {
 	suite.Logger.Infof("Suite Start: %s %s", suite.Name, strings.Repeat("=", 80-14-len(suite.Name)))
 
 	var (
-		region   = core.GetEnvAsString("PURECLOUD_REGION", "")
-		clientID = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
-		secret   = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
+		region        = core.GetEnvAsString("PURECLOUD_REGION", "")
+		clientID      = uuid.MustParse(core.GetEnvAsString("PURECLOUD_CLIENTID", ""))
+		secret        = core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "")
+		correlationID string
 	)
 
 	suite.Client = gcloudcx.NewClient(&gcloudcx.ClientOptions{
@@ -73,9 +74,10 @@ func (suite *DataTableRowSuite) SetupSuite() {
 
 	// Create a DataTable
 	tableID := uuid.MustParse("a5c9b6e1-9a36-405d-8728-67fc31973e5e")
-	suite.Table, err = gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, tableID)
+	suite.Table, correlationID, err = gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, tableID)
 	suite.Require().NoError(err, "Failed to fetch DataTable")
 	suite.Require().NotNil(suite.Table, "DataTable is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 
 	suite.Key = "test-key"
 	suite.Value = "test-value"
@@ -100,21 +102,24 @@ func (suite *DataTableRowSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
 	}
 
 	// Create a Row
-	err := suite.Table.AddRow(suite.Context, suite.Key, gcloudcx.DataTableRow{"text": suite.Value})
+	correlationID, err := suite.Table.AddRow(suite.Context, suite.Key, gcloudcx.DataTableRow{"text": suite.Value})
 	suite.Require().NoError(err, "Failed to add DataTable row")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 }
 
 func (suite *DataTableRowSuite) AfterTest(suiteName, testName string) {
-	err := suite.Table.DeleteRow(suite.Context, suite.Key)
+	correlationID, err := suite.Table.DeleteRow(suite.Context, suite.Key)
 	suite.Require().NoError(err, "Failed to delete DataTable row")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 
 	duration := time.Since(suite.Start)
 	if suite.T().Failed() {
@@ -141,21 +146,24 @@ func (suite *DataTableRowSuite) UnmarshalData(filename string, v interface{}) er
 // Suite Tests
 
 func (suite *DataTableRowSuite) TestCanUpdateRow() {
-	err := suite.Table.UpdateRow(suite.Context, suite.Key, gcloudcx.DataTableRow{"text": "updated"})
+	correlationID, err := suite.Table.UpdateRow(suite.Context, suite.Key, gcloudcx.DataTableRow{"text": "updated"})
 	suite.Require().NoError(err, "Failed to update DataTable rows")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 
-	row, err := suite.Table.GetRow(suite.Context, suite.Key)
+	row, correlationID, err := suite.Table.GetRow(suite.Context, suite.Key)
 	suite.Require().NoError(err, "Failed to fetch DataTable rows")
 	suite.Require().NotNil(row, "DataTable rows is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("row", row).Infof("DataTable row")
 	suite.Assert().Equal(suite.Key, row["key"], "DataTable row key is wrong")
 	suite.Assert().Equal("updated", row["text"], "DataTable row value is wrong")
 }
 
 func (suite *DataTableRowSuite) TestCanGetAllRows() {
-	rows, err := suite.Table.GetRows(suite.Context)
+	rows, correlationID, err := suite.Table.GetRows(suite.Context)
 	suite.Require().NoError(err, "Failed to fetch DataTable rows")
 	suite.Require().NotNil(rows, "DataTable rows is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Require().Len(rows, 1, "DataTable rows is wrong length")
 	suite.Logger.Record("row", rows[0]).Infof("DataTable row 0")
 	suite.Assert().Equal(suite.Key, rows[0]["key"], "DataTable row 0 key is wrong")
@@ -163,25 +171,29 @@ func (suite *DataTableRowSuite) TestCanGetAllRows() {
 }
 
 func (suite *DataTableRowSuite) TestCanGetRowByKey() {
-	row, err := suite.Table.GetRow(suite.Context, suite.Key)
+	row, correlationID, err := suite.Table.GetRow(suite.Context, suite.Key)
 	suite.Require().NoError(err, "Failed to fetch DataTable rows")
 	suite.Require().NotNil(row, "DataTable rows is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Record("row", row).Infof("DataTable row")
 	suite.Assert().Equal(suite.Key, row["key"], "DataTable row key is wrong")
 	suite.Assert().Equal(suite.Value, row["text"], "DataTable row value is wrong")
 }
 
 func (suite *DataTableRowSuite) TestShouldFailGettingUnknowRow() {
-	_, err := suite.Table.GetRow(suite.Context, "unknown")
+	_, correlationID, err := suite.Table.GetRow(suite.Context, "unknown")
 	suite.Require().Error(err, "Should have failed to fetch DataTable rows")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 }
 
 func (suite *DataTableRowSuite) TestShouldFailWithNilRow() {
-	err := suite.Table.AddRow(suite.Context, "nil", nil)
+	correlationID, err := suite.Table.AddRow(suite.Context, "nil", nil)
 	suite.Require().Error(err, "Should have failed to add DataTable row")
 	suite.Assert().ErrorIs(err, errors.ArgumentMissing, "Should have failed with ArgumentMissing")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 
-	err = suite.Table.UpdateRow(suite.Context, "nil", nil)
+	correlationID, err = suite.Table.UpdateRow(suite.Context, "nil", nil)
 	suite.Require().Error(err, "Should have failed to update DataTable row")
 	suite.Assert().ErrorIs(err, errors.ArgumentMissing, "Should have failed with ArgumentMissing")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 }

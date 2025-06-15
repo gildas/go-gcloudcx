@@ -45,17 +45,17 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 							continue
 						}
 						log.Infof("Subscribing to Conversation %s", topic.ConversationID)
-						_, err := channel.Subscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
+						_, correlationID, err := channel.Subscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
 						if err != nil {
-							log.Errorf("Failed to subscribe to topic: %s", topic.Name, err)
+							log.Record("genesys-correlation", correlationID).Errorf("Failed to subscribe to topic: %s", topic.Name, err)
 							continue
 						}
 
 						log.Infof("Setting Participant %s state to %s", participant, "connected")
 						conversation := gcloudcx.New[gcloudcx.ConversationChat](context, client, topic.ConversationID, log)
-						err = participant.UpdateState(context, conversation, "connected")
+						correlationID, err = participant.UpdateState(context, conversation, "connected")
 						if err != nil {
-							log.Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
+							log.Record("genesys-correlation", correlationID).Errorf("Failed to set Participant %s state to: %s", participant, "connected", err)
 							continue
 						}
 					case "disconnected": // Finally, if we need tp wrap up the chat, let's do it
@@ -68,13 +68,13 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 							//   if needed (queue request a wrapup)
 							conversation := gcloudcx.New[gcloudcx.ConversationChat](context, client, topic.ConversationID, log)
 							wrapup := &gcloudcx.Wrapup{Code: "Default Wrap-up Code", Name: "Default Wap-up Code"}
-							if err := conversation.Wrapup(context, participant, wrapup); err != nil {
-								log.Errorf("Failed to wrapup Participant %s", participant)
+							if correlationID, err := conversation.Wrapup(context, participant, wrapup); err != nil {
+								log.Record("genesys-correlation", correlationID).Errorf("Failed to wrapup Participant %s", participant)
 								continue
 							}
 						}
-						if err := channel.Unsubscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID})); err != nil {
-							log.Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
+						if correlationID, err := channel.Unsubscribe(context, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID})); err != nil {
+							log.Record("genesys-correlation", correlationID).Errorf("Failed to unscubscribe Participant %s  from topic: %s", participant, gcloudcx.ConversationChatMessageTopic{}.With(gcloudcx.EntityRef{topic.ConversationID}))
 							continue
 						}
 					}
@@ -84,9 +84,9 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 				log.Infof("Conversation: %s, BodyType: %s, Body: %s, sender: %s", topic.ConversationID, topic.BodyType, topic.Body, topic.Sender)
 				if topic.Type == "message" && topic.BodyType == "standard" { // remove the noise...
 					// We need a full conversation object, so we can operate on it
-					conversation, err := gcloudcx.Fetch[gcloudcx.ConversationChat](context, client, topic.ConversationID)
+					conversation, correlationID, err := gcloudcx.Fetch[gcloudcx.ConversationChat](context, client, topic.ConversationID)
 					if err != nil {
-						log.Errorf("Failed to retrieve a Conversation for ID %s", topic.ConversationID, err)
+						log.Record("genesys-correlation", correlationID).Errorf("Failed to retrieve a Conversation for ID %s", topic.ConversationID, err)
 						continue
 					}
 					participant := findParticipant(conversation.Participants, config.User, "agent")
@@ -107,9 +107,9 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 					}
 					// Pretend the Chat Bot is typing... (whereis it is thinking... isn't it?)
 					log.Record("chat", participant.Chats[0]).Debugf("The agent is now typing")
-					err = conversation.SetTyping(context, participant.Chats[0])
+					correlationID, err = conversation.SetTyping(context, participant.Chats[0])
 					if err != nil {
-						log.Errorf("Failed to send Typing to Chat Member", err)
+						log.Record("genesys-correlation", correlationID).Errorf("Failed to send Typing to Chat Member", err)
 					}
 
 					// Send stuff to Matt's Google Dialog Flow webservice
@@ -134,21 +134,21 @@ func MessageLoop(config *AppConfig, client *gcloudcx.Client) {
 						continue
 					}
 					log.Record("response", response).Debugf("Received: %s", response.Fulfillment)
-					if err = conversation.Post(context, participant.Chats[0], response.Fulfillment); err != nil {
-						log.Errorf("Failed to send Text to Chat Member", err)
+					if correlationID, err = conversation.Post(context, participant.Chats[0], response.Fulfillment); err != nil {
+						log.Record("genesys-correlation", correlationID).Errorf("Failed to send Text to Chat Member", err)
 					}
 					switch {
 					case response.EndConversation:
 						log.Infof("Disconnecting Participant %s", participant)
-						if err := conversation.Disconnect(context, participant); err != nil {
-							log.Errorf("Failed to Wrapup Participant %s", &participant, err)
+						if correlationID, err := conversation.Disconnect(context, participant); err != nil {
+							log.Record("genesys-correlation", correlationID).Errorf("Failed to Wrapup Participant %s", &participant, err)
 							continue
 						}
 					case "agenttransfer" == strings.ToLower(response.Intent):
 						log.Infof("Transferring Participant %s to Queue %s", participant, config.AgentQueue)
 						log.Record("queue", config.AgentQueue).Debugf("Agent Queue: %s", config.AgentQueue)
-						if err := conversation.Transfer(context, participant, config.AgentQueue); err != nil {
-							log.Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
+						if correlationID, err := conversation.Transfer(context, participant, config.AgentQueue); err != nil {
+							log.Record("genesys-correlation", correlationID).Errorf("Failed to Transfer Participant %s to Queue %s", &participant, config.AgentQueue, err)
 							continue
 						}
 					}

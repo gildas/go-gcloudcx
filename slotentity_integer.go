@@ -27,9 +27,35 @@ func (entity IntegerSlotEntity) GetName() string {
 	return entity.Name
 }
 
+// ParseValue parses the value and returns a new SlotEntity instance
+func (entity IntegerSlotEntity) ParseValue(value string) (SlotEntity, error) {
+	intValue, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return nil, errors.ArgumentInvalid.With("value", value, "integer")
+	}
+	return &IntegerSlotEntity{
+		Name:  entity.Name,
+		Value: intValue,
+	}, nil
+}
+
 // Integer returns the string representation of the slot entity's value
 func (entity IntegerSlotEntity) String() string {
 	return strconv.FormatInt(entity.Value, 10)
+}
+
+// Validate checks if the slot entity is valid
+func (entity *IntegerSlotEntity) Validate() error {
+	var merr errors.MultiError
+
+	if len(entity.Name) == 0 {
+		merr.Append(errors.ArgumentMissing.With("entity.name"))
+	}
+	if len(entity.Name) > 100 {
+		merr.Append(errors.ArgumentInvalid.With("entity.name", "must be less than 100 characters"))
+	}
+
+	return merr.AsError()
 }
 
 // MarshalJSON marshals the slot entity to JSON
@@ -63,10 +89,11 @@ func (entity *IntegerSlotEntity) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	*entity = IntegerSlotEntity(inner.surrogate)
-	entity.Value, err = strconv.ParseInt(inner.Value, 10, 64)
-	if err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "integer"), err)
+	if len(inner.Value) > 0 {
+		entity.Value, err = strconv.ParseInt(inner.Value, 10, 64)
+		if err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "integer"), err)
+		}
 	}
-
-	return nil
+	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

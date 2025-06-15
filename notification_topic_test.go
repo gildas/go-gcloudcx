@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gildas/go-logger"
-	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/suite"
 
@@ -92,33 +91,4 @@ func (suite *NotificationTopicSuite) TestCanUnmarshalConverstionMessageTopic() {
 	actual, ok := topic.(gcloudcx.ConversationChatMessageTopic)
 	suite.Require().Truef(ok, "Expected a ConversationChatMessageTopic, got %T", topic)
 	suite.Require().NotNil(actual, "Cast Notification Topic returned nil")
-}
-
-func (suite *NotificationTopicSuite) TestCanUnmarshalConversationChatMemberTopic() {
-	payload := suite.LoadTestData("notification_topic_chat_member.json")
-
-	topic, err := gcloudcx.UnmarshalNotificationTopic(payload)
-	suite.Require().NoErrorf(err, "Failed to Unmarshal Notification Topic. %s", err)
-	suite.Require().NotNil(topic, "Unmarshal Notification Topic returned nil")
-
-	actual, ok := topic.(gcloudcx.ConversationChatMemberTopic)
-	suite.Require().Truef(ok, "Expected a ConversationChatMemberTopic, got %T", topic)
-	suite.Require().NotNil(actual, "Cast Notification Topic returned nil")
-}
-
-func (suite *NotificationTopicSuite) TestCanInstantiateFromString() {
-	expected := gcloudcx.ConversationChatMemberTopic{}
-	topic, err := gcloudcx.NotificationTopicFrom("v2.conversations.chats.aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e.members")
-	suite.Require().NoErrorf(err, "Failed to instantiate Notification Topic. %s", err)
-	suite.Require().NotNil(topic, "Instantiate Notification Topic returned nil")
-	suite.Require().Equal(expected.GetType(), topic.GetType())
-	suite.Require().Len(topic.GetTargets(), 1)
-	suite.Require().Equal(uuid.MustParse("aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e"), topic.GetTargets()[0].GetID())
-}
-
-func (suite *NotificationTopicSuite) TestCanGetTopicName() {
-	expected := "v2.conversations.chats.aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e.members"
-	entityRef := gcloudcx.EntityRef{ID: uuid.MustParse("aa06a6fc-1fdf-4e59-b8a1-df3ca44f523e")}
-	topic := gcloudcx.ConversationChatMemberTopic{}
-	suite.Require().Equal(expected, topic.With(entityRef).String())
 }

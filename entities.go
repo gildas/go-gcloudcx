@@ -16,21 +16,20 @@ type Entities struct {
 	LastURI    string   `json:"lastUri"`
 }
 
-func (client *Client) FetchEntities(context context.Context, uri URI) ([][]byte, error) {
+func (client *Client) FetchEntities(context context.Context, uri URI) (values [][]byte, correlationID string, err error) {
 	entities := Entities{}
-	values := [][]byte{}
 
 	page := uint64(1)
 	for {
-		if err := client.Get(context, uri.WithQuery(Query{"pageNumber": page}), &entities); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, uri.WithQuery(Query{"pageNumber": page}), &entities); err != nil {
+			return nil, correlationID, err
 		}
 		values = append(values, entities.Entities...)
 		if page++; page > entities.PageCount {
 			break
 		}
 	}
-	return values, nil
+	return
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.

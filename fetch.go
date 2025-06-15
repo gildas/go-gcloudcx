@@ -16,36 +16,38 @@ import (
 //
 // Resources can be fetched by their ID:
 //
-//	user, err := Fetch[gcloudcx.User](context, client, uuid.UUID)
+//	user, correlationID, err := Fetch[gcloudcx.User](context, client, uuid.UUID)
 //
-//	user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{ID: uuid.UUID})
+//	user, correlationID, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{ID: uuid.UUID})
 //
 // or by their URI:
 //
-//	user, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{}.GetURI(uuid.UUID))
+//	user, correlationID, err := Fetch[gcloudcx.User](context, client, gcloudcx.User{}.GetURI(uuid.UUID))
 func Fetch[T Fetchable, PT interface {
 	Initializable
 	*T
-}](context context.Context, client *Client, parameters ...any) (*T, error) {
+}](context context.Context, client *Client, parameters ...any) (*T, string, error) {
 	id, query, selfURI, log := parseFetchParameters(context, client, parameters...)
+	var err error
+	var correlationID string
 
 	if len(selfURI) > 0 {
 		var object T
-		if err := client.Get(context, selfURI.WithQuery(query), &object); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, selfURI.WithQuery(query), &object); err != nil {
+			return nil, correlationID, err
 		}
 		PT(&object).Initialize(client, log)
-		return &object, nil
+		return &object, correlationID, nil
 	}
 	if id != uuid.Nil {
 		var object T
-		if err := client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
+			return nil, correlationID, err
 		}
 		PT(&object).Initialize(client, log)
-		return &object, nil
+		return &object, correlationID, nil
 	}
-	return nil, errors.NotFound.WithStack()
+	return nil, correlationID, errors.NotFound.WithStack()
 }
 
 // FetchWithStringID fetches a resource from the Genesys Cloud API
@@ -54,34 +56,36 @@ func Fetch[T Fetchable, PT interface {
 //
 // Resources can be fetched by their ID:
 //
-//	integrationType, err := Fetch[gcloudcx.IntegrationType](context, client, stringid)
+//	integrationType, correlationID, err := Fetch[gcloudcx.IntegrationType](context, client, stringid)
 //
 // or by their URI:
 //
-//	integrationType, err := Fetch[gcloudcx.IntegrationType](context, client, gcloudcx.IntegrationType{}.GetURI(stringid))
+//	integrationType, correlationID, err := Fetch[gcloudcx.IntegrationType](context, client, gcloudcx.IntegrationType{}.GetURI(stringid))
 func FetchWithStringID[T FetchableByStringID, PT interface {
 	Initializable
 	*T
-}](context context.Context, client *Client, parameters ...any) (*T, error) {
+}](context context.Context, client *Client, parameters ...any) (*T, string, error) {
 	id, query, selfURI, log := parseFetchParametersWithNamedID(context, client, parameters...)
+	var err error
+	var correlationID string
 
 	if len(selfURI) > 0 {
 		var object T
-		if err := client.Get(context, selfURI.WithQuery(query), &object); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, selfURI.WithQuery(query), &object); err != nil {
+			return nil, correlationID, err
 		}
 		PT(&object).Initialize(client, log)
-		return &object, nil
+		return &object, correlationID, nil
 	}
 	if id != "" {
 		var object T
-		if err := client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, object.GetURI(id).WithQuery(query), &object); err != nil {
+			return nil, correlationID, err
 		}
 		PT(&object).Initialize(client, log)
-		return &object, nil
+		return &object, correlationID, nil
 	}
-	return nil, errors.NotFound.WithStack()
+	return nil, correlationID, errors.NotFound.WithStack()
 }
 
 // FetchBy fetches a resource from the Genesys Cloud API by a match function
@@ -91,17 +95,20 @@ func FetchWithStringID[T FetchableByStringID, PT interface {
 //	match := func(user gcloudcx.User) bool {
 //	    return user.Name == "John Doe"
 //	}
-//	user, err := FetchBy(context, client, match)
+//	user, correlationID, err := FetchBy(context, client, match)
 //
 // A gcloudcx.Query can be added to narrow the request:
 //
-//	user, err := FetchBy(context, client, match, gcloudcx.Query{Language: "en-US"})
+//	user, correlationID, err := FetchBy(context, client, match, gcloudcx.Query{Language: "en-US"})
 func FetchBy[T Fetchable, PT interface {
 	Initializable
 	*T
-}](context context.Context, client *Client, match func(T) bool, parameters ...interface{}) (*T, error) {
+}](context context.Context, client *Client, match func(T) bool, parameters ...interface{}) (*T, string, error) {
+	var correlationID string
+	var err error
+
 	if match == nil {
-		return nil, errors.ArgumentMissing.With("match function")
+		return nil, "", errors.ArgumentMissing.With("match function")
 	}
 	_, query, _, log := parseFetchParameters(context, client, parameters...)
 	entities := Entities{}
@@ -109,45 +116,48 @@ func FetchBy[T Fetchable, PT interface {
 	var addressable T
 	for {
 		uri := addressable.GetURI().WithQuery(query).WithQuery(Query{"pageNumber": page})
-		if err := client.Get(context, uri, &entities); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, uri, &entities); err != nil {
+			return nil, correlationID, err
 		}
 		for _, entity := range entities.Entities {
 			var object T
 			if err := json.Unmarshal(entity, &object); err == nil && match(object) {
 				PT(&object).Initialize(client, log)
-				return &object, nil
+				return &object, correlationID, nil
 			}
 		}
 		if page++; page > entities.PageCount {
 			break
 		}
 	}
-	return nil, errors.NotFound.WithStack()
+	return nil, correlationID, errors.NotFound.WithStack()
 }
 
 // FetchAll fetches all objects from the Genesys Cloud API
 //
 // The objects must implement the Fetchable interface
 //
-//	users, err := FetchAll[gcloudcx.User](context, client)
+//	users, correlationID, err := FetchAll[gcloudcx.User](context, client)
 //
 // A gcloudcx.Query can be added to narrow the request:
 //
-//	users, err := FetchAll[gcloudcx.User](context, client, gcloudcx.Query{Language: "en-US"})
+//	users, correlationID, err := FetchAll[gcloudcx.User](context, client, gcloudcx.Query{Language: "en-US"})
 func FetchAll[T Fetchable, PT interface {
 	Initializable
 	*T
-}](context context.Context, client *Client, parameters ...interface{}) ([]*T, error) {
+}](context context.Context, client *Client, parameters ...interface{}) ([]*T, string, error) {
 	_, query, _, log := parseFetchParameters(context, client, parameters...)
 	entities := Entities{}
 	objects := []*T{}
 	page := uint64(1)
 	var addressable T
+	var correlationID string
+	var err error
+
 	for {
 		uri := addressable.GetURI().WithQuery(query).WithQuery(Query{"pageNumber": page})
-		if err := client.Get(context, uri, &entities); err != nil {
-			return nil, err
+		if correlationID, err = client.Get(context, uri, &entities); err != nil {
+			return nil, correlationID, err
 		}
 		for _, entity := range entities.Entities {
 			var object T
@@ -160,7 +170,7 @@ func FetchAll[T Fetchable, PT interface {
 			break
 		}
 	}
-	return objects, nil
+	return objects, correlationID, nil
 }
 
 /*

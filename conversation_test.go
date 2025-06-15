@@ -92,8 +92,9 @@ func (suite *ConversationSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -130,9 +131,10 @@ func (suite *ConversationSuite) TestCanUnmarshal() {
 
 func (suite *ConversationSuite) TestCanFetchByID() {
 	suite.T().Skip("We need a reliable way to fetch a conversation by ID forever")
-	conversation, err := gcloudcx.Fetch[gcloudcx.Conversation](context.Background(), suite.Client, suite.ConversationID)
+	conversation, correlationID, err := gcloudcx.Fetch[gcloudcx.Conversation](context.Background(), suite.Client, suite.ConversationID)
 	suite.Require().NoErrorf(err, "Failed to fetch Conversation %s. %s", suite.ConversationID, err)
 	suite.Assert().Equal(suite.ConversationID, conversation.ID)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 }
 
 func (suite *ConversationSuite) TestCanUnmarshalRecordings() {

@@ -72,16 +72,16 @@ func (contact ExternalContact) String() string {
 }
 
 // SearchExternalContact search for an external contact by one of its attributes
-func (client *Client) SearchExternalContact(context context.Context, value string) (contact *ExternalContact, err error) {
-	entities, err := client.FetchEntities(context, NewURI("/externalcontacts/contacts").WithQuery(Query{"q": value}))
+func (client *Client) SearchExternalContact(context context.Context, value string) (contact *ExternalContact, correlationID string, err error) {
+	entities, correlationID, err := client.FetchEntities(context, NewURI("/externalcontacts/contacts").WithQuery(Query{"q": value}))
 	if err != nil {
-		return nil, err
+		return nil, correlationID, err
 	}
 	if len(entities) == 0 {
-		return nil, errors.NotFound.With("value", value)
+		return nil, correlationID, errors.NotFound.With("value", value)
 	}
 	if err = json.Unmarshal(entities[0], &contact); err != nil {
-		return nil, err
+		return nil, correlationID, err
 	}
 	return
 }

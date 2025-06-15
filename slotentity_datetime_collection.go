@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -29,9 +30,39 @@ func (entity DatetimeCollectionSlotEntity) GetName() string {
 	return entity.Name
 }
 
+// ParseValue parses the value and returns a new SlotEntity instance
+func (entity DatetimeCollectionSlotEntity) ParseValue(value string) (SlotEntity, error) {
+	var values []time.Time
+	for index, raw := range strings.Split(value, ",") {
+		datetime, err := time.Parse(time.RFC3339, strings.TrimSpace(raw))
+		if err != nil {
+			return nil, errors.ArgumentInvalid.With(fmt.Sprintf("value[%d]", index), value)
+		}
+		values = append(values, datetime)
+	}
+	return &DatetimeCollectionSlotEntity{
+		Name:   entity.Name,
+		Values: values,
+	}, nil
+}
+
 // DatetimeCollection returns the string representation of the slot entity's value
 func (entity DatetimeCollectionSlotEntity) String() string {
 	return strings.Join(core.Map(entity.Values, func(value time.Time) string { return value.Format(time.RFC3339) }), ",")
+}
+
+// Validate checks if the slot entity is valid
+func (entity *DatetimeCollectionSlotEntity) Validate() error {
+	var merr errors.MultiError
+
+	if len(entity.Name) == 0 {
+		merr.Append(errors.ArgumentMissing.With("entity.name"))
+	}
+	if len(entity.Name) > 100 {
+		merr.Append(errors.ArgumentInvalid.With("entity.name", "must be less than 100 characters"))
+	}
+
+	return merr.AsError()
 }
 
 // MarshalJSON marshals the slot entity to JSON
@@ -69,5 +100,5 @@ func (entity *DatetimeCollectionSlotEntity) UnmarshalJSON(data []byte) (err erro
 		datetime, _ := time.Parse(time.RFC3339, value)
 		return datetime
 	})
-	return nil
+	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

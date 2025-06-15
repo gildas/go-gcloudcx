@@ -90,8 +90,9 @@ func (suite *DataTableSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -136,9 +137,10 @@ func (suite *DataTableSuite) TestCanMarshal() {
 }
 
 func (suite *DataTableSuite) TestCanFetchByID() {
-	table, err := gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, suite.TableID)
+	table, correlationID, err := gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, suite.TableID)
 	suite.Require().NoError(err, "Failed to fetch DataTable")
 	suite.Require().NotNil(table, "DataTable is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.TableID, table.GetID(), "DataTable ID is wrong")
 	suite.Assert().Equal("Unit Test", table.String(), "DataTable stringer is wrong")
 	suite.Assert().Equal("Unit Test", table.Name, "DataTable name is wrong")
@@ -149,9 +151,10 @@ func (suite *DataTableSuite) TestCanFetchByID() {
 }
 
 func (suite *DataTableSuite) TestCanFetchByName() {
-	table, err := gcloudcx.FetchBy(suite.Context, suite.Client, func(dt gcloudcx.DataTable) bool { return dt.Name == "Unit Test" })
+	table, correlationID, err := gcloudcx.FetchBy(suite.Context, suite.Client, func(dt gcloudcx.DataTable) bool { return dt.Name == "Unit Test" })
 	suite.Require().NoError(err, "Failed to fetch DataTable")
 	suite.Require().NotNil(table, "DataTable is nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Assert().Equal(suite.TableID, table.GetID(), "DataTable ID is wrong")
 	suite.Assert().Equal("Unit Test", table.String(), "DataTable stringer is wrong")
 	suite.Assert().Equal("Unit Test", table.Name, "DataTable name is wrong")
@@ -162,17 +165,19 @@ func (suite *DataTableSuite) TestCanFetchByName() {
 }
 
 func (suite *DataTableSuite) TestFetchShoudFailWithUnknownID() {
-	table, err := gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, uuid.New())
+	table, correlationID, err := gcloudcx.Fetch[gcloudcx.DataTable](suite.Context, suite.Client, uuid.New())
 	suite.Require().Error(err, "DataTable should not be found")
 	suite.Require().Nil(table, "DataTable should nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected error:", err)
 	// suite.Assert().ErrorIs(err, gcloudcx.NotFoundError, "Error should be NotFound")
 }
 
 func (suite *DataTableSuite) TestFetchShoudFailWithUnknownName() {
-	table, err := gcloudcx.FetchBy(suite.Context, suite.Client, func(dt gcloudcx.DataTable) bool { return dt.Name == "ZZZZZZZZ" })
+	table, correlationID, err := gcloudcx.FetchBy(suite.Context, suite.Client, func(dt gcloudcx.DataTable) bool { return dt.Name == "ZZZZZZZZ" })
 	suite.Require().Error(err, "DataTable should not be found")
 	suite.Require().Nil(table, "DataTable should nil")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected error:", err)
 	// suite.Assert().ErrorIs(err, errors.NotFound, "Error should be NotFound")
 }

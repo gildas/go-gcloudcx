@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -29,9 +30,39 @@ func (entity IntegerCollectionSlotEntity) GetName() string {
 	return entity.Name
 }
 
+// ParseValue parses the value and returns a new SlotEntity instance
+func (entity IntegerCollectionSlotEntity) ParseValue(value string) (SlotEntity, error) {
+	var values []int64
+	for index, raw := range strings.Split(value, ",") {
+		intValue, err := strconv.ParseInt(strings.TrimSpace(raw), 10, 64)
+		if err != nil {
+			return nil, errors.ArgumentInvalid.With(fmt.Sprintf("value[%d]", index), value)
+		}
+		values = append(values, intValue)
+	}
+	return &IntegerCollectionSlotEntity{
+		Name:   entity.Name,
+		Values: values,
+	}, nil
+}
+
 // IntegerCollection returns the string representation of the slot entity's value
 func (entity IntegerCollectionSlotEntity) String() string {
 	return strings.Join(core.Map(entity.Values, func(value int64) string { return strconv.FormatInt(value, 10) }), ",")
+}
+
+// Validate checks if the slot entity is valid
+func (entity *IntegerCollectionSlotEntity) Validate() error {
+	var merr errors.MultiError
+
+	if len(entity.Name) == 0 {
+		merr.Append(errors.ArgumentMissing.With("entity.name"))
+	}
+	if len(entity.Name) > 100 {
+		merr.Append(errors.ArgumentInvalid.With("entity.name", "must be less than 100 characters"))
+	}
+
+	return merr.AsError()
 }
 
 // MarshalJSON marshals the slot entity to JSON
@@ -69,6 +100,5 @@ func (entity *IntegerCollectionSlotEntity) UnmarshalJSON(payload []byte) error {
 		intValue, _ := strconv.ParseInt(value, 10, 64)
 		return intValue
 	})
-
-	return nil
+	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

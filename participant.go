@@ -172,12 +172,12 @@ func (participant Participant) String() string {
 }
 
 // Disconnect disconnects the Participant from the target
-func (participant *Participant) Disconnect(context context.Context, target Disconnecter) error {
+func (participant *Participant) Disconnect(context context.Context, target Disconnecter) (correlationID string, err error) {
 	return target.Disconnect(context, participant)
 }
 
 // UpdateState updates the state of the Participant in target
-func (participant *Participant) UpdateState(context context.Context, target StateUpdater, state string) error {
+func (participant *Participant) UpdateState(context context.Context, target StateUpdater, state string) (correlationID string, err error) {
 	return target.UpdateState(context, participant, state)
 }
 

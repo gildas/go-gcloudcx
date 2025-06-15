@@ -123,9 +123,10 @@ func (suite *ClientSuite) TestCanLoginWithClientCredentials() {
 		ClientID: clientID,
 		Secret:   core.GetEnvAsString("PURECLOUD_CLIENTSECRET", "s3cr3t"),
 	})
-	err := client.Login(context.Background())
+	correlationID, err := client.Login(context.Background())
 	suite.Require().NoError(err, "Login should have succeeded")
 	suite.Require().NotEmpty(client.Grant.AccessToken(), "Access Token should not be empty")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 }
 
 func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsSecret() {
@@ -142,8 +143,9 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsSecret(
 		ClientID: clientID,
 		Secret:   "s3cr3t",
 	})
-	err := client.Login(context.Background())
+	correlationID, err := client.Login(context.Background())
 	suite.Require().Error(err, "Login should have failed")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected Error", err)
 	suite.Assert().NotErrorIs(err, errors.RuntimeError)
 
@@ -161,8 +163,9 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsClientI
 		ClientID: uuid.New(), // The chances of this being a valid Client ID are very low
 		Secret:   "s3cr3t",
 	})
-	err := client.Login(context.Background())
+	correlationID, err := client.Login(context.Background())
 	suite.Require().Error(err, "Login should have failed")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected Error", err)
 	suite.Assert().NotErrorIs(err, errors.RuntimeError)
 

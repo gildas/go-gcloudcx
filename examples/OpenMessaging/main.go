@@ -21,9 +21,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Log is the application Logger
-var Log *logger.Logger
-
 func UpdateEnvFile(config *Config) {
 	config.Client.Logger.Infof("Updating the .env file")
 	_ = godotenv.Write(map[string]string{
@@ -50,20 +47,21 @@ func main() {
 		integrationHook  = flag.String("webhook", core.GetEnvAsString("INTEGRATION_WEBHOOK", ""), "the Integration Webhook URL")
 		integrationToken = flag.String("webhook-token", core.GetEnvAsString("INTEGRATION_TOKEN", ""), "the Integration Webhook Token")
 
-		port = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
-		wait = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
-		err  error
+		port          = flag.Int("port", core.GetEnvAsInt("PORT", 3000), "the port to listen to")
+		wait          = flag.Duration("graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
+		err           error
+		correlationID string
 	)
 	flag.Parse()
 
-	Log = logger.Create("OpenMessaging_Example", logger.TRACE)
-	defer Log.Flush()
-	Log.Infof(strings.Repeat("-", 80))
-	Log.Infof("Log Destination: %s", Log)
-	Log.Infof("Webserver Port=%d", *port)
+	log := logger.Create("OpenMessaging_Example", logger.TRACE)
+	defer log.Flush()
+	log.Infof("%s", strings.Repeat("-", 80))
+	log.Infof("log Destination: %s", log)
+	log.Infof("Webserver Port=%d", *port)
 
 	if *port == 0 {
-		Log.Fatalf("Missing Webserver port, stopping...")
+		log.Fatalf("Missing Webserver port, stopping...")
 		os.Exit(-1)
 	}
 
@@ -74,7 +72,7 @@ func main() {
 		IntegrationWebhookToken: *integrationToken,
 		Client: gcloudcx.NewClient(&gcloudcx.ClientOptions{
 			Region: *region,
-			Logger: Log,
+			Logger: log,
 		}).SetAuthorizationGrant(&gcloudcx.ClientCredentialsGrant{
 			ClientID: uuid.MustParse(*clientID),
 			Secret:   *clientSecret,
@@ -91,33 +89,36 @@ func main() {
 	match := func(integration gcloudcx.OpenMessagingIntegration) bool {
 		return integration.Name == *integrationName
 	}
-	config.Integration, err = gcloudcx.FetchBy(context.Background(), config.Client, match)
+	config.Integration, correlationID, err = gcloudcx.FetchBy(context.Background(), config.Client, match)
+	log = log.Record("genesys-correlation", correlationID)
 
 	if errors.Is(err, errors.NotFound) {
-		Log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
-		config.Integration, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken, nil)
+		log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
+		config.Integration, correlationID, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken, nil)
+		log = log.Record("genesys-correlation", correlationID)
 		if err != nil {
-			Log.Fatalf("Failed creating integration", err)
+			log.Fatalf("Failed creating integration", err)
 			os.Exit(1)
 		}
-		Log.Record("integration", config.Integration).Infof("Created new integration")
+		log.Record("integration", config.Integration).Infof("Created new integration")
 	} else if err != nil {
-		Log.Fatalf("Failed to retrieve OpenMessaging Integration", err)
+		log.Fatalf("Failed to retrieve OpenMessaging Integration", err)
 		os.Exit(1)
 	}
 
 	if strings.Compare(config.Integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(config.Integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
-		Log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
-		if err := config.Integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
-			Log.Fatalf("Failed to update the OpenMessaging Integration")
+		log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
+		if correlationID, err := config.Integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
+			log = log.Record("genesys-correlation", correlationID)
+			log.Fatalf("Failed to update the OpenMessaging Integration")
 			os.Exit(1)
 		}
-		Log.Record("integration", config.Integration).Infof("Updated integration")
+		log.Record("integration", config.Integration).Infof("Updated integration")
 	}
 
 	// Setting up web routes
 	router := mux.NewRouter().StrictSlash(true)
-	router.Use(Log.HttpHandler())
+	router.Use(log.HttpHandler())
 	router.Use(config.HttpHandler())
 	router.Methods("POST").Path("/hook").HandlerFunc(mainRouteHandler)
 
@@ -136,13 +137,13 @@ func main() {
 	}
 
 	// Start the Chat Server
-	Log.Infof("Starting Chat server")
-	config.ChatServer = NewChatServer(router, Log)
+	log.Infof("Starting Chat server")
+	config.ChatServer = NewChatServer(router, log)
 	go config.ChatServer.Start(config)
 
 	// Starting the server
 	go func() {
-		log := Log.Child("webserver", "run")
+		log := log.Child("webserver", "run")
 
 		log.Infof("Starting WEB server on port %d", *port)
 		log.Infof("Serving routes:")
@@ -185,15 +186,15 @@ func main() {
 		context, cancel := context.WithTimeout(context.Background(), *wait)
 		defer cancel()
 
-		Log.Infof("Application is stopping (%+v)", sig)
+		log.Infof("Application is stopping (%+v)", sig)
 
 		// Stopping the WEB server
-		Log.Debugf("WEB server is shutting down")
+		log.Debugf("WEB server is shutting down")
 		webServer.SetKeepAlivesEnabled(false)
 		if err = webServer.Shutdown(context); err != nil {
-			Log.Errorf("Failed to stop WEB server", err)
+			log.Errorf("Failed to stop WEB server", err)
 		} else {
-			Log.Infof("WEB server is stopped")
+			log.Infof("WEB server is stopped")
 		}
 
 		// Stopping the application

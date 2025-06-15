@@ -31,11 +31,9 @@ type NotificationChannel struct {
 // CreateNotificationChannel creates a new channel for notifications
 //
 //	If the environment variable PURECLOUD_LOG_HEARTBEAT is set to true, the Heartbeat topic will be logged
-func (client *Client) CreateNotificationChannel(context context.Context) (*NotificationChannel, error) {
-	var err error
-	channel := &NotificationChannel{}
-	if err = client.Post(context, "/notifications/channels", struct{}{}, &channel); err != nil {
-		return nil, err
+func (client *Client) CreateNotificationChannel(context context.Context) (channel *NotificationChannel, correlationID string, err error) {
+	if correlationID, err = client.Post(context, "/notifications/channels", struct{}{}, &channel); err != nil {
+		return nil, correlationID, err
 	}
 	channel.LogHeartbeat = core.GetEnvAsBool("PURECLOUD_LOG_HEARTBEAT", false)
 	channel.Client = client
@@ -44,24 +42,24 @@ func (client *Client) CreateNotificationChannel(context context.Context) (*Notif
 	if channel.ConnectURL != nil {
 		channel.Socket, _, err = websocket.DefaultDialer.Dial(channel.ConnectURL.String(), nil)
 		if err != nil {
-			return nil, errors.WrapErrors(errors.NotConnected.With("Channel"), err)
+			return nil, correlationID, errors.WrapErrors(errors.NotConnected.With("Channel"), err)
 		}
 	}
 	// Start the message loop
 	go channel.messageLoop()
 
-	return channel, nil
+	return channel, correlationID, nil
 }
 
 // Close unsubscribes from all subscriptions and closes the websocket
-func (channel *NotificationChannel) Close(context context.Context) (err error) {
+func (channel *NotificationChannel) Close(context context.Context) (correlationID string, err error) {
 	if channel.Client != nil && channel.Client.IsAuthorized() {
-		_ = channel.Unsubscribe(context)
+		_, _ = channel.Unsubscribe(context)
 	}
 	if channel.Socket != nil {
 		close(channel.TopicReceived)
 		if err = channel.Socket.Close(); err != nil {
-			return errors.WithMessage(err, "Failed while closing websocket")
+			return "", errors.WithMessage(err, "Failed while closing websocket")
 		}
 		channel.Socket = nil
 	}
@@ -70,22 +68,22 @@ func (channel *NotificationChannel) Close(context context.Context) (err error) {
 }
 
 // GetTopicStates gets all subscription topics set on this
-func (channel *NotificationChannel) GetTopicStates(context context.Context) ([]NotificationChannelTopicState, error) {
+func (channel *NotificationChannel) GetTopicStates(context context.Context) (states []NotificationChannelTopicState, correlationID string, err error) {
 	results := struct {
 		Entities []NotificationChannelTopicState
 	}{}
-	if err := channel.Client.Get(
+	if correlationID, err = channel.Client.Get(
 		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		&results,
 	); err != nil {
-		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, correlationID, err // err should already be decorated by Client
 	}
-	return results.Entities, nil
+	return results.Entities, correlationID, nil
 }
 
 // SetTopics sets the subscriptions. It overrides any previous subscriptions
-func (channel *NotificationChannel) SetTopics(context context.Context, topics ...NotificationTopic) ([]NotificationChannelTopicState, error) {
+func (channel *NotificationChannel) SetTopics(context context.Context, topics ...NotificationTopic) (states []NotificationChannelTopicState, correlationID string, err error) {
 	channelTopics := make([]NotificationChannelTopicState, 0, len(topics))
 	for _, topic := range topics {
 		channelTopics = append(channelTopics, NotificationChannelTopicState{Topic: topic})
@@ -93,20 +91,20 @@ func (channel *NotificationChannel) SetTopics(context context.Context, topics ..
 	results := struct {
 		Entities []NotificationChannelTopicState `json:"entities"`
 	}{}
-	if err := channel.Client.Put(
+	if correlationID, err = channel.Client.Put(
 		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
 	); err != nil {
-		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, correlationID, err // err should already be decorated by Client
 	}
-	return results.Entities, nil
+	return results.Entities, correlationID, nil
 }
 
 // IsSubscribed tells if the channel is subscribed to the given topic
 func (channel *NotificationChannel) IsSubscribed(context context.Context, topic NotificationTopic) bool {
-	topicStates, err := channel.GetTopicStates(context)
+	topicStates, _, err := channel.GetTopicStates(context)
 	if err != nil {
 		return false
 	}
@@ -119,7 +117,7 @@ func (channel *NotificationChannel) IsSubscribed(context context.Context, topic 
 }
 
 // Subscribe subscribes to a list of topics in the NotificationChannel
-func (channel *NotificationChannel) Subscribe(context context.Context, topics ...NotificationTopic) ([]NotificationChannelTopicState, error) {
+func (channel *NotificationChannel) Subscribe(context context.Context, topics ...NotificationTopic) (states []NotificationChannelTopicState, correlationID string, err error) {
 	channelTopics := make([]NotificationChannelTopicState, 0, len(topics))
 	for _, topic := range topics {
 		channelTopics = append(channelTopics, NotificationChannelTopicState{Topic: topic})
@@ -127,27 +125,27 @@ func (channel *NotificationChannel) Subscribe(context context.Context, topics ..
 	results := struct {
 		Entities []NotificationChannelTopicState `json:"entities"`
 	}{}
-	if err := channel.Client.Post(
+	if correlationID, err = channel.Client.Post(
 		context,
 		NewURI("/notifications/channels/%s/subscriptions", channel.ID),
 		channelTopics,
 		&results,
 	); err != nil {
-		return []NotificationChannelTopicState{}, err // err should already be decorated by Client
+		return []NotificationChannelTopicState{}, correlationID, err // err should already be decorated by Client
 	}
-	return results.Entities, nil
+	return results.Entities, correlationID, nil
 }
 
 // Unsubscribe unsubscribes from some topics,
 //
 // If there is no argument, unsubscribe from all topics
-func (channel *NotificationChannel) Unsubscribe(context context.Context, topics ...NotificationTopic) error {
+func (channel *NotificationChannel) Unsubscribe(context context.Context, topics ...NotificationTopic) (correlationID string, err error) {
 	if len(topics) == 0 {
 		return channel.Client.Delete(context, NewURI("/notifications/channels/%s/subscriptions", channel.ID), nil)
 	}
-	topicStates, err := channel.GetTopicStates(context)
+	topicStates, correlationID, err := channel.GetTopicStates(context)
 	if err != nil {
-		return err
+		return correlationID, err
 	}
 	filteredTopics := []NotificationTopic{}
 	for _, topicState := range topicStates {
@@ -162,8 +160,8 @@ func (channel *NotificationChannel) Unsubscribe(context context.Context, topics 
 			filteredTopics = append(filteredTopics, topicState.Topic)
 		}
 	}
-	_, err = channel.SetTopics(context, filteredTopics...)
-	return err
+	_, correlationID, err = channel.SetTopics(context, filteredTopics...)
+	return
 }
 
 // MarshalJSON marshals this into JSON

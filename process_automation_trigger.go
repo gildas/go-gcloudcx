@@ -73,25 +73,27 @@ func (trigger ProcessAutomationTrigger) GetURI(ids ...uuid.UUID) URI {
 
 // Create creates a new ProcessAutomationTrigger
 //
+// The Genesys Cloud correlation ID is return as the second return value.
+//
 // See: https://developer.genesys.cloud/platform/process-automation/trigger-apis#post-api-v2-processautomation-triggers
-func (trigger ProcessAutomationTrigger) Create(context context.Context, client *Client) (*ProcessAutomationTrigger, error) {
+func (trigger ProcessAutomationTrigger) Create(context context.Context, client *Client) (*ProcessAutomationTrigger, string, error) {
 	created := ProcessAutomationTrigger{}
-	err := client.Post(
+	correlationID, err := client.Post(
 		context,
 		"processautomation/triggers",
 		trigger,
 		&created,
 	)
 	if err != nil {
-		return nil, err
+		return nil, correlationID, err
 	}
 	created.client = client
 	created.logger = client.Logger.Child("trigger", "trigger", "id", trigger.ID)
-	return &created, nil
+	return &created, correlationID, nil
 }
 
 // Delete deletes this ProcessAutomationTrigger
-func (trigger ProcessAutomationTrigger) Delete(context context.Context) error {
+func (trigger ProcessAutomationTrigger) Delete(context context.Context) (correlationID string, err error) {
 	return trigger.client.Delete(context, trigger.GetURI(), nil)
 }
 

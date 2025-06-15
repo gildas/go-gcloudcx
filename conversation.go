@@ -136,9 +136,9 @@ func (conversation Conversation) String() string {
 // Disconnect disconnect an Identifiable from this
 //
 // implements Disconnecter
-func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) error {
+func (conversation Conversation) Disconnect(context context.Context, identifiable Identifiable) (correlationID string, err error) {
 	if conversation.client == nil {
-		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+		return "", errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
 	}
 
 	return conversation.client.Patch(
@@ -152,7 +152,7 @@ func (conversation Conversation) Disconnect(context context.Context, identifiabl
 // UpdateState update the state of an identifiable in this
 //
 // implements StateUpdater
-func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) error {
+func (conversation Conversation) UpdateState(context context.Context, identifiable Identifiable, state string) (correlationID string, err error) {
 	return conversation.client.Patch(
 		context,
 		NewURI("/conversations/%s/participants/%s", conversation.ID, identifiable.GetID()),
@@ -172,13 +172,13 @@ func (conversation Conversation) GetParticipantByPurpose(purpose string) (partic
 }
 
 // AssociateExternalContact associates an ExternalContact to this Conversation
-func (conversation Conversation) AssociateExternalContact(context context.Context, contact *ExternalContact, communicationID uuid.UUID, mediaType string) error {
+func (conversation Conversation) AssociateExternalContact(context context.Context, contact *ExternalContact, communicationID uuid.UUID, mediaType string) (correlationID string, err error) {
 	if conversation.client == nil {
-		return errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+		return "", errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
 	}
 
 	if contact == nil {
-		return errors.ArgumentMissing.With("contact")
+		return "", errors.ArgumentMissing.With("contact")
 	}
 	return conversation.client.Put(
 		context,
@@ -199,14 +199,14 @@ func (conversation Conversation) AssociateExternalContact(context context.Contex
 }
 
 // FetchRecordings fetches the recordings of this conversation
-func (conversation Conversation) FetchRecordings(context context.Context) (recordings []Recording, err error) {
+func (conversation Conversation) FetchRecordings(context context.Context) (recordings []Recording, correlationID string, err error) {
 	if conversation.client == nil {
-		return nil, errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
+		return nil, correlationID, errors.Join(errors.Errorf("Conversation %s is not initialized", conversation.ID), errors.ArgumentMissing.With("client"))
 	}
 	log := conversation.client.GetLogger(context).Child("conversation", "getrecordings", "conversation", conversation.ID)
 
 	log.Infof("Fetching recordings for conversation %s", conversation.ID)
-	err = conversation.client.SendRequest(
+	correlationID, err = conversation.client.SendRequest(
 		context,
 		NewURI("/api/v2/conversations/%s/recordings?maxWaitMs=60000", conversation.ID),
 		&request.Options{
@@ -228,7 +228,7 @@ func (conversation Conversation) FetchRecordings(context context.Context) (recor
 	)
 	if err != nil {
 		log.Errorf("Failed to send request: %s", err)
-		return nil, err
+		return nil, correlationID, err
 	}
 	log.Debugf("Received response for %d recordings", len(recordings))
 

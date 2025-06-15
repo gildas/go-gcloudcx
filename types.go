@@ -59,17 +59,17 @@ type FetchableByStringID interface {
 
 // StateUpdater describes objects than can update the state of an Identifiable
 type StateUpdater interface {
-	UpdateState(context context.Context, identifiable Identifiable, state string) error
+	UpdateState(context context.Context, identifiable Identifiable, state string) (correlationID string, err error)
 }
 
 // Disconnecter describes objects that can disconnect an Identifiable from themselves
 type Disconnecter interface {
-	Disconnect(context context.Context, identifiable Identifiable) error
+	Disconnect(context context.Context, identifiable Identifiable) (correlationID string, err error)
 }
 
 // Transferrer describes objects that can transfer an Identifiable somewhere else
 type Transferrer interface {
-	Transfer(context context.Context, identifiable Identifiable, target Identifiable) error
+	Transfer(context context.Context, identifiable Identifiable, target Identifiable) (correlationID string, err error)
 }
 
 // Address describes an Address (telno, etc)

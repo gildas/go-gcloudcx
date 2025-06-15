@@ -113,8 +113,9 @@ func (suite *ResponseManagementSuite) BeforeTest(suiteName, testName string) {
 	// Reuse tokens as much as we can
 	if !suite.Client.IsAuthorized() {
 		suite.Logger.Infof("Client is not logged in...")
-		err := suite.Client.Login(context.Background())
+		correlationID, err := suite.Client.Login(context.Background())
 		suite.Require().NoError(err, "Failed to login")
+		suite.Logger.Infof("Correlation: %s", correlationID)
 		suite.Logger.Infof("Client is now logged in...")
 	} else {
 		suite.Logger.Infof("Client is already logged in...")
@@ -192,7 +193,8 @@ func (suite *ResponseManagementSuite) TestCanUnmarshalMessageTemplate() {
 }
 
 func (suite *ResponseManagementSuite) TestCanFetchLibraryByID() {
-	library, err := gcloudcx.Fetch[gcloudcx.ResponseManagementLibrary](context.Background(), suite.Client, suite.LibraryID)
+	library, correlationID, err := gcloudcx.Fetch[gcloudcx.ResponseManagementLibrary](context.Background(), suite.Client, suite.LibraryID)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -206,7 +208,8 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByName() {
 	match := func(library gcloudcx.ResponseManagementLibrary) bool {
 		return library.Name == suite.LibraryName
 	}
-	library, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	library, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -217,7 +220,8 @@ func (suite *ResponseManagementSuite) TestCanFetchLibraryByName() {
 }
 
 func (suite *ResponseManagementSuite) TestCanFetchResponseByID() {
-	response, err := gcloudcx.Fetch[gcloudcx.ResponseManagementResponse](context.Background(), suite.Client, suite.ResponseID)
+	response, correlationID, err := gcloudcx.Fetch[gcloudcx.ResponseManagementResponse](context.Background(), suite.Client, suite.ResponseID)
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -228,9 +232,10 @@ func (suite *ResponseManagementSuite) TestCanFetchResponseByID() {
 }
 
 func (suite *ResponseManagementSuite) TestCanFetchResponseByFilters() {
-	response, err := gcloudcx.ResponseManagementResponse{}.FetchByFilters(context.Background(), suite.Client, gcloudcx.ResponseManagementQueryFilter{
+	response, correlationID, err := gcloudcx.ResponseManagementResponse{}.FetchByFilters(context.Background(), suite.Client, gcloudcx.ResponseManagementQueryFilter{
 		Name: "name", Operator: "EQUALS", Values: []string{suite.ResponseName},
 	})
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -244,7 +249,8 @@ func (suite *ResponseManagementSuite) TestCanFetchResponseByName() {
 	match := func(response gcloudcx.ResponseManagementResponse) bool {
 		return response.Name == suite.ResponseName
 	}
-	response, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
+	response, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	if err != nil {
 		suite.Logger.Errorf("Failed", err)
 	}
@@ -258,8 +264,9 @@ func (suite *ResponseManagementSuite) TestShouldFailFetchingLibraryWithUnknownNa
 	match := func(library gcloudcx.ResponseManagementLibrary) bool {
 		return library.Name == "unknown library"
 	}
-	_, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
+	_, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match)
 	suite.Require().Error(err, "Should have failed to fetch Response Management Library")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected Failure", err)
 	suite.Assert().ErrorIs(err, errors.NotFound, "Should have failed to fetch Response Management Library")
 }
@@ -268,8 +275,9 @@ func (suite *ResponseManagementSuite) TestShouldFailFetchingResponseWithUnknownN
 	match := func(response gcloudcx.ResponseManagementResponse) bool {
 		return response.Name == "unknown response"
 	}
-	_, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
+	_, correlationID, err := gcloudcx.FetchBy(context.Background(), suite.Client, match, gcloudcx.Query{"libraryId": suite.LibraryID})
 	suite.Require().Error(err, "Should have failed to fetch Response Management Response")
+	suite.Logger.Infof("Correlation: %s", correlationID)
 	suite.Logger.Errorf("Expected Failure", err)
 	suite.Assert().ErrorIs(err, errors.NotFound, "Should have failed to fetch Response Management Response")
 }

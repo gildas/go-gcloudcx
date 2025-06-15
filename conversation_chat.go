@@ -107,7 +107,7 @@ func (conversation ConversationChat) String() string {
 // Disconnect disconnect an Identifiable from this
 //
 // implements Disconnecter
-func (conversation ConversationChat) Disconnect(context context.Context, identifiable Identifiable) error {
+func (conversation ConversationChat) Disconnect(context context.Context, identifiable Identifiable) (correlationID string, err error) {
 	return conversation.client.Patch(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
@@ -119,7 +119,7 @@ func (conversation ConversationChat) Disconnect(context context.Context, identif
 // UpdateState update the state of an identifiable in this
 //
 // implements StateUpdater
-func (conversation ConversationChat) UpdateState(context context.Context, identifiable Identifiable, state string) error {
+func (conversation ConversationChat) UpdateState(context context.Context, identifiable Identifiable, state string) (correlationID string, err error) {
 	return conversation.client.Patch(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),
@@ -131,7 +131,7 @@ func (conversation ConversationChat) UpdateState(context context.Context, identi
 // Transfer transfers a participant of this Conversation to the given Queue
 //
 // implement Transferrer
-func (conversation ConversationChat) Transfer(context context.Context, identifiable Identifiable, queue Identifiable) error {
+func (conversation ConversationChat) Transfer(context context.Context, identifiable Identifiable, queue Identifiable) (correlationID string, err error) {
 	return conversation.client.Post(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/participants/%s/replace", conversation.ID, identifiable.GetID()),
@@ -143,7 +143,7 @@ func (conversation ConversationChat) Transfer(context context.Context, identifia
 }
 
 // Post sends a text message to a chat member
-func (conversation ConversationChat) Post(context context.Context, member Identifiable, text string) error {
+func (conversation ConversationChat) Post(context context.Context, member Identifiable, text string) (correlationID string, err error) {
 	return conversation.client.Post(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/communications/%s/messages", conversation.ID, member.GetID()),
@@ -159,7 +159,7 @@ func (conversation ConversationChat) Post(context context.Context, member Identi
 }
 
 // SetTyping send a typing indicator to the chat member
-func (conversation ConversationChat) SetTyping(context context.Context, member Identifiable) error {
+func (conversation ConversationChat) SetTyping(context context.Context, member Identifiable) (correlationID string, err error) {
 	return conversation.client.Post(
 		conversation.logger.ToContext(context),
 		NewURI("/conversations/chats/%s/communications/%s/typing", conversation.ID, member.GetID()),
@@ -169,7 +169,7 @@ func (conversation ConversationChat) SetTyping(context context.Context, member I
 }
 
 // Wrapup wraps up a Participant of this Conversation
-func (conversation ConversationChat) Wrapup(context context.Context, identifiable Identifiable, wrapup *Wrapup) error {
+func (conversation ConversationChat) Wrapup(context context.Context, identifiable Identifiable, wrapup *Wrapup) (correlationID string, err error) {
 	return conversation.client.Patch(
 		context,
 		NewURI("/conversations/chats/%s/participants/%s", conversation.ID, identifiable.GetID()),

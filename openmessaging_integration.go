@@ -92,9 +92,8 @@ func (integration OpenMessagingIntegration) GetURI(ids ...uuid.UUID) URI {
 }
 
 // Create creates a new OpenMessaging Integration
-func (client *Client) CreateOpenMessagingIntegration(context context.Context, name string, webhookURL *url.URL, token string, headers map[string]string) (*OpenMessagingIntegration, error) {
-	integration := OpenMessagingIntegration{}
-	err := client.Post(
+func (client *Client) CreateOpenMessagingIntegration(context context.Context, name string, webhookURL *url.URL, token string, headers map[string]string) (integration *OpenMessagingIntegration, correlationID string, err error) {
+	correlationID, err = client.Post(
 		context,
 		"/conversations/messaging/integrations/open",
 		struct {
@@ -111,19 +110,19 @@ func (client *Client) CreateOpenMessagingIntegration(context context.Context, na
 		&integration,
 	)
 	if err != nil {
-		return nil, err
+		return nil, correlationID, err
 	}
 	integration.Client = client
 	integration.logger = client.Logger.Child("openmessagingintegration", "openmessagingintegration", "id", integration.ID)
-	return &integration, nil
+	return integration, correlationID, nil
 }
 
 // Delete deletes an OpenMessaging Integration
 //
 // If the integration was not created, nothing is done
-func (integration *OpenMessagingIntegration) Delete(context context.Context) error {
+func (integration *OpenMessagingIntegration) Delete(context context.Context) (correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return nil
+		return "", nil
 	}
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
 	return integration.Client.Delete(
@@ -133,10 +132,10 @@ func (integration *OpenMessagingIntegration) Delete(context context.Context) err
 	)
 }
 
-func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error {
+func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) (correlationID string, err error) {
 	var value OpenMessagingIntegration
-	if err := integration.Client.Get(ctx, integration.GetURI(), &value); err != nil {
-		return err
+	if correlationID, err = integration.Client.Get(ctx, integration.GetURI(), &value); err != nil {
+		return correlationID, err
 	}
 	integration.Name = value.Name
 	integration.CreateStatus = value.CreateStatus
@@ -148,21 +147,21 @@ func (integration *OpenMessagingIntegration) Refresh(ctx context.Context) error 
 	integration.SupportedContent = value.SupportedContent
 	integration.DateModified = value.DateModified
 	integration.ModifiedBy = value.ModifiedBy
-	return nil
+	return correlationID, nil
 }
 
 // Update updates an OpenMessaging Integration
 //
 // If the integration was not created, an error is return without reaching GENESYS Cloud
-func (integration *OpenMessagingIntegration) Update(context context.Context, name string, webhookURL *url.URL, token string) error {
+func (integration *OpenMessagingIntegration) Update(context context.Context, name string, webhookURL *url.URL, token string) (correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return errors.ArgumentMissing.With("ID")
+		return "", errors.ArgumentMissing.With("ID")
 	}
 	if webhookURL == nil {
-		return errors.ArgumentMissing.With("webhookURL")
+		return "", errors.ArgumentMissing.With("webhookURL")
 	}
 	response := &OpenMessagingIntegration{}
-	err := integration.Client.Patch(
+	correlationID, err = integration.Client.Patch(
 		integration.logger.ToContext(context),
 		NewURI("/conversations/messaging/integrations/open/%s", integration.ID),
 		struct {
@@ -177,19 +176,19 @@ func (integration *OpenMessagingIntegration) Update(context context.Context, nam
 		&response,
 	)
 	if err != nil {
-		return errors.CreationFailed.Wrap(err)
+		return correlationID, errors.CreationFailed.Wrap(err)
 	}
 	integration.logger.Record("response", response).Debugf("Updated integration")
-	return nil
+	return
 }
 
 // GetRoutingMessageRecipient fetches the RoutingMessageRecipient for this OpenMessagingIntegration
-func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context context.Context) (*RoutingMessageRecipient, error) {
+func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context context.Context) (recipient *RoutingMessageRecipient, correlationID string, err error) {
 	if integration == nil || integration.ID == uuid.Nil {
-		return nil, errors.ArgumentMissing.With("ID")
+		return nil, "", errors.ArgumentMissing.With("ID")
 	}
 	if !integration.IsCreated() {
-		return nil, errors.CreationFailed.With("integration", integration.ID)
+		return nil, "", errors.CreationFailed.With("integration", integration.ID)
 	}
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
 	return Fetch[RoutingMessageRecipient](log.ToContext(context), integration.Client, integration)
@@ -199,73 +198,73 @@ func (integration *OpenMessagingIntegration) GetRoutingMessageRecipient(context 
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
 // See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-message
-func (integration *OpenMessagingIntegration) SendInboundTextMessage(context context.Context, message OpenMessageText) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundTextMessage(context context.Context, message OpenMessageText) (id string, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return "", errors.ArgumentMissing.With("ID")
+		return "", "", errors.ArgumentMissing.With("ID")
 	}
 	if len(message.Channel.ID) == 0 {
-		return "", errors.ArgumentMissing.With("channel.ID")
+		return "", "", errors.ArgumentMissing.With("channel.ID")
 	}
 	if len(message.Channel.MessageID) == 0 {
-		return "", errors.ArgumentMissing.With("channel.MessageID")
+		return "", "", errors.ArgumentMissing.With("channel.MessageID")
 	}
 	message.Channel.Platform = "Open"
 	message.Channel.Type = "Private"
 	message.Channel.Time = time.Now().UTC()
 	message.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
 	if err := message.Channel.Validate(); err != nil {
-		return "", err
+		return "", "", err
 	}
 	if len(message.Text) == 0 && len(message.Content) == 0 {
-		return "", errors.ArgumentMissing.With("text")
+		return "", "", errors.ArgumentMissing.With("text")
 	}
 	message.Direction = "Inbound"
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	result := OpenMessageText{}
-	err = integration.Client.Post(
+	correlationID, err = integration.Client.Post(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/message", integration.ID),
 		message,
 		&result,
 	)
-	return result.ID, err
+	return result.ID, correlationID, err
 }
 
 // SendInboundButtonResponse sends an Open Message button response from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/inboundMessages#send-an-inbound-open-message
 // See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-structured-response
-func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context context.Context, message OpenMessageButtonResponse) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context context.Context, message OpenMessageButtonResponse) (id string, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return "", errors.ArgumentMissing.With("ID")
+		return "", "", errors.ArgumentMissing.With("ID")
 	}
 	if len(message.Channel.ID) == 0 {
-		return "", errors.ArgumentMissing.With("channel.ID")
+		return "", "", errors.ArgumentMissing.With("channel.ID")
 	}
 	if len(message.Channel.MessageID) == 0 {
-		return "", errors.ArgumentMissing.With("channel.MessageID")
+		return "", "", errors.ArgumentMissing.With("channel.MessageID")
 	}
 	message.Channel.Platform = "Open"
 	message.Channel.Type = "Private"
 	message.Channel.Time = time.Now().UTC()
 	message.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
 	if err := message.Channel.Validate(); err != nil {
-		return "", err
+		return "", "", err
 	}
 	message.Direction = "Inbound"
 	// TODO: attributes and metadata should be of a new type Metadata that containd a map and a []string for keysToRedact
 
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	result := OpenMessageStructured{}
-	err = integration.Client.Post(
+	correlationID, err = integration.Client.Post(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/structured/response", integration.ID),
 		message,
 		&result,
 	)
-	return result.ID, err
+	return result.ID, correlationID, err
 }
 
 // SendInboundReceipt sends a receipt from the middleware to GENESYS Cloud
@@ -276,54 +275,54 @@ func (integration *OpenMessagingIntegration) SendInboundButtonResponse(context c
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundReceiptMessages
 // See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-receipt
-func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, receipt OpenMessageReceipt) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundReceipt(context context.Context, receipt OpenMessageReceipt) (id string, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return "", errors.ArgumentMissing.With("ID")
+		return "", "", errors.ArgumentMissing.With("ID")
 	}
 	if len(receipt.ID) == 0 {
 		// if the messageID was provided in the Channel, we need to move it to the receipt
 		receipt.ID = receipt.Channel.MessageID
 		if len(receipt.ID) == 0 {
-			return "", errors.ArgumentMissing.With("ID")
+			return "", "", errors.ArgumentMissing.With("ID")
 		}
 	}
 	receipt.Channel.MessageID = ""
 	receipt.Direction = "Outbound"
 	if len(receipt.Channel.ID) == 0 {
-		return "", errors.ArgumentMissing.With("channel.ID")
+		return "", "", errors.ArgumentMissing.With("channel.ID")
 	}
 	receipt.Channel.Platform = "Open"
 	receipt.Channel.Type = "Private"
 	receipt.Channel.Time = time.Now().UTC()
 	receipt.Channel.From = &OpenMessageFrom{ID: integration.ID.String(), Type: "email"}
 	if err := receipt.Channel.Validate(); err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "receipt", receipt.GetID())
 	result := OpenMessageReceipt{}
-	err = integration.Client.Post(
+	correlationID, err = integration.Client.Post(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/receipt", integration.ID),
 		receipt,
 		&result,
 	)
 	if err != nil {
-		return "", err
+		return "", correlationID, err
 	}
 	if result.IsFailed() {
 		log.Debugf("Receipt was sent successfully. But the returned payload contained an error: %s", result.AsError().Error())
-		return "", result.AsError()
+		return "", correlationID, result.AsError()
 	}
-	return result.ID, err
+	return result.ID, correlationID, nil
 }
 
 // SendInboundEvent sends an event from the middleware to GENESYS Cloud
 //
 // See https://developer.genesys.cloud/commdigital/digital/openmessaging/inboundEventMessages
-func (integration *OpenMessagingIntegration) SendInboundEvents(context context.Context, events OpenMessageEvents) (id string, err error) {
+func (integration *OpenMessagingIntegration) SendInboundEvents(context context.Context, events OpenMessageEvents) (id string, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return "", errors.ArgumentMissing.With("ID")
+		return "", "", errors.ArgumentMissing.With("ID")
 	}
 	events.Channel.MessageID = ""
 	events.Channel.Platform = "Open"
@@ -331,17 +330,17 @@ func (integration *OpenMessagingIntegration) SendInboundEvents(context context.C
 	events.Channel.Time = time.Now().UTC()
 	events.Channel.To = &OpenMessageTo{ID: integration.ID.String()}
 	if err := events.Channel.Validate(); err != nil {
-		return "", err
+		return "", "", err
 	}
 	result := OpenMessageEvents{}
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", events.GetID())
-	err = integration.Client.Post(
+	correlationID, err = integration.Client.Post(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/inbound/open/event", integration.ID),
 		events,
 		&result,
 	)
-	return result.ID, err
+	return result.ID, correlationID, err
 }
 
 // SendOutboundMessage sends a message from GENESYS Cloud to the middleware
@@ -352,13 +351,12 @@ func (integration *OpenMessagingIntegration) SendInboundEvents(context context.C
 //
 // See https://developer.genesys.cloud/api/digital/openmessaging/outboundMessages#send-an-agentless-outbound-text-message
 // See https://developer.genesys.cloud/devapps/api-explorer#post-api-v2-conversations-messages--integrationId--inbound-open-event
-func (integration *OpenMessagingIntegration) SendOutboundMessage(context context.Context, destination, text string) (*AgentlessMessageResult, error) {
+func (integration *OpenMessagingIntegration) SendOutboundMessage(context context.Context, destination, text string) (result *AgentlessMessageResult, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return nil, errors.ArgumentMissing.With("ID")
+		return nil, "", errors.ArgumentMissing.With("ID")
 	}
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID)
-	result := &AgentlessMessageResult{}
-	err := integration.Client.Post(
+	correlationID, err = integration.Client.Post(
 		log.ToContext(context),
 		"/conversations/messages/agentless",
 		AgentlessMessage{
@@ -370,32 +368,32 @@ func (integration *OpenMessagingIntegration) SendOutboundMessage(context context
 		&result,
 	)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
-	return result, nil
+	return result, correlationID, nil
 }
 
-// GetMessageData gets the details ofa message
-func (integration *OpenMessagingIntegration) GetMessageData(context context.Context, message OpenMessage) (*OpenMessageData, error) {
+// GetMessageData gets the details of a message
+func (integration *OpenMessagingIntegration) GetMessageData(context context.Context, message OpenMessage) (messageData *OpenMessageData, correlationID string, err error) {
 	if integration.ID == uuid.Nil {
-		return nil, errors.ArgumentMissing.With("ID")
+		return nil, "", errors.ArgumentMissing.With("ID")
 	}
 	if len(message.GetID()) == 0 {
-		return nil, errors.ArgumentMissing.With("messageID")
+		return nil, "", errors.ArgumentMissing.With("messageID")
 	}
 	log := logger.Must(logger.FromContext(context, integration.logger)).Child("integration", "getmessagedata", "integration", integration.ID, "message", message.GetID())
 	data := &OpenMessageData{}
-	err := integration.Client.Get(
+	correlationID, err = integration.Client.Get(
 		log.ToContext(context),
 		NewURI("/conversations/messages/%s/details", message.GetID()),
 		data,
 	)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	data.Conversation.client = integration.Client
 	data.Conversation.logger = integration.logger.Child("conversation", "conversation", "id", data.Conversation.ID)
-	return data, nil
+	return data, correlationID, nil
 }
 
 // String gets a string version

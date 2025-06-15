@@ -65,7 +65,7 @@ func (recipient RoutingMessageRecipient) GetURI(ids ...uuid.UUID) URI {
 }
 
 // UpdateFlow updates the flow of this recipient
-func (recipient *RoutingMessageRecipient) UpdateFlow(context context.Context, flow *Flow) error {
+func (recipient *RoutingMessageRecipient) UpdateFlow(context context.Context, flow *Flow) (correlationID string, err error) {
 	// Should we disconnect the current flow first?
 	type FlowRef struct {
 		ID   string `json:"id"`
@@ -92,7 +92,7 @@ func (recipient *RoutingMessageRecipient) UpdateFlow(context context.Context, fl
 }
 
 // DeleteFlow removes the flow of this recipient
-func (recipient *RoutingMessageRecipient) DeleteFlow(context context.Context) error {
+func (recipient *RoutingMessageRecipient) DeleteFlow(context context.Context) (correlationID string, err error) {
 	recipient.Flow = nil
 	return recipient.client.Put(context, recipient.GetURI(), recipient, nil)
 }

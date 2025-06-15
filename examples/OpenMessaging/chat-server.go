@@ -99,7 +99,7 @@ func (server *ChatServer) Start(config *Config) {
 				log := server.Logger.Child(nil, "sendCX", "chat", message.Chat.ID, "message", message.ID)
 
 				log.Debugf("Sending message to GENESYS Cloud")
-				inboundResult, err := config.Integration.SendInboundTextMessage(
+				inboundResult, correlationID, err := config.Integration.SendInboundTextMessage(
 					context.Background(),
 					gcloudcx.OpenMessageText{
 						Channel: gcloudcx.OpenMessageChannel{
@@ -116,9 +116,9 @@ func (server *ChatServer) Start(config *Config) {
 					},
 				)
 				if err != nil {
-					Log.Errorf("Failed to send inbound", err)
+					log.Record("genesys-correlation", correlationID).Errorf("Failed to send inbound", err)
 				} else {
-					Log.Record("message", inboundResult).Record("result", inboundResult).Infof("Message sent successfully")
+					log.Record("genesys-correlation", correlationID).Record("message", inboundResult).Record("result", inboundResult).Infof("Message sent successfully")
 				}
 
 				log.Infof("Message sent to GENESYS Cloud")

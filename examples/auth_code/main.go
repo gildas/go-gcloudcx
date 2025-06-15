@@ -58,9 +58,9 @@ func mainRouteHandler() http.Handler {
 
 		// Let's get my user and organization here, as an example...
 
-		organization, err := client.GetMyOrganization(context.Background())
+		organization, correlationID, err := client.GetMyOrganization(context.Background())
 		if err != nil {
-			log.Errorf("Failed to retrieve my Organization", err)
+			log.Record("genesys-correlation", correlationID).Errorf("Failed to retrieve my Organization", err)
 			core.RespondWithError(w, http.StatusServiceUnavailable, err)
 			return
 		}

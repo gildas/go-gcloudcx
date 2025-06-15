@@ -26,7 +26,7 @@ func (grant *TokenGrant) GetID() uuid.UUID {
 // Authorize this Grant with GCloud CX
 //
 // Implements Authorizable
-func (grant *TokenGrant) Authorize(context context.Context, client *Client) (err error) {
+func (grant *TokenGrant) Authorize(context context.Context, client *Client) (correlationID string, err error) {
 	log := client.GetLogger(context).Child("client", "authorize", "grant", "token")
 
 	log.Debugf("Authenticating with %s using Token grant", client.Region)
@@ -44,7 +44,7 @@ func (grant *TokenGrant) Authorize(context context.Context, client *Client) (err
 		} `json:"OAuthClient"`
 	}
 
-	err = client.SendRequest(
+	correlationID, err = client.SendRequest(
 		context,
 		NewURI("/tokens/me"),
 		&request.Options{
@@ -54,7 +54,7 @@ func (grant *TokenGrant) Authorize(context context.Context, client *Client) (err
 	)
 	if err != nil {
 		log.Errorf("Failed to authenticate with %s using Token grant", client.Region, err)
-		return err
+		return correlationID, err
 	}
 
 	log.Infof("Authenticated with %s using Token grant", client.Region)

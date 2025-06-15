@@ -111,14 +111,17 @@ func (response ResponseManagementResponse) String() string {
 	return response.ID.String()
 }
 
-func (response ResponseManagementResponse) FetchByFilters(context context.Context, client *Client, filters ...ResponseManagementQueryFilter) (*ResponseManagementResponse, error) {
+// FetchByFilters fetches a ResponseManagementResponse by filters
+//
+// The Genesys Cloud correlation ID is return as the second return value.
+func (response ResponseManagementResponse) FetchByFilters(context context.Context, client *Client, filters ...ResponseManagementQueryFilter) (*ResponseManagementResponse, string, error) {
 	results := struct {
 		Results struct {
 			Responses []ResponseManagementResponse `json:"entities"`
 			paginatedEntities
 		} `json:"results"`
 	}{}
-	err := client.Post(
+	correlationID, err := client.Post(
 		context,
 		NewURI("/responsemanagement/responses/query"),
 		ResponseManagementQuery{
@@ -127,10 +130,10 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 		&results,
 	)
 	if err != nil {
-		return nil, err
+		return nil, correlationID, err
 	}
 	if len(results.Results.Responses) == 0 {
-		return nil, errors.NotFound.With("ResponseManagementResponse")
+		return nil, correlationID, errors.NotFound.With("ResponseManagementResponse")
 	}
 	/*
 		for _, entity := range results.Results.Responses {
@@ -140,7 +143,7 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 			}
 		}
 	*/
-	return &results.Results.Responses[0], nil
+	return &results.Results.Responses[0], correlationID, nil
 }
 
 // ApplySubstitutions applies the substitutions to the response text that matches the given content type

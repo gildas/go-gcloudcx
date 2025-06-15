@@ -14,7 +14,8 @@ import (
 type SlotEntity interface {
 	core.TypeCarrier
 	core.Named
-	fmt.Stringer // used to get the string representation of the entity's value
+	fmt.Stringer                                 // used to get the string representation of the entity's value
+	ParseValue(value string) (SlotEntity, error) // ParseValue parses the value and returns a new SlotEntity instance
 }
 
 var slotEntityRegistry = core.TypeRegistry{}

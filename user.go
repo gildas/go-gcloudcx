@@ -64,7 +64,7 @@ func (client *Client) GetMyUser(context context.Context, properties ...string) (
 		query.Add("expand", strings.Join(properties, ","))
 	}
 	user := &User{}
-	if err := client.Get(context, NewURI("/users/me?%s", query.Encode()), &user); err != nil {
+	if _, err := client.Get(context, NewURI("/users/me?%s", query.Encode()), &user); err != nil {
 		return nil, err
 	}
 	user.client = client
