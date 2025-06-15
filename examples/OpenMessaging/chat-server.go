@@ -116,9 +116,9 @@ func (server *ChatServer) Start(config *Config) {
 					},
 				)
 				if err != nil {
-					log.Record("correlation", correlationID).Errorf("Failed to send inbound", err)
+					log.Record("genesys-correlation", correlationID).Errorf("Failed to send inbound", err)
 				} else {
-					log.Record("correlation", correlationID).Record("message", inboundResult).Record("result", inboundResult).Infof("Message sent successfully")
+					log.Record("genesys-correlation", correlationID).Record("message", inboundResult).Record("result", inboundResult).Infof("Message sent successfully")
 				}
 
 				log.Infof("Message sent to GENESYS Cloud")

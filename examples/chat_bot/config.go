@@ -104,7 +104,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 
 	config.NotificationChannel, correlationID, err = client.CreateNotificationChannel(context)
 	if err != nil {
-		log.Record("correlation", correlationID).Errorf("Failed to create a notification channel", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to create a notification channel", err)
 		return
 	}
 
@@ -114,7 +114,7 @@ func (config *AppConfig) Initialize(context context.Context, client *gcloudcx.Cl
 		gcloudcx.UserConversationChatTopic{}.With(config.User),
 	)
 	if err != nil {
-		log.Record("correlation", correlationID).Errorf("Failed to subscribe to topics", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to subscribe to topics", err)
 		return
 	}
 	log.Infof("Subscribed to topics: [%v]", topics)
@@ -133,7 +133,7 @@ func (config *AppConfig) Reset(context context.Context) (err error) {
 		log.Debugf("Closing Notification Channel %s", config.NotificationChannel)
 		correlationID, err := config.NotificationChannel.Close(context)
 		if err != nil {
-			config.NotificationChannel.Logger.Record("correlation", correlationID).Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
+			config.NotificationChannel.Logger.Record("genesys-correlation", correlationID).Errorf("Failed to close the notification channel %s", config.NotificationChannel, err)
 			return err
 		}
 		log.Infof("Closed Notification Channel %s", config.NotificationChannel)

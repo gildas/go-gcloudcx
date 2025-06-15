@@ -56,7 +56,7 @@ func main() {
 
 	log := logger.Create("OpenMessaging_Example", logger.TRACE)
 	defer log.Flush()
-	log.Infof(strings.Repeat("-", 80))
+	log.Infof("%s", strings.Repeat("-", 80))
 	log.Infof("log Destination: %s", log)
 	log.Infof("Webserver Port=%d", *port)
 
@@ -90,12 +90,12 @@ func main() {
 		return integration.Name == *integrationName
 	}
 	config.Integration, correlationID, err = gcloudcx.FetchBy(context.Background(), config.Client, match)
-	log = log.Record("correlation", correlationID)
+	log = log.Record("genesys-correlation", correlationID)
 
 	if errors.Is(err, errors.NotFound) {
 		log.Infof("Creating a new OpenMessaging Integration for %s", *integrationName)
 		config.Integration, correlationID, err = config.Client.CreateOpenMessagingIntegration(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken, nil)
-		log = log.Record("correlation", correlationID)
+		log = log.Record("genesys-correlation", correlationID)
 		if err != nil {
 			log.Fatalf("Failed creating integration", err)
 			os.Exit(1)
@@ -109,7 +109,7 @@ func main() {
 	if strings.Compare(config.Integration.WebhookURL.String(), config.IntegrationWebhookURL.String()) != 0 || strings.Compare(config.Integration.WebhookToken, config.IntegrationWebhookToken) != 0 {
 		log.Warnf("OpenMessaging Integration has changed, we need to update it in GENESYS Cloud")
 		if correlationID, err := config.Integration.Update(context.Background(), config.IntegrationName, config.IntegrationWebhookURL, config.IntegrationWebhookToken); err != nil {
-			log = log.Record("correlation", correlationID)
+			log = log.Record("genesys-correlation", correlationID)
 			log.Fatalf("Failed to update the OpenMessaging Integration")
 			os.Exit(1)
 		}

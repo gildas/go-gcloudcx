@@ -41,7 +41,7 @@ func main() {
 	// Let's make sure the conversation ecists
 	conversation, correlationID, err := gcloudcx.Fetch[gcloudcx.Conversation](mainctx, client, uuid.MustParse(*conversationID))
 	if err != nil {
-		log.Record("correlation", correlationID).Errorf("Failed to get conversation: %v", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to get conversation: %v", err)
 		fmt.Fprintf(os.Stderr, "Failed to get conversation: %v\n", err)
 		os.Exit(1)
 	}
@@ -63,7 +63,7 @@ func main() {
 
 	correlationID, err = conversation.Disconnect(mainctx, agent)
 	if err != nil {
-		log.Record("correlation", correlationID).Errorf("Failed to disconnect from conversation: %v", err)
+		log.Record("genesys-correlation", correlationID).Errorf("Failed to disconnect from conversation: %v", err)
 		fmt.Fprintf(os.Stderr, "Failed to disconnect from conversation: %v\n", err)
 		os.Exit(1)
 	}
