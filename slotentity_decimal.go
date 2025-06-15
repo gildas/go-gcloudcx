@@ -88,9 +88,11 @@ func (entity *DecimalSlotEntity) UnmarshalJSON(data []byte) (err error) {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*entity = DecimalSlotEntity(inner.surrogate)
-	entity.Value, err = strconv.ParseFloat(inner.Value, 64)
-	if err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "decimal"), err)
+	if len(inner.Value) > 0 {
+		entity.Value, err = strconv.ParseFloat(inner.Value, 64)
+		if err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "decimal"), err)
+		}
 	}
 	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

@@ -89,9 +89,11 @@ func (entity *BooleanSlotEntity) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	*entity = BooleanSlotEntity(inner.surrogate)
-	entity.Value, err = strconv.ParseBool(inner.Value)
-	if err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "boolean"), err)
+	if len(inner.Value) > 0 {
+		entity.Value, err = strconv.ParseBool(inner.Value)
+		if err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "boolean"), err)
+		}
 	}
 	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

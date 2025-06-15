@@ -116,14 +116,16 @@ func (entity *CurrencySlotEntity) UnmarshalJSON(payload []byte) (err error) {
 	}
 	*entity = CurrencySlotEntity(inner.surrogate)
 
-	var data struct {
-		Amount   float64 `json:"amount"`
-		Currency string  `json:"code"`
+	if len(inner.Value) > 0 {
+		var data struct {
+			Amount   float64 `json:"amount"`
+			Currency string  `json:"code"`
+		}
+		if err = json.Unmarshal([]byte(inner.Value), &data); err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "currency"), err)
+		}
+		entity.Amount = data.Amount
+		entity.Currency = data.Currency
 	}
-	if err = json.Unmarshal([]byte(inner.Value), &data); err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "currency"), err)
-	}
-	entity.Amount = data.Amount
-	entity.Currency = data.Currency
 	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

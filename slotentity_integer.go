@@ -89,9 +89,11 @@ func (entity *IntegerSlotEntity) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	*entity = IntegerSlotEntity(inner.surrogate)
-	entity.Value, err = strconv.ParseInt(inner.Value, 10, 64)
-	if err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "integer"), err)
+	if len(inner.Value) > 0 {
+		entity.Value, err = strconv.ParseInt(inner.Value, 10, 64)
+		if err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "integer"), err)
+		}
 	}
 	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }

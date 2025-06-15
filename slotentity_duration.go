@@ -90,9 +90,11 @@ func (entity *DurationSlotEntity) UnmarshalJSON(data []byte) (err error) {
 	}
 
 	*entity = DurationSlotEntity(inner.surrogate)
-	entity.Value, err = core.ParseDuration(inner.Value)
-	if err != nil {
-		return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "duration"), err)
+	if len(inner.Value) > 0 {
+		entity.Value, err = core.ParseDuration(inner.Value)
+		if err != nil {
+			return errors.Join(errors.JSONUnmarshalError, errors.ArgumentInvalid.With("value", inner.Value, "duration"), err)
+		}
 	}
 	return errors.JSONUnmarshalError.Wrap(entity.Validate())
 }
