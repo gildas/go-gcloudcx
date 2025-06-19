@@ -1,0 +1,22 @@
+{
+  "type": "Structured",
+  "text": "Do you want to proceed?",
+  "content": [
+    {
+      "contentType": "QuickReply",
+      "quickReply": {
+        "text": "Yes",
+        "payload": "Yes",
+        "action": "Message"
+      }
+    },
+    {
+      "contentType": "QuickReply",
+      "quickReply": {
+        "text": "No",
+        "payload": "No",
+        "action": "Message"
+      }
+    }
+  ]
+}

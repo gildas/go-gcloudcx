@@ -1,58 +1,40 @@
 package gcloudcx
 
 import (
-	"encoding/json"
-	"net/url"
+	"fmt"
+	"strings"
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
 )
 
-// NormalizedMessageCardAction describes the action of a Card
-type NormalizedMessageCardAction struct {
-	ActionType string   `json:"type,omitempty"` // "Link", "Postback", "Unknown"
-	Text       string   `json:"text"`
-	Payload    string   `json:"payload"`
-	URL        *url.URL `json:"url,omitempty"`
+// NormalizedMessageCardAction describes an action in a Card
+type NormalizedMessageCardAction interface {
+	core.TypeCarrier
+	fmt.Stringer
 }
 
-// GetType tells the type of this OpenMessageContent
-//
-// implements core.TypeCarrier
-func (action NormalizedMessageCardAction) GetType() string {
-	return action.ActionType
-}
+var cardActionTypeRegistry = core.TypeRegistry{}
 
-// MarshalJSON marshals this into JSON
-//
-// implements json.Marshaler
-func (action NormalizedMessageCardAction) MarshalJSON() ([]byte, error) {
-	type surrogate NormalizedMessageCardAction
-
-	data, err := json.Marshal(struct {
-		surrogate
-		URL *core.URL `json:"url"`
-	}{
-		surrogate: surrogate(action),
-		URL:       (*core.URL)(action.URL),
-	})
-	return data, errors.JSONMarshalError.Wrap(err)
-}
-
-// UnmarshalJSON unmarshals JSON into this
-//
-// implements json.Unmarshaler
-func (action *NormalizedMessageCardAction) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate NormalizedMessageCardAction
-
-	var inner struct {
-		surrogate
-		URL *core.URL `json:"url"`
+// UnmarshalMessageCardAction unmarshals a JSON payload into a NormalizedMessageCardAction
+func UnmarshalMessageCardAction(payload []byte) (NormalizedMessageCardAction, error) {
+	action, err := cardActionTypeRegistry.UnmarshalJSON(payload, "type")
+	if err == nil {
+		return action.(NormalizedMessageCardAction), nil
 	}
-	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.JSONUnmarshalError.Wrap(err)
+	if strings.HasPrefix(err.Error(), "Missing JSON Property") {
+		return nil, errors.JSONUnmarshalError.Wrap(errors.ArgumentMissing.With("type"))
 	}
-	*action = NormalizedMessageCardAction(inner.surrogate)
-	action.URL = (*url.URL)(inner.URL)
-	return
+	if strings.HasPrefix(err.Error(), "Unsupported Type") {
+		return nil, errors.JSONUnmarshalError.Wrap(
+			errors.InvalidType.With(
+				strings.TrimSuffix(strings.TrimPrefix(err.Error(), `Unsupported Type "`), `"`),
+				strings.Join(cardActionTypeRegistry.SupportedTypes(), ","),
+			),
+		)
+	}
+	if errors.Is(err, errors.JSONUnmarshalError) {
+		return nil, err
+	}
+	return nil, errors.JSONUnmarshalError.Wrap(err)
 }

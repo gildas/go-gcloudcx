@@ -1,0 +1,78 @@
+{
+  "type": "Structured",
+  "content": [
+    {
+      "contentType": "Carousel",
+      "carousel": {
+        "cards": [
+          {
+            "title": "Card 1",
+            "description": "Description 1",
+            "image": "https://www.acme.com/image1.png",
+            "actions": [
+              {
+                "type": "Postback",
+                "text": "Option1",
+                "payload": "Option1"
+              },
+              {
+                "type": "Postback",
+                "text": "Option2",
+                "payload": "Option2"
+              },
+              {
+                "type": "Link",
+                "text": "Option3",
+                "url": "https://www.acme.com/option3"
+              }
+            ]
+          },
+          {
+            "title": "Card 2",
+            "description": "Description 2",
+            "image": "https://www.acme.com/image2.png",
+            "actions": [
+              {
+                "type": "Postback",
+                "text": "Option4",
+                "payload": "Option4"
+              },
+              {
+                "type": "Postback",
+                "text": "Option5",
+                "payload": "Option5"
+              },
+              {
+                "type": "Link",
+                "text": "Option6",
+                "url": "https://www.acme.com/option6"
+              }
+            ]
+          },
+          {
+            "title": "Card 3",
+            "description": "Description 3",
+            "video": "https://www.acme.com/video3.mp4",
+            "actions": [
+              {
+                "type": "Postback",
+                "text": "Option7",
+                "payload": "Option7"
+              },
+              {
+                "type": "Postback",
+                "text": "Option8",
+                "payload": "Option8"
+              },
+              {
+                "type": "Link",
+                "text": "Option9",
+                "url": "https://www.acme.com/option9"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

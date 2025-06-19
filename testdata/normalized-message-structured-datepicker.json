@@ -1,0 +1,22 @@
+{
+  "type": "Structured",
+  "content": [
+    {
+      "contentType": "DatePicker",
+      "datePicker": {
+        "title": "When would you be available?",
+        "subtitle": "Pick a date and time",
+        "availableTimes": [
+          {
+            "duration": 1800,
+            "dateTime": "2025-05-30T12:00:00Z"
+          },
+          {
+            "duration": 900,
+            "dateTime": "2025-06-30T13:00:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}
