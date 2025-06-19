@@ -92,7 +92,7 @@ func (message *NormalizedMessage) UnmarshalJSON(data []byte) error {
 		for _, raw := range inner.Content {
 			content, err := UnmarshalOpenMessageContent(raw)
 			if err != nil {
-				return errors.JSONUnmarshalError.Wrap(err)
+				return errors.JSONUnmarshalError.WrapIfNotMe(err)
 			}
 			message.Content = append(message.Content, content)
 		}

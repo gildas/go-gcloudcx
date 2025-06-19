@@ -11,16 +11,16 @@ import (
 
 // NormalizedMessageDatePickerContent describes the content of a DatePicker
 type NormalizedMessageDatePickerContent struct {
-	Title          string                     `json:"title,omitempty"`
-	Subtitle       string                     `json:"subtitle,omitempty"`
-	ImageURL       *url.URL                   `json:"imageUrl,omitempty"`
-	MinDate        *time.Time                 `json:"dateMinimum,omitempty"`
-	MaxDate        *time.Time                 `json:"dateMaximum,omitempty"`
-	AvailableTimes []OpenMessageAvailableTime `json:"availableTimes"`
+	Title          string                    `json:"title,omitempty"`
+	Subtitle       string                    `json:"subtitle,omitempty"`
+	ImageURL       *url.URL                  `json:"imageUrl,omitempty"`
+	MinDate        *time.Time                `json:"dateMinimum,omitempty"`
+	MaxDate        *time.Time                `json:"dateMaximum,omitempty"`
+	AvailableTimes []NormalizedAvailableTime `json:"availableTimes"`
 }
 
-// OpenMessageAvailableTime describes the content of an available time within a DatePicker
-type OpenMessageAvailableTime struct {
+// NormalizedAvailableTime describes the content of an available time within a DatePicker
+type NormalizedAvailableTime struct {
 	Time     time.Time     `json:"dateTime"`
 	Duration time.Duration `json:"duration"`
 }
@@ -39,8 +39,8 @@ func (datePicker NormalizedMessageDatePickerContent) GetType() string {
 // MarshalJSON marshals this into JSON
 //
 // implements json.marshaler
-func (availableTime OpenMessageAvailableTime) MarshalJSON() ([]byte, error) {
-	type surrogate OpenMessageAvailableTime
+func (availableTime NormalizedAvailableTime) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedAvailableTime
 	data, err := json.Marshal(struct {
 		surrogate
 		Time     core.Time `json:"dateTime"`
@@ -82,8 +82,8 @@ func (datePicker NormalizedMessageDatePickerContent) MarshalJSON() ([]byte, erro
 // UnmarshalJSON unmarshals this from JSON
 //
 // implements json.Unmarshaler
-func (availableTime *OpenMessageAvailableTime) UnmarshalJSON(payload []byte) (err error) {
-	type surrogate OpenMessageAvailableTime
+func (availableTime *NormalizedAvailableTime) UnmarshalJSON(payload []byte) (err error) {
+	type surrogate NormalizedAvailableTime
 	var inner struct {
 		surrogate
 		Time     core.Time `json:"dateTime"`
@@ -92,7 +92,7 @@ func (availableTime *OpenMessageAvailableTime) UnmarshalJSON(payload []byte) (er
 	if err = json.Unmarshal(payload, &inner); err != nil {
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
-	*availableTime = OpenMessageAvailableTime(inner.surrogate)
+	*availableTime = NormalizedAvailableTime(inner.surrogate)
 	availableTime.Time = time.Time(inner.Time)
 	availableTime.Duration = time.Duration(inner.Duration) * time.Second
 	return nil

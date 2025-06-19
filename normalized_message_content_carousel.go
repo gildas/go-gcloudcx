@@ -10,7 +10,7 @@ import (
 
 // NormalizedMessageCarouselContent describes the content of a Carousel
 type NormalizedMessageCarouselContent struct {
-	Cards []NormalizedMessageCarouselCard `json:"-"`
+	Cards []NormalizedMessageCarouselCard `json:"cards"`
 }
 
 // NormalizedMessageCarouselCard describes the content of a Card in a Carousel
@@ -19,7 +19,7 @@ type NormalizedMessageCarouselCard struct {
 	Description   string                        `json:"description,omitempty"`
 	ImageURL      *url.URL                      `json:"image,omitempty"`
 	VideoURL      *url.URL                      `json:"video,omitempty"`
-	DefaultAction *NormalizedMessageCardAction  `json:"defaultAction,omitempty"`
+	DefaultAction NormalizedMessageCardAction   `json:"defaultAction,omitempty"`
 	Actions       []NormalizedMessageCardAction `json:"actions,omitempty"`
 }
 
@@ -60,22 +60,40 @@ func (carousel NormalizedMessageCarouselContent) MarshalJSON() ([]byte, error) {
 func (carousel *NormalizedMessageCarouselContent) UnmarshalJSON(payload []byte) (err error) {
 	type surrogate NormalizedMessageCarouselContent
 	type Carousel struct {
-		Cards []NormalizedMessageCarouselCard `json:"cards"`
+		surrogate
 	}
 	var inner struct {
 		ContentType string   `json:"contentType"`
 		Carousel    Carousel `json:"carousel"`
-		surrogate
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.JSONUnmarshalError.Wrap(err)
+		return errors.JSONUnmarshalError.WrapIfNotMe(err)
 	}
 	if inner.ContentType != carousel.GetType() {
 		return errors.JSONUnmarshalError.Wrap(errors.InvalidType.With("contentType", carousel.GetType()))
 	}
-	*carousel = NormalizedMessageCarouselContent(inner.surrogate)
-	carousel.Cards = append(carousel.Cards, inner.Carousel.Cards...)
+	if len(inner.Carousel.surrogate.Cards) == 0 {
+		return errors.JSONUnmarshalError.Wrap(errors.ArgumentMissing.With("carousel.cards"))
+	}
+	*carousel = NormalizedMessageCarouselContent(inner.Carousel.surrogate)
 	return nil
+}
+
+// / MarshalJSON marshals this into JSON
+//
+// implements json.Marshaler
+func (card NormalizedMessageCarouselCard) MarshalJSON() ([]byte, error) {
+	type surrogate NormalizedMessageCarouselCard
+	data, err := json.Marshal(struct {
+		surrogate
+		ImageURL *core.URL `json:"image,omitempty"`
+		VideoURL *core.URL `json:"video,omitempty"`
+	}{
+		surrogate: surrogate(card),
+		ImageURL:  (*core.URL)(card.ImageURL),
+		VideoURL:  (*core.URL)(card.VideoURL),
+	})
+	return data, errors.JSONMarshalError.Wrap(err)
 }
 
 // UnmarshalJSON unmarshals JSON into this
@@ -85,14 +103,31 @@ func (card *NormalizedMessageCarouselCard) UnmarshalJSON(payload []byte) (err er
 	type surrogate NormalizedMessageCarouselCard
 	var inner struct {
 		surrogate
-		ImageURL *core.URL `json:"image,omitempty"`
-		VideoURL *core.URL `json:"video,omitempty"`
+		ImageURL      *core.URL         `json:"image"`
+		VideoURL      *core.URL         `json:"video"`
+		DefaultAction *json.RawMessage  `json:"defaultAction,omitempty"`
+		Actions       []json.RawMessage `json:"actions,omitempty"`
 	}
 	if err = json.Unmarshal(payload, &inner); err != nil {
-		return errors.JSONUnmarshalError.Wrap(err)
+		return errors.JSONUnmarshalError.WrapIfNotMe(err)
 	}
 	*card = NormalizedMessageCarouselCard(inner.surrogate)
 	card.ImageURL = (*url.URL)(inner.ImageURL)
 	card.VideoURL = (*url.URL)(inner.VideoURL)
+	if inner.DefaultAction != nil {
+		action, err := UnmarshalMessageCardAction(*inner.DefaultAction)
+		if err != nil {
+			return errors.JSONUnmarshalError.WrapIfNotMe(err)
+		}
+		card.DefaultAction = action
+	}
+	card.Actions = make([]NormalizedMessageCardAction, 0, len(inner.Actions))
+	for _, actionPayload := range inner.Actions {
+		action, err := UnmarshalMessageCardAction(actionPayload)
+		if err != nil {
+			return errors.JSONUnmarshalError.WrapIfNotMe(err)
+		}
+		card.Actions = append(card.Actions, action)
+	}
 	return
 }
