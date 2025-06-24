@@ -551,17 +551,17 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 
 	postbackAction, ok := card1.Actions[0].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card1.Actions[0])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 1", postbackAction.Text)
 	suite.Assert().Equal("Option1", postbackAction.Payload)
 
 	postbackAction, ok = card1.Actions[1].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card1.Actions[1])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 2", postbackAction.Text)
 	suite.Assert().Equal("Option2", postbackAction.Payload)
 
 	postbackAction, ok = card1.Actions[2].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card1.Actions[2])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 3", postbackAction.Text)
 	suite.Assert().Equal("Option3", postbackAction.Payload)
 
 	card2 := carousel.Cards[1]
@@ -572,17 +572,17 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 
 	postbackAction, ok = card2.Actions[0].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card2.Actions[0])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 4", postbackAction.Text)
 	suite.Assert().Equal("Option4", postbackAction.Payload)
 
 	postbackAction, ok = card2.Actions[1].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card2.Actions[1])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 5", postbackAction.Text)
 	suite.Assert().Equal("Option5", postbackAction.Payload)
 
 	postbackAction, ok = card2.Actions[2].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card2.Actions[2])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 6", postbackAction.Text)
 	suite.Assert().Equal("Option6", postbackAction.Payload)
 
 	card3 := carousel.Cards[2]
@@ -593,17 +593,17 @@ func (suite *OpenMessagingSuite) TestCanUnmarshalOpenMessageStructuredWithCarous
 
 	postbackAction, ok = card3.Actions[0].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card3.Actions[0])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 7", postbackAction.Text)
 	suite.Assert().Equal("Option7", postbackAction.Payload)
 
 	postbackAction, ok = card3.Actions[1].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card3.Actions[1])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 8", postbackAction.Text)
 	suite.Assert().Equal("Option8", postbackAction.Payload)
 
 	postbackAction, ok = card3.Actions[2].(*gcloudcx.NormalizedMessageCardPostbackAction)
 	suite.Assert().True(ok, "The action is not a *NormalizedMessageCardPostbackAction but a %T", card3.Actions[2])
-	suite.Assert().Equal("Postback", postbackAction.Text)
+	suite.Assert().Equal("Option 9", postbackAction.Text)
 	suite.Assert().Equal("Option9", postbackAction.Payload)
 }
 
