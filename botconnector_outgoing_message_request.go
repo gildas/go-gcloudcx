@@ -9,7 +9,7 @@ import (
 )
 
 type BotConnectorOutgoingMessageRequest struct {
-	BotID         uuid.UUID           `json:"botId"`
+	BotID         string              `json:"botId"`
 	BotVersion    string              `json:"botVersion"`
 	BotState      string              `json:"botState"` // Complete, Failed, MoreData
 	BotSessionID  uuid.UUID           `json:"botSessionId"`
@@ -28,7 +28,7 @@ type BotConnectorOutgoingMessageRequest struct {
 func (request *BotConnectorOutgoingMessageRequest) Validate() error {
 	var merr errors.MultiError
 
-	if request.BotID == uuid.Nil {
+	if len(request.BotID) == 0 {
 		merr.Append(errors.ArgumentMissing.With("botId"))
 	}
 	if request.BotSessionID == uuid.Nil {
@@ -72,13 +72,11 @@ func (request BotConnectorOutgoingMessageRequest) MarshalJSON() ([]byte, error) 
 
 	data, err := json.Marshal(struct {
 		surrogate
-		BotID        core.UUID `json:"botId"`
 		BotSessionID core.UUID `json:"botSessionId"`
 		MessageID    core.UUID `json:"messageId"`
 		Confidence   *float64  `json:"confidence,omitempty"` // Confidence is optional, so we use a pointer to allow nil
 	}{
 		surrogate:    surrogate(request),
-		BotID:        core.UUID(request.BotID),
 		BotSessionID: core.UUID(request.BotSessionID),
 		MessageID:    core.UUID(request.MessageID),
 		Confidence:   confidence,
@@ -93,7 +91,6 @@ func (request *BotConnectorOutgoingMessageRequest) UnmarshalJSON(data []byte) er
 	type surrogate BotConnectorOutgoingMessageRequest
 	var inner struct {
 		surrogate
-		BotID        core.UUID         `json:"botId"`
 		BotSessionID core.UUID         `json:"botSessionId"`
 		MessageID    core.UUID         `json:"messageId"`
 		Entities     []json.RawMessage `json:"entities"`
@@ -102,7 +99,6 @@ func (request *BotConnectorOutgoingMessageRequest) UnmarshalJSON(data []byte) er
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*request = BotConnectorOutgoingMessageRequest(inner.surrogate)
-	request.BotID = uuid.UUID(inner.BotID)
 	request.BotSessionID = uuid.UUID(inner.BotSessionID)
 	request.MessageID = uuid.UUID(inner.MessageID)
 	if len(inner.Entities) > 0 {
