@@ -12,7 +12,7 @@ import (
 
 // BotConnectorIncomingMessageRequest represents a message request received from a Genesys Cloud Digital Bot
 type BotConnectorIncomingMessageRequest struct {
-	BotID             uuid.UUID         `json:"botId"`
+	BotID             string            `json:"botId"`
 	BotVersion        string            `json:"botVersion"`
 	BotSessionID      uuid.UUID         `json:"botSessionId"`
 	ConversationID    uuid.UUID         `json:"genesysConversationId"`
@@ -34,7 +34,7 @@ func (request BotConnectorIncomingMessageRequest) GetType() string {
 // Validate validates the incoming message request
 func (request *BotConnectorIncomingMessageRequest) Validate() error {
 	var merr errors.MultiError
-	if request.BotID == uuid.Nil {
+	if len(request.BotID) == 0 {
 		merr.Append(errors.ArgumentMissing.With("botId"))
 	}
 	if request.BotSessionID == uuid.Nil {
@@ -76,13 +76,11 @@ func (request BotConnectorIncomingMessageRequest) MarshalJSON() ([]byte, error) 
 
 	data, err := json.Marshal(struct {
 		surrogate
-		BotID          core.UUID `json:"botId"`
 		BotSessionID   core.UUID `json:"botSessionId"`
 		ConversationID core.UUID `json:"genesysConversationId"`
 		MessageID      core.UUID `json:"messageId"`
 	}{
 		surrogate:      surrogate(request),
-		BotID:          core.UUID(request.BotID),
 		BotSessionID:   core.UUID(request.BotSessionID),
 		ConversationID: core.UUID(request.ConversationID),
 		MessageID:      core.UUID(request.MessageID),
@@ -97,7 +95,6 @@ func (request *BotConnectorIncomingMessageRequest) UnmarshalJSON(data []byte) er
 	type surrogate BotConnectorIncomingMessageRequest
 	var inner struct {
 		surrogate
-		BotID          core.UUID `json:"botId"`
 		BotSessionID   core.UUID `json:"botSessionId"`
 		ConversationID core.UUID `json:"genesysConversationId"`
 		MessageID      core.UUID `json:"messageId"`
@@ -106,7 +103,6 @@ func (request *BotConnectorIncomingMessageRequest) UnmarshalJSON(data []byte) er
 		return errors.JSONUnmarshalError.Wrap(err)
 	}
 	*request = BotConnectorIncomingMessageRequest(inner.surrogate)
-	request.BotID = uuid.UUID(inner.BotID)
 	request.BotSessionID = uuid.UUID(inner.BotSessionID)
 	request.ConversationID = uuid.UUID(inner.ConversationID)
 	request.MessageID = uuid.UUID(inner.MessageID)

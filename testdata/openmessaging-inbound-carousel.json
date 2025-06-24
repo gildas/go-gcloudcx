@@ -32,17 +32,17 @@
             "actions": [
               {
                 "type": "Postback",
-                "text": "Option1",
+                "text": "Option 1",
                 "payload": "Option1"
               },
               {
                 "type": "Postback",
-                "text": "Option2",
+                "text": "Option 2",
                 "payload": "Option2"
               },
               {
                 "type": "Postback",
-                "text": "Option3",
+                "text": "Option 3",
                 "payload": "Option3"
               }
             ]
@@ -53,17 +53,17 @@
             "actions": [
               {
                 "type": "Postback",
-                "text": "Option4",
+                "text": "Option 4",
                 "payload": "Option4"
               },
               {
                 "type": "Postback",
-                "text": "Option5",
+                "text": "Option 5",
                 "payload": "Option5"
               },
               {
                 "type": "Postback",
-                "text": "Option6",
+                "text": "Option 6",
                 "payload": "Option6"
               }
             ]
@@ -74,17 +74,17 @@
             "actions": [
               {
                 "type": "Postback",
-                "text": "Option7",
+                "text": "Option 7",
                 "payload": "Option7"
               },
               {
                 "type": "Postback",
-                "text": "Option8",
+                "text": "Option 8",
                 "payload": "Option8"
               },
               {
                 "type": "Postback",
-                "text": "Option9",
+                "text": "Option 9",
                 "payload": "Option9"
               }
             ]
