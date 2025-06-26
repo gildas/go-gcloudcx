@@ -9,13 +9,13 @@ import (
 // TODO: This will need to go to go-gcloudcx
 
 type BotConnectorIncomingMessageResponse struct {
-	BotState      string              `json:"botState"`                // Complete, Failed, MoreData
-	Intent        string              `json:"intent,omitempty"`        // The discovered intent, mandatory if BotState is "Complete"
-	Confidence    float64             `json:"confidence,omitempty"`    // Confidence score for the intent, optional
-	Entities      []SlotEntity        `json:"entities,omitempty"`      // List of slot entities, optional
-	ReplyMessages []NormalizedMessage `json:"replyMessages,omitempty"` // List of reply messages to be sent back, optional
-	Parameters    map[string]string   `json:"parameters,omitempty"`    // Message Parameters, optional
-	ErrorInfo     *APIError           `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
+	BotState      string                 `json:"botState"`                // Complete, Failed, MoreData
+	Intent        string                 `json:"intent,omitempty"`        // The discovered intent, mandatory if BotState is "Complete"
+	Confidence    float64                `json:"confidence,omitempty"`    // Confidence score for the intent, optional
+	Entities      []SlotEntity           `json:"entities,omitempty"`      // List of slot entities, optional
+	ReplyMessages []NormalizedMessage    `json:"replyMessages,omitempty"` // List of reply messages to be sent back, optional
+	Parameters    map[string]string      `json:"parameters,omitempty"`    // Message Parameters, optional
+	ErrorInfo     *BotConnectorErrorInfo `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
 }
 
 const (
