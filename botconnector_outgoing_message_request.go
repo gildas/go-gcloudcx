@@ -9,19 +9,19 @@ import (
 )
 
 type BotConnectorOutgoingMessageRequest struct {
-	BotID         string              `json:"botId"`
-	BotVersion    string              `json:"botVersion"`
-	BotState      string              `json:"botState"` // Complete, Failed, MoreData
-	BotSessionID  uuid.UUID           `json:"botSessionId"`
-	MessageID     uuid.UUID           `json:"messageId"`
-	Language      string              `json:"languageCode"`
-	Intent        string              `json:"intent,omitempty"`        // The discovered intent, mandatory if BotState is "Complete"
-	Confidence    float64             `json:"confidence,omitempty"`    // Confidence score for the intent, optional
-	Entities      []SlotEntity        `json:"entities,omitempty"`      // List of slot entities, optional
-	ReplyMessages []NormalizedMessage `json:"replyMessages,omitempty"` // List of reply messages to be sent back, optional
-	Parameters    map[string]string   `json:"parameters,omitempty"`    // Message Parameters, optional
-	ErrorInfo     *APIError           `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
-	CorrelationID string              `json:"correlationId,omitempty"` // Optional correlation ID for tracking purposes
+	BotID         string                 `json:"botId"`
+	BotVersion    string                 `json:"botVersion"`
+	BotState      string                 `json:"botState"` // Complete, Failed, MoreData
+	BotSessionID  uuid.UUID              `json:"botSessionId"`
+	MessageID     uuid.UUID              `json:"messageId"`
+	Language      string                 `json:"languageCode"`
+	Intent        string                 `json:"intent,omitempty"`        // The discovered intent, mandatory if BotState is "Complete"
+	Confidence    float64                `json:"confidence,omitempty"`    // Confidence score for the intent, optional
+	Entities      []SlotEntity           `json:"entities,omitempty"`      // List of slot entities, optional
+	ReplyMessages []NormalizedMessage    `json:"replyMessages,omitempty"` // List of reply messages to be sent back, optional
+	Parameters    map[string]string      `json:"parameters,omitempty"`    // Message Parameters, optional
+	ErrorInfo     *BotConnectorErrorInfo `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
+	CorrelationID string                 `json:"correlationId,omitempty"` // Optional correlation ID for tracking purposes
 }
 
 // Validate validates the outgoing message request
