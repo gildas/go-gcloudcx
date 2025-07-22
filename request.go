@@ -2,6 +2,7 @@ package gcloudcx
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -102,6 +103,13 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	options.InterAttemptUseRetryAfter = true
 
 	log.Record("payload", options.Payload).Debugf("Sending request to %s", options.URL)
+	if value := context.Value("logPayload"); value != nil {
+		if logPayload, ok := value.(bool); ok && logPayload {
+			if payload, err := json.Marshal(options.Payload); err == nil {
+				log.Scope("payload").Debugf("Payload: %s", string(payload))
+			}
+		}
+	}
 	start := time.Now()
 	res, err := request.Send(options, results)
 	duration := time.Since(start)

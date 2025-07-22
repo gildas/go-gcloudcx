@@ -106,9 +106,6 @@ func (request *BotConnectorIncomingMessageRequest) UnmarshalJSON(data []byte) er
 	request.BotSessionID = uuid.UUID(inner.BotSessionID)
 	request.ConversationID = uuid.UUID(inner.ConversationID)
 	request.MessageID = uuid.UUID(inner.MessageID)
-	if request.Parameters == nil {
-		request.Parameters = make(map[string]string)
-	}
 
 	return nil
 }
