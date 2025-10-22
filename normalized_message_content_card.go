@@ -29,6 +29,19 @@ func (card NormalizedMessageCardContent) GetType() string {
 	return "Card"
 }
 
+// Validate validates this NormalizedMessageCardContent
+func (card *NormalizedMessageCardContent) Validate() error {
+	var merr errors.MultiError
+
+	if len(card.Title) == 0 {
+		merr.Append(errors.ArgumentMissing.With("title"))
+	}
+	if len(card.Actions) == 0 {
+		merr.Append(errors.ArgumentInvalid.With("actions", "At least one action is required"))
+	}
+	return merr.AsError()
+}
+
 // MarshalJSON marshals this into JSON
 //
 // implements json.Marshaler
@@ -89,5 +102,5 @@ func (card *NormalizedMessageCardContent) UnmarshalJSON(payload []byte) (err err
 		}
 		card.Actions = append(card.Actions, action)
 	}
-	return
+	return errors.JSONUnmarshalError.Wrap(card.Validate())
 }

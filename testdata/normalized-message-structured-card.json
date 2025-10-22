@@ -1,0 +1,19 @@
+{
+  "type": "Structured",
+  "content": [
+    {
+      "contentType": "Card",
+      "card": {
+        "title": "",
+        "description": "This is a test description",
+        "actions": [
+          {
+            "type": "Link",
+            "text": "This is a link action",
+            "url": "http://www.acme.com"
+          }
+        ]
+      }
+    }
+  ]
+}
