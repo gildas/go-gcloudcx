@@ -151,13 +151,15 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 			log.Infof("Response payload: %s", res.Data)
 			return correlationID, errors.Join(JSONUnmarshalError.SetCorrelationID(correlationID).WithParams(fmt.Sprintf("%T", results), map[string]string{"data": string(res.Data)}), err)
 		}
-		log.Errorf("Response payload: %s", res.Data)
-		var simpleError struct {
-			Error       string `json:"error"`
-			Description string `json:"description"`
-		}
-		if jsonerr := res.UnmarshalContentJSON(&simpleError); jsonerr == nil && len(simpleError.Error) > 0 {
-			return correlationID, APIError{Status: 500, Code: "generic", Message: simpleError.Error, MessageParams: map[string]string{"description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
+		if res != nil {
+			log.Errorf("Response payload: %s", res.Data)
+			var simpleError struct {
+				Error       string `json:"error"`
+				Description string `json:"description"`
+			}
+			if jsonerr := res.UnmarshalContentJSON(&simpleError); jsonerr == nil && len(simpleError.Error) > 0 {
+				return correlationID, APIError{Status: 500, Code: "generic", Message: simpleError.Error, MessageParams: map[string]string{"description": simpleError.Description}, CorrelationID: correlationID}.WithStack()
+			}
 		}
 		var details *errors.Error
 		if errors.As(err, &details) {

@@ -289,6 +289,15 @@ func (suite *NormalizedMessageSuite) TestCanUnmarshalCarousel() {
 	suite.Assert().Equal("https://www.acme.com/option9", linkAction.URL.String())
 }
 
+func (suite *NormalizedMessageSuite) TestCanUnmarshalCard() {
+	payload := suite.LoadTestData("normalized-message-structured-card-02.json")
+	var message gcloudcx.NormalizedMessage
+	err := json.Unmarshal(payload, &message)
+	suite.Require().NoErrorf(err, "Failed to unmarshal NormalizedMessage. %s", err)
+	suite.Assert().Equal(gcloudcx.NormalizedMessageTypeStructured, message.Type)
+	suite.Assert().Len(message.Content, 1)
+}
+
 func (suite *NormalizedMessageSuite) TestCanMarshalQuickReplies() {
 	message := gcloudcx.NormalizedMessage{
 		Type: gcloudcx.NormalizedMessageTypeStructured,
