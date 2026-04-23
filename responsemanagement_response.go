@@ -62,6 +62,16 @@ type ResponseManagementSubstitution struct {
 	Default     string `json:"defaultValue"`
 }
 
+// ResponseManagementVersion describes a version of a response management response
+type ResponseManagementVersion int
+
+const (
+	// ResponseManagementVersionFirst is the first version of the response management response
+	ResponseManagementVersionFirst ResponseManagementVersion = 1
+	// ResponseManagementVersionLast is the last version of the response management response
+	ResponseManagementVersionLast ResponseManagementVersion = -1
+)
+
 // Initialize initializes the object
 //
 // implements Initializable
@@ -148,16 +158,50 @@ func (response ResponseManagementResponse) FetchByFilters(context context.Contex
 
 // ApplySubstitutions applies the substitutions to the response text that matches the given content type
 func (response ResponseManagementResponse) ApplySubstitutions(context context.Context, contentType string, substitutions map[string]string) (string, error) {
+	return response.ApplySubstitutionsWithVersion(context, ResponseManagementVersionLast, contentType, substitutions)
+}
+
+// ApplySubstitutions applies the substitutions to the response text that matches the given content type
+//
+// # The version can be either a specific version number, ResponseManagementVersionFirst or ResponseManagementVersionLast
+//
+// If the specified version is not of the expected content type, an error is returned.
+//
+// If the version is out of range, an error is returned.
+func (response ResponseManagementResponse) ApplySubstitutionsWithVersion(context context.Context, version any, contentType string, substitutions map[string]string) (string, error) {
 	log := logger.Must(logger.FromContext(context, logger.Create("gcloudcx", "nil"))).Child("response", "applysubstitutions", "response", response.ID)
+	var index int
 	// Logging is done at the TRACE level since the response and/or the text could contain sensitive information
 
-	var text string
-	for _, content := range response.Texts {
-		if strings.Compare(strings.ToLower(content.ContentType), strings.ToLower(contentType)) == 0 {
-			text = content.Content
-			break
+	switch v := version.(type) {
+	case ResponseManagementVersion:
+		switch v {
+		case ResponseManagementVersionFirst:
+			index = 0
+		case ResponseManagementVersionLast:
+			index = len(response.Texts) - 1
+		default:
+			return "", errors.ArgumentInvalid.With("version", version)
 		}
+	case int:
+		if v < 1 {
+			index = 0
+		} else if v <= len(response.Texts) {
+			index = v - 1
+		} else {
+			return "", errors.IndexOutOfBounds.With("version", version, "max", len(response.Texts))
+		}
+	default:
+		return "", errors.ArgumentInvalid.With("version", version)
 	}
+
+	log.Record("version", version).Tracef("Applying substitutions for version %d (index %d)", index+1, index)
+	if !strings.EqualFold(response.Texts[index].ContentType, contentType) {
+		log.Tracef("Version %d does not match content type %s, trying other versions...", version, contentType)
+		return "", errors.Join(errors.Errorf("version %d does not match content type %s", version, contentType), errors.ArgumentInvalid.With("version", version))
+	}
+
+	text := response.Texts[index].Content
 	if len(text) == 0 {
 		return "", errors.NotFound.With("text of type ", contentType)
 	}

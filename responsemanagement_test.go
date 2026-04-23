@@ -493,3 +493,149 @@ func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithComplexTempla
 	suite.Require().NoError(err, "Failed to apply substitutions")
 	suite.Assert().Equal(expected, text)
 }
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithVersion_0() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name:    "Test",
+		Version: 4,
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 1",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 2",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 3",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 4",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutionsWithVersion(ctx, 0, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John, this is version 1", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithVersion_First() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name:    "Test",
+		Version: 4,
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 1",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 2",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 3",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 4",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutionsWithVersion(ctx, gcloudcx.ResponseManagementVersionFirst, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John, this is version 1", text)
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithVersion_N() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name:    "Test",
+		Version: 4,
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 1",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 2",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 3",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 4",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutionsWithVersion(ctx, 3, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John, this is version 3", text, "Expected to apply substitutions with version 3")
+}
+
+func (suite *ResponseManagementSuite) TestCanApplySubstitutionsWithVersion_Last() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name:    "Test",
+		Version: 4,
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 1",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 2",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 3",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 4",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutionsWithVersion(ctx, gcloudcx.ResponseManagementVersionLast, "text/plain", map[string]string{"name": "John"})
+	suite.Require().NoError(err, "Failed to apply substitutions")
+	suite.Assert().Equal("Hello, John, this is version 4", text)
+}
+
+func (suite *ResponseManagementSuite) TestShouldFailApplySubstitutionsWithVersion_OutOfRange() {
+	ctx := suite.Logger.ToContext(context.Background())
+	response := gcloudcx.ResponseManagementResponse{
+		Name:    "Test",
+		Version: 4,
+		Texts: []gcloudcx.ResponseManagementContent{
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 1",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 2",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 3",
+			},
+			{
+				ContentType: "text/plain",
+				Content:     "Hello, {{name}}, this is version 4",
+			},
+		},
+	}
+	text, err := response.ApplySubstitutionsWithVersion(ctx, 10, "text/plain", map[string]string{"name": "John"})
+	suite.Require().Error(err, "Expected error when applying substitutions out of range")
+	suite.Assert().Equal("", text)
+	suite.Assert().ErrorIs(err, errors.IndexOutOfBounds, "Expected OutOfRange error when applying substitutions out of range")
+}
