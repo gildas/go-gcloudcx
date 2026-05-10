@@ -113,13 +113,13 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	start := time.Now()
 	res, err := request.Send(options, results)
 	duration := time.Since(start)
-	log = log.Record("duration", duration)
+	log = log.Record("duration", duration.Seconds())
 	if res != nil {
 		correlationID = res.Headers.Get("Genesys-Correlation-Id") // The new way
 		if len(correlationID) == 0 {
 			correlationID = res.Headers.Get("Inin-Correlation-Id") //The old way, back in the Interactiove Intelligence days
 		}
-		log = log.Record("genesys-correlation", correlationID)
+		log = log.Record("gcloudcx-correlation", correlationID)
 	}
 	if err != nil {
 		urlError := &url.Error{}
