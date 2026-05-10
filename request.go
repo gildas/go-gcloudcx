@@ -113,7 +113,7 @@ func (client *Client) SendRequest(context context.Context, uri URI, options *req
 	start := time.Now()
 	res, err := request.Send(options, results)
 	duration := time.Since(start)
-	log = log.Record("duration", duration)
+	log = log.Record("duration", duration.Seconds())
 	if res != nil {
 		correlationID = res.Headers.Get("Genesys-Correlation-Id") // The new way
 		if len(correlationID) == 0 {
