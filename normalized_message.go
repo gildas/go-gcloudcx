@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // TODO: This will need to go to go-gcloudcx
@@ -29,6 +30,21 @@ const (
 // implements core.TypeCarrier
 func (message NormalizedMessage) GetType() string {
 	return message.Type
+}
+
+// Redact redacts sensitive data
+// implements logger.Redactable
+func (message NormalizedMessage) Redact() any {
+	redacted := message
+	if len(message.Text) > 0 {
+		redacted.Text = logger.RedactWithHash(message.Text)
+	}
+	for index, content := range message.Content {
+		if redactable, ok := content.(logger.Redactable); ok {
+			redacted.Content[index] = redactable.Redact().(NormalizedMessageContent)
+		}
+	}
+	return redacted
 }
 
 // Validate validates the input message

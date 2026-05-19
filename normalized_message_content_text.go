@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // NormalizedMessageTextContent describes the content of a Text Message
@@ -20,6 +21,17 @@ func init() {
 // implements core.TypeCarrier
 func (text NormalizedMessageTextContent) GetType() string {
 	return "Text"
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (text NormalizedMessageTextContent) Redact() any {
+	redacted := text
+	if len(text.Text) > 0 {
+		redacted.Text = logger.RedactWithHash(text.Text)
+	}
+	return redacted
 }
 
 // MarshalJSON marshals this into JSON

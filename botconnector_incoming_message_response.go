@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 // TODO: This will need to go to go-gcloudcx
@@ -23,6 +24,25 @@ const (
 	BotStateFailed   = "Failed"   // BotState when the message processing has failed
 	BotStateMoreData = "MoreData" // BotState when the message processing requires more data
 )
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (response BotConnectorIncomingMessageResponse) Redact() any {
+	redacted := response
+	for index, entity := range redacted.Entities {
+		if redactable, ok := entity.(logger.Redactable); ok {
+			redacted.Entities[index] = redactable.Redact().(SlotEntity)
+		}
+	}
+	for index, message := range redacted.ReplyMessages {
+		redacted.ReplyMessages[index] = message.Redact().(NormalizedMessage)
+	}
+	for key, value := range redacted.Parameters {
+		redacted.Parameters[key] = logger.RedactWithHash(value)
+	}
+	return redacted
+}
 
 // Validate validates the response
 func (response *BotConnectorIncomingMessageResponse) Validate() error {
