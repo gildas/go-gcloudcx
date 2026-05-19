@@ -5,6 +5,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
 
@@ -29,6 +30,19 @@ type BotConnectorIncomingMessageRequest struct {
 // implements core.TypeCarrier
 func (request BotConnectorIncomingMessageRequest) GetType() string {
 	return request.Message.GetType()
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (request BotConnectorIncomingMessageRequest) Redact() any {
+	redacted := request
+	redacted.Message = redacted.Message.Redact().(NormalizedMessage)
+	for key, value := range redacted.Parameters {
+		redacted.Parameters[key] = logger.RedactWithHash(value)
+	}
+	return redacted
+
 }
 
 // Validate validates the incoming message request

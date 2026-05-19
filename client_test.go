@@ -172,5 +172,5 @@ func (suite *ClientSuite) TestShouldFailLoginWithInvalidClientCredentialsClientI
 	var apiError gcloudcx.APIError
 	suite.Require().ErrorAs(err, &apiError, "Error should be an APIError")
 	suite.Require().NotEmpty(apiError.MessageParams, "Error should have some parameters")
-	suite.Assert().Equal("client not found", apiError.MessageParams["description"])
+	suite.Assert().Equal("authentication failed", apiError.MessageParams["description"])
 }

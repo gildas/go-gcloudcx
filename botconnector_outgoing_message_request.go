@@ -5,6 +5,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 	"github.com/google/uuid"
 )
 
@@ -22,6 +23,25 @@ type BotConnectorOutgoingMessageRequest struct {
 	Parameters    map[string]string      `json:"parameters,omitempty"`    // Message Parameters, optional
 	ErrorInfo     *BotConnectorErrorInfo `json:"errorInfo,omitempty"`     // Error information if BotState is "Failed", optional
 	CorrelationID string                 `json:"correlationId,omitempty"` // Optional correlation ID for tracking purposes
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (request BotConnectorOutgoingMessageRequest) Redact() any {
+	redacted := request
+	for index, entity := range redacted.Entities {
+		if redactable, ok := entity.(logger.Redactable); ok {
+			redacted.Entities[index] = redactable.Redact().(SlotEntity)
+		}
+	}
+	for index, message := range redacted.ReplyMessages {
+		redacted.ReplyMessages[index] = message.Redact().(NormalizedMessage)
+	}
+	for key, value := range redacted.Parameters {
+		redacted.Parameters[key] = logger.RedactWithHash(value)
+	}
+	return redacted
 }
 
 // Validate validates the outgoing message request

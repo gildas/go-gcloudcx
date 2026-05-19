@@ -6,6 +6,7 @@ import (
 
 	"github.com/gildas/go-core"
 	"github.com/gildas/go-errors"
+	"github.com/gildas/go-logger"
 )
 
 type NormalizedMessageLocationContent struct {
@@ -25,6 +26,22 @@ func init() {
 // implements core.TypeCarrier
 func (location NormalizedMessageLocationContent) GetType() string {
 	return "Location"
+}
+
+// Redact redacts sensitive data
+//
+// implements logger.Redactable
+func (location NormalizedMessageLocationContent) Redact() any {
+	redacted := location
+	if len(location.Text) > 0 {
+		redacted.Text = logger.RedactWithHash(location.Text)
+	}
+	if len(location.Address) > 0 {
+		redacted.Address = logger.RedactWithHash(location.Address)
+	}
+	redacted.Latitude = 0
+	redacted.Longitude = 0
+	return redacted
 }
 
 // MarshalJSON marshals this into JSON
