@@ -39,9 +39,12 @@ func (message NormalizedMessage) Redact() any {
 	if len(message.Text) > 0 {
 		redacted.Text = logger.RedactWithHash(message.Text)
 	}
-	for index, content := range message.Content {
+	redacted.Content = make([]NormalizedMessageContent, 0, len(message.Content))
+	for _, content := range message.Content {
 		if redactable, ok := content.(logger.Redactable); ok {
-			redacted.Content[index] = redactable.Redact().(NormalizedMessageContent)
+			redacted.Content = append(redacted.Content, redactable.Redact().(NormalizedMessageContent))
+		} else {
+			redacted.Content = append(redacted.Content, content)
 		}
 	}
 	return redacted
