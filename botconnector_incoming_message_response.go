@@ -30,15 +30,18 @@ const (
 // implements logger.Redactable
 func (response BotConnectorIncomingMessageResponse) Redact() any {
 	redacted := response
-	for index, entity := range redacted.Entities {
+	redacted.Entities = make([]SlotEntity, 0, len(redacted.Entities))
+	for _, entity := range response.Entities {
 		if redactable, ok := entity.(logger.Redactable); ok {
-			redacted.Entities[index] = redactable.Redact().(SlotEntity)
+			redacted.Entities = append(redacted.Entities, redactable.Redact().(SlotEntity))
 		}
 	}
-	for index, message := range redacted.ReplyMessages {
-		redacted.ReplyMessages[index] = message.Redact().(NormalizedMessage)
+	redacted.ReplyMessages = make([]NormalizedMessage, 0, len(redacted.ReplyMessages))
+	for _, message := range response.ReplyMessages {
+		redacted.ReplyMessages = append(redacted.ReplyMessages, message.Redact().(NormalizedMessage))
 	}
-	for key, value := range redacted.Parameters {
+	redacted.Parameters = make(map[string]string)
+	for key, value := range response.Parameters {
 		redacted.Parameters[key] = logger.RedactWithHash(value)
 	}
 	return redacted

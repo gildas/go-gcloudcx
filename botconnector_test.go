@@ -93,3 +93,14 @@ func (suite *BotConnectorSuite) TestCanMarshalIncomingMessageResponse() {
 	suite.Require().NoError(err, "Failed to unmarshal BotConnectorIncomingMessageResponse")
 	suite.Logger.Record("IncomingMessageResponse", response).Infof("Got IncomingMessageResponse")
 }
+
+func (suite *BotConnectorSuite) TestCanRedactRequest() {
+	request := gcloudcx.BotConnectorOutgoingMessageRequest{
+		BotID:         "12345",
+		ReplyMessages: []gcloudcx.NormalizedMessage{{Text: "This is some text"}},
+	}
+	suite.Logger.Record("original", request).Infof("Original request")
+	suite.Assert().Equal("This is some text", request.ReplyMessages[0].Text)
+	_ = request.Redact()
+	suite.Assert().Equal("This is some text", request.ReplyMessages[0].Text)
+}

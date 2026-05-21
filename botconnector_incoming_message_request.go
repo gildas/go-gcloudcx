@@ -37,12 +37,12 @@ func (request BotConnectorIncomingMessageRequest) GetType() string {
 // implements logger.Redactable
 func (request BotConnectorIncomingMessageRequest) Redact() any {
 	redacted := request
-	redacted.Message = redacted.Message.Redact().(NormalizedMessage)
-	for key, value := range redacted.Parameters {
+	redacted.Message = request.Message.Redact().(NormalizedMessage)
+	redacted.Parameters = make(map[string]string)
+	for key, value := range request.Parameters {
 		redacted.Parameters[key] = logger.RedactWithHash(value)
 	}
 	return redacted
-
 }
 
 // Validate validates the incoming message request
