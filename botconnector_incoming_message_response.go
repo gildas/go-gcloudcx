@@ -34,6 +34,8 @@ func (response BotConnectorIncomingMessageResponse) Redact() any {
 	for _, entity := range response.Entities {
 		if redactable, ok := entity.(logger.Redactable); ok {
 			redacted.Entities = append(redacted.Entities, redactable.Redact().(SlotEntity))
+		} else {
+			redacted.Entities = append(redacted.Entities, entity)
 		}
 	}
 	redacted.ReplyMessages = make([]NormalizedMessage, 0, len(redacted.ReplyMessages))
