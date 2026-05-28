@@ -83,7 +83,7 @@ func (client *Client) LoggedInHandler() func(http.Handler) http.Handler {
 			grant.Code = params.Get("code")
 			log.Tracef("Authorization Code: %s", grant.Code)
 			if correlationID, err := client.Login(r.Context()); err != nil {
-				log.Record("gcloudcx-correlation", correlationID).Errorf("Failed to Authorize Grant", err)
+				log.Record("genesys-correlation", correlationID).Errorf("Failed to Authorize Grant", err)
 				core.RespondWithError(w, http.StatusInternalServerError, err)
 				return
 			}
