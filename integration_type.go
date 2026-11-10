@@ -37,6 +37,7 @@ type IntegrationType struct {
 
 const (
 	IntegrationTypeGenesysDigitalBotConnector = "genesys-digital-bot-connector"
+	IntegrationTypeAudioHookConnector         = "audio-connector"
 )
 
 // GetID gets the ID of this integration type
